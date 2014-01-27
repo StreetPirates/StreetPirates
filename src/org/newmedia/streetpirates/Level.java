@@ -1,44 +1,77 @@
 package org.newmedia.streetpirates;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Gdx.*;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteCache;
+import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.*;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.*;
+
 //import com.badlogic.gdx.maps.tiled.TiledMap;
 //import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 //import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
-import java.util.ArrayList;  
-import java.util.List;
+import java.util.Vector;  
+import java.util.ArrayList;
+import java.util.Arrays;
+
+
+import org.newmedia.streetpirates.Character;
 
 public class Level implements ApplicationListener, InputProcessor {
-	private Texture texture;	
-	private SpriteCache cache;
-	private String texture_file; 
+	private Texture texture_hero;
+	private Texture texture_starfish;
+	private Texture texture_bluecar_back, texture_bluecar_front, texture_bluecar_side;
+	//private SpriteCache cache;
+	//private String texture_file; 
 	//int tiledMapId;
 	private OrthographicCamera camera;
 	private TiledMap tiledMap;
 	private TiledMap tiledCity;
 	private TmxMapLoader maploader;
-	OrthogonalTiledMapRenderer renderer;
-	TiledMapTileLayer layer;
-	int columns;
-	int rows;
-	int tilewidth, tileheight;
-
+	private MapProperties prop;
+	private OrthogonalTiledMapRenderer renderer;
+	private	TiledMapTileLayer layer;
+	private int columns;
+	private int rows;
+	private int tilewidth, tileheight, width, height;
+	private int tiledata[][];
+	private int num_starfish = 2, place_idx = 0;
+	private Stage stage;
+	//private Character[] car;
+	private ArrayList<Character> car;
+	private ArrayList<Character> badguy;
+	private ArrayList<Character> starfish;
+	private Character hero;
+	private Screen screen;
+	
+	public int legal_car_tileid[] = {4, 10};
+	public int pavement_tileid = 1;
+	public int road_tileid = 4;
+	public int pedestrianwalk_tileid = 10;
+	
 	@Override
 	public void create() {		
 		
 		tiledMap = new TmxMapLoader().load("assets/streetpirates-level1.tmx");
-		//texture = gdx.Graphics.newTexture(gdx.Files.internal("map/map (2).jpg"));
+		prop = tiledMap.getProperties();
+		 
+		texture_hero = new Texture(Gdx.files.internal("assets/pirate/front_walk1.png"));
+		texture_bluecar_back = new Texture(Gdx.files.internal("assets/cars/BlueCar_back.png"));
+		texture_bluecar_front = new Texture(Gdx.files.internal("assets/cars/BlueCar_front.png"));
+		texture_bluecar_side = new Texture(Gdx.files.internal("assets/cars/BlueCar_side.png"));
+		texture_starfish = new Texture(Gdx.files.internal("assets/map/starfish.png"));//map_tiles.png"));
 		 
 		/*cache = new SpriteCache();
-		cache.beginCache();
-		
+		cache.beginCache();	
 		for(int y = 0; y < HEIGHT; y++) {
 			for(int x = 0; x < WIDTH; x++) {
 				int textureX = tileLayer[y][x] % 8;
@@ -57,28 +90,57 @@ public class Level implements ApplicationListener, InputProcessor {
 		layer = (TiledMapTileLayer)tiledMap.getLayers().get(0); // assuming the layer at index on contains tiles
 		columns = layer.getWidth();
 		rows = layer.getHeight();
-		tilewidth = 60;
-		tileheight = 60;
+		tilewidth = prop.get("tilewidth", Integer.class);
+		tileheight = prop.get("tileheight", Integer.class);
+		width = prop.get("width", Integer.class);
+		height = prop.get("height", Integer.class);
+		tiledata = new int[width][height];
+		tiledata = prop.get("data", Integer.class);
+		
 		camera = new OrthographicCamera();
-		camera.setToOrtho(true, columns, rows);
+		camera.setToOrtho(false, columns, rows);
 		renderer.setView(camera);
 		
+	    Gdx.input.setInputProcessor(this);
+		//Gdx.input.setInputProcessor(stage);
 		
-		Gdx.input.setInputProcessor(this);
+		stage = new Stage();
+		stage.setCamera(camera);
 		
+		hero = new Character(texture_hero, 1, 1, tilewidth, tileheight, stage);
+		//hero.addmoveToAction(5, 7, tilewidth, tileheight, 10f);
+		
+		car = new ArrayList<Character>();
+		car.add(new Character(texture_bluecar_front, 5, 5, tilewidth, tileheight, stage));
+		
+		//starfish = new Character[num_starfishes];
+		starfish = new ArrayList<Character>();
+		starfish.add(new Character(texture_starfish, 1, 8, tilewidth, tileheight, stage));
+		starfish.add(new Character(texture_starfish, 5, 8, tilewidth, tileheight, stage));
+		//starfish.add(new Character(texture_starfish, 11, 4, tilewidth, tileheight, stage));
+		//starfish.add(new Character(texture_starfish, 11, 5, tilewidth, tileheight, stage));
+		
+		//hero.followCharacter(starfish.get(0));
+		//hero.followCharacter(starfish.get(1));
+		
+		//starfish.get(0).addClickListener();
+
 	}
 	
 	@Override
 	public void render() {		
-		//Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);		
+		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);		
 		//camera.update();		
 		//cache.setProjectionMatrix(cam.getCombinedMatrix());
 		//cache.begin();		
 		//cache.draw(tileMap);
 		//cache.end();
 		
+		
 		int layers_id[] = {0};
 		renderer.render(layers_id);
+		stage.act(Gdx.graphics.getDeltaTime());
+		stage.draw();
 	}
 	
 	@Override
@@ -97,8 +159,8 @@ public class Level implements ApplicationListener, InputProcessor {
 	}
 	
 	@Override
-	public void resize(int x, int y) {	
-		
+	public void resize(int width, int height) {	
+		 stage.setViewport(width, height, true);
 	}
 	
 	@Override
@@ -119,6 +181,11 @@ public class Level implements ApplicationListener, InputProcessor {
 	@Override
 	public boolean touchDown (int x, int y, int pointer, int button) {
 	   System.out.println("touchDown x: " + x + " y: " + y);
+	   if (place_idx < num_starfish) {
+		   starfish.get(place_idx).setPosition(x, y);   
+		   place_idx++;
+	   }
+	   else hero.followRoute(starfish);
 	   return false;
 	}
 
