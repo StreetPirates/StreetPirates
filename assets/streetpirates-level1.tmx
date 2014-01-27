@@ -2,6 +2,12 @@
 <map version="1.0" orientation="orthogonal" width="13" height="10" tilewidth="60" tileheight="60">
  <tileset firstgid="1" name="map_tiles (2)" tilewidth="60" tileheight="60">
   <image source="map/map_tiles (2).png" width="180" height="360"/>
+  <terraintypes>
+   <terrain name="pavement" tile="0"/>
+   <terrain name="street" tile="3"/>
+   <terrain name="grass" tile="6"/>
+   <terrain name="pedwalk" tile="9"/>
+  </terraintypes>
  </tileset>
  <layer name="Tile Layer 1" width="13" height="10">
   <data encoding="csv">

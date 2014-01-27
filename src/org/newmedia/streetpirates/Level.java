@@ -42,8 +42,6 @@ public class Level implements ApplicationListener, InputProcessor {
 	private	TiledMapTileLayer layer;
 	private int columns;
 	private int rows;
-	private int tilewidth, tileheight, width, height;
-	private int tiledata[][];
 	private int num_starfish = 2, place_idx = 0;
 	private Stage stage;
 	//private Character[] car;
@@ -54,16 +52,19 @@ public class Level implements ApplicationListener, InputProcessor {
 	private Screen screen;
 	
 	public int legal_car_tileid[] = {4, 10};
-	public int pavement_tileid = 1;
+	public int pavement_tileid = 7;
 	public int road_tileid = 4;
+	public int wall_tileid = 1;
 	public int pedestrianwalk_tileid = 10;
+	public int tilewidth, tileheight, width, height;
+	public int hero_move = 5;
 	
 	@Override
 	public void create() {		
 		
 		tiledMap = new TmxMapLoader().load("assets/streetpirates-level1.tmx");
 		prop = tiledMap.getProperties();
-		 
+		
 		texture_hero = new Texture(Gdx.files.internal("assets/pirate/front_walk1.png"));
 		texture_bluecar_back = new Texture(Gdx.files.internal("assets/cars/BlueCar_back.png"));
 		texture_bluecar_front = new Texture(Gdx.files.internal("assets/cars/BlueCar_front.png"));
@@ -90,12 +91,15 @@ public class Level implements ApplicationListener, InputProcessor {
 		layer = (TiledMapTileLayer)tiledMap.getLayers().get(0); // assuming the layer at index on contains tiles
 		columns = layer.getWidth();
 		rows = layer.getHeight();
+		
 		tilewidth = prop.get("tilewidth", Integer.class);
 		tileheight = prop.get("tileheight", Integer.class);
 		width = prop.get("width", Integer.class);
 		height = prop.get("height", Integer.class);
-		tiledata = new int[width][height];
-		tiledata = prop.get("data", Integer.class);
+		
+		for (int i = 0 ; i < layer.getWidth(); i++)
+			for (int j = 0 ; j < layer.getHeight(); j++)
+				System.out.println("cell (0,0): " + layer.getCell(i, j).getTile().getId());
 		
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, columns, rows);
@@ -111,7 +115,7 @@ public class Level implements ApplicationListener, InputProcessor {
 		//hero.addmoveToAction(5, 7, tilewidth, tileheight, 10f);
 		
 		car = new ArrayList<Character>();
-		car.add(new Character(texture_bluecar_front, 5, 5, tilewidth, tileheight, stage));
+		car.add(new Character(texture_bluecar_front, 6, 5, tilewidth, tileheight, stage));
 		
 		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();
@@ -121,8 +125,6 @@ public class Level implements ApplicationListener, InputProcessor {
 		//starfish.add(new Character(texture_starfish, 11, 5, tilewidth, tileheight, stage));
 		
 		//hero.followCharacter(starfish.get(0));
-		//hero.followCharacter(starfish.get(1));
-		
 		//starfish.get(0).addClickListener();
 
 	}
@@ -165,6 +167,7 @@ public class Level implements ApplicationListener, InputProcessor {
 	
 	@Override
 	public boolean keyDown (int keycode) {
+	   //
 	   return false;
 	}
 
@@ -173,8 +176,37 @@ public class Level implements ApplicationListener, InputProcessor {
 	   return false;
 	}
 
+	public boolean is_tileid(float x, float y, int tileid) {
+		int tilex = (int) (x / tilewidth);
+		int tiley = (int) (y / tileheight);
+		if (layer.getCell(tilex, tiley).getTile().getId() == tileid)
+			return true;
+		else 
+			return false;
+	}
+	
 	@Override
 	public boolean keyTyped (char character) {
+		switch(character) {
+			case 'i':
+				//TODO: boundary check
+				if (!is_tileid(hero.getX(), hero.getY() + hero_move, wall_tileid))
+					hero.setPosition((float) (hero.getX()), (float)(hero.getY() + hero_move));
+				break;
+			case 'k':
+				if (!is_tileid(hero.getX(), hero.getY() - hero_move, wall_tileid))
+					hero.setPosition((float) (hero.getX()), (float)(hero.getY() - hero_move));
+				break;
+			case 'j':
+				if (!is_tileid(hero.getX() - hero_move, hero.getY(), wall_tileid))
+					hero.setPosition((float) (hero.getX() - hero_move), (float)(hero.getY()));
+				break;
+			case 'l':
+				if (!is_tileid(hero.getX() + hero_move, hero.getY(), wall_tileid))
+					hero.setPosition((float) (hero.getX() + hero_move), (float)(hero.getY()));
+				break;	
+				
+		}
 	   return false;
 	}
 
@@ -182,10 +214,10 @@ public class Level implements ApplicationListener, InputProcessor {
 	public boolean touchDown (int x, int y, int pointer, int button) {
 	   System.out.println("touchDown x: " + x + " y: " + y);
 	   if (place_idx < num_starfish) {
-		   starfish.get(place_idx).setPosition(x, y);   
+		   starfish.get(place_idx).setPosition(x, tileheight * height - y);   
 		   place_idx++;
 	   }
-	   else hero.followRoute(starfish);
+	   else hero.gotoPointSoft(this, x, tileheight * height - y);//hero.followRoute(starfish);
 	   return false;
 	}
 
