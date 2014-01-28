@@ -2,10 +2,14 @@ package org.newmedia.streetpirates;
 
 import java.util.*;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
@@ -14,13 +18,18 @@ import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 
 import org.newmedia.streetpirates.Character;
 
-public class Character extends Image {
+public class Character extends Actor {
 	Level l;
-	int validtile_id = 0;
+	int validtile_id = 0, textid = 0;
 	Random generator;
 	long clock;
 	//Date date;
-	boolean random_move;
+	boolean random_move, in_action, moving;
+	SpriteBatch spriteBatch; 
+	Texture currentFrame;
+	TextureRegion imageregion[], currentFrameRegion;
+	Animation animation;
+	float stateTime;
 	
 	public static final int LEFT = 0;
 	public static final int RIGHT = 1;
@@ -29,22 +38,38 @@ public class Character extends Image {
 	public static final long delta = 5000;
 	
 	//public Character(Texture  texture, int tilex, int tiley, float scalex, float scaley, Stage stage) {
-	public Character(Texture  texture, int tilex, int tiley, int tilewidth, int tileheight, Stage stage, Level l) {
-		super(texture);
+	public Character(Texture texture[], int tilex, int tiley, int tilewidth, int tileheight, Stage stage, Level l) {
+		//super(texture);
+		imageregion = new TextureRegion[texture.length];
+		for(int i = 0; i < texture.length; i++) {
+			imageregion[i] = new TextureRegion(texture[i]);
+		}
+		
 		this.setX(tilex * tilewidth);
 		this.setY(tiley * tileheight);
-		this.setScale((float)tilewidth / (float)texture.getWidth(), (float)tileheight / (float)texture.getHeight() );
-		//this.setHeight(texture.getHeight() * this.getScaleY());
-		//this.setWidth(texture.getWidth() * this.getScaleX());
+		this.setScale((float)tilewidth / (float)texture[0].getWidth(), (float)tileheight / (float)texture[0].getHeight() );
+		//this.setHeight(texture[0].getHeight());
+		//this.setWidth(texture[0].getWidth());
+		this.setHeight(texture[0].getHeight() * this.getScaleY());
+		this.setWidth(texture[0].getWidth() * this.getScaleX());
+		this.animation = new Animation(0.1f, imageregion);
+		spriteBatch = new SpriteBatch();
+		
+		//this.setSize(width, height);
+		
 		this.setVisible(true);
-		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());	
+		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
+		
+		System.out.println("Character:! width = " + this.getWidth() + "height = " + this.getHeight() + " originx:  " + this.getX() + " originy: " + this.getY() );
+		
 		stage.addActor(this);
 		validtile_id = 0;
-		//date = new Date();
-		generator = new Random(System.currentTimeMillis());
 		clock = System.currentTimeMillis();
+		generator = new Random(clock);
 		this.l = l;
 		this.random_move = false;
+		this.moving = false;
+		this.in_action = false;
 	}
 	
 	public void set_validtile(int tileid) {
@@ -81,6 +106,17 @@ public class Character extends Image {
 	@Override
 	public void draw(Batch batch, float parentAlpha) {
 		super.draw(batch,  parentAlpha);
+		
+		stateTime += Gdx.graphics.getDeltaTime();
+		if (moving == true)
+			currentFrameRegion = animation.getKeyFrame(stateTime, true);
+		else 
+			currentFrameRegion = imageregion[0];
+		
+	    spriteBatch.begin();
+        spriteBatch.draw(currentFrameRegion, getX(), getY(), getWidth(), getHeight());        
+        spriteBatch.end();
+
 		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
 		for (Actor a: this.getStage().getActors()) {
 			if (a!= this && overlapRectangles (a, this)) {
@@ -90,8 +126,7 @@ public class Character extends Image {
 					//this.removeAction(a.getActions().first());
 			   //a.clearActions();
 			   //this.clearActions();
-			   //System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY());
-			   //System.out.println("Collision Widths:! A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
+			   System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
 		   }	
 			
 		}
@@ -121,7 +156,6 @@ public class Character extends Image {
 		SequenceAction sequence = new SequenceAction();
 		
 		for (Character next: route) {
-			//this.addmoveToAction(next.getX(), next.getY(), 3f);
 			MoveToAction moveAction = new MoveToAction();
 			moveAction.setPosition(next.getX(), next.getY());
 			moveAction.setDuration(3f);
@@ -129,15 +163,24 @@ public class Character extends Image {
 		}
 		this.addAction(sequence);
 	}
-	
+
+	//TODO: Fix scaling
+	//TODO: Accurate point clicking?!
+	//TODO: Fix bounds, don't let actors leave screen! can cause a crash
+	//TODO: multiple valid TIleids e.g. for car to walk over pedestrianwalk
+	//TODO: Listener for starfish to pick and drop
 	//TODO: Use Actor.clearActions() to clear all actions in actor, e.g. if collision happens?!
+	//TODO: Animations
+	//TODO: Menu + parrot + compass
+	//TODO: Intro storytelling
 	
+	
+	/* A* pathfinding on the fully connected tiledmap grid. Uses tile costs from Level class */
 	public Stack<Vector2> getPath(int startx, int starty, int x, int y)
 	{
 	    //PriorityQueue<Vector2> openList = new PriorityQueue<Vector2>(10, new SearchNodeComparator());
 		ArrayList<Vector2> openList = new ArrayList<Vector2>();
 	    ArrayList<Vector2> closedList = new ArrayList<Vector2>();
-	    //ArrayList<Vector2> path = new ArrayList<Vector2>();
 	    Stack<Vector2> path = new Stack<Vector2>();
 	    
 	    int costpath[][] = new int[l.width][l.height];
@@ -225,40 +268,48 @@ public class Character extends Image {
 		int mytilex = (int) (this.getX() / l.tilewidth);
 		int mytiley = (int) (this.getY() / l.tileheight);
 		Stack<Vector2> path;
+		
+		/*if (x - this.getWidth()/2 >= 0)
+			x -= this.getWidth()/2;
+		if (y - this.getHeight()/2 >= 0)
+			y -= this.getHeight()/2;*/
+		
+		SequenceAction sequence = new SequenceAction();
+		this.moving = true;
+		this.in_action = true;
+		
 		if ((mytilex == tilex) || (mytiley == tiley)) {
-			this.addAction(addmoveToAction(x, y, 3f));	
+			sequence.addAction(moveTo(x, y, 3f));	
 		}
-		else {
+		else {	
 			
-			SequenceAction sequence = new SequenceAction();
 			// the route can be ambiguous. 
 			// We could try to find either the safest or the least safe path.
 			// We don't need to find the optimal/safest route from a pavement. This is the player's part :)
 			
 			path = getPath(mytilex, mytiley, tilex, tiley);
 			
-			/*if (tilex < mytilex)
-				mytilex--;
-			else if (tilex > mytilex) 
-				mytilex++;
-			if (tiley < mytiley)
-				mytiley--;
-			else if (tiley > mytiley) 
-				mytiley++;*/
-			
 			while (path.empty() == false) {
 				Vector2 next = path.pop();
-				sequence.addAction(addmoveToAction(next.x * l.tilewidth, next.y * l.tileheight, 1f));
+				
+				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
 				System.out.println("PATH x: " + next.x + " y: " + next.y);
 			}
 			
-			sequence.addAction(run(new java.lang.Runnable() {
-			    public void run () {
-			        System.out.println("Action complete!");
-			    }
-			}));
-			this.addAction(sequence);
+			sequence.addAction(moveTo(x, y, 0.5f));
+			System.out.println("LAST PATH x: " + x + " y: " + y);	
+			
+			
 		}
+		
+		sequence.addAction(run(new java.lang.Runnable() {
+		    public void run () {
+		        System.out.println("Action complete!");
+		        moving = false;
+		        in_action = false;
+		    }
+		}));
+		this.addAction(sequence);
 	}
 	
 	public void followCharacter(Character next) {
@@ -270,6 +321,10 @@ public class Character extends Image {
 		this.addAction(moveAction);
 	}
 	
+	
+	public void animate() {
+		;
+	}
 	
 	public void RandomMove() {
 		boolean willmove = false;
@@ -335,7 +390,7 @@ public class Character extends Image {
 		//System.out.println("Random move initiated? " + direction + " " + willmove);
 		if (willmove == true) {
 			System.out.println("Random move initiated " + direction);
-			sequence.addAction(addmoveToAction(mytilex * l.tilewidth, mytiley * l.tileheight, generator.nextFloat() * 3f + 0.5f));
+			sequence.addAction(moveTo(mytilex * l.tilewidth, mytiley * l.tileheight, generator.nextFloat() * 3f + 0.5f));
 			//myActor.addAction(Actions.moveTo(100, 200, 0.7f, Interpolation.bounceOut));
 		}
 		
