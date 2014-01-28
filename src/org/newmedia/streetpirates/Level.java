@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteCache;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.*;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
@@ -46,6 +47,7 @@ public class Level implements ApplicationListener, InputProcessor {
 	private int rows;
 	private int num_starfish = 2, place_idx = 0;
 	private Stage stage;
+	
 	//private Character[] car;
 	private ArrayList<Character> car;
 	private ArrayList<Character> badguy;
@@ -53,11 +55,15 @@ public class Level implements ApplicationListener, InputProcessor {
 	private Character hero;
 	private Screen screen;
 	
+	public int cost[][];
 	public int legal_car_tileid[] = {4, 10};
-	public int pavement_tileid = 7;
-	public int street_tileid = 4;
-	public int wall_tileid = 1;
-	public int pedestrianwalk_tileid = 10;
+	public final int pavement_tileid = 7;
+	public final int street_tileid = 4;
+	public final int wall_tileid = 1;
+	public final int pedestrianwalk_tileid = 10;
+	public int street_tilecost = 1;
+	public int safe_tilecost = 2;
+	public int wall_tilecost = 100;
 	public int tilewidth, tileheight, width, height;
 	public int hero_move = 5;
 	
@@ -79,6 +85,7 @@ public class Level implements ApplicationListener, InputProcessor {
 		texture_greencar_back = new Texture(Gdx.files.internal("assets/cars/GreenCar_back.png"));
 		texture_greencar_front = new Texture(Gdx.files.internal("assets/cars/GreenCar_front.png"));
 		texture_greencar_side = new Texture(Gdx.files.internal("assets/cars/GreenCar_side.png"));
+		//texture_starfish = new Texture(Gdx.files.internal("assets/map/starfish.png"));//map_tiles.png"));
 		texture_starfish = new Texture(Gdx.files.internal("assets/map/starfish.png"));//map_tiles.png"));
 		
 		//get tilewidth, height from tiledMap properties? should be both 60? 
@@ -95,6 +102,9 @@ public class Level implements ApplicationListener, InputProcessor {
 		for (int i = 0 ; i < layer.getWidth(); i++)
 			for (int j = 0 ; j < layer.getHeight(); j++)
 				System.out.println("cell(" + i + "," + j + "): " + layer.getCell(i, j).getTile().getId());
+		
+		cost = new int[this.width][this.height];
+		calculate_cost();
 		
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, columns, rows);
@@ -124,13 +134,13 @@ public class Level implements ApplicationListener, InputProcessor {
 		//hero.followCharacter(starfish.get(0));
 		//starfish.get(0).addClickListener();
 		car.get(0).set_validtile(street_tileid);
-		car.get(0).RandomMove();
+		car.get(0).set_random_move();
 		
 		car.get(1).set_validtile(street_tileid);
-		car.get(1).RandomMove();
+		car.get(1).set_random_move();
 		
 		car.get(2).set_validtile(street_tileid);
-		car.get(2).RandomMove();
+		car.get(2).set_random_move();
 	}
 	
 	
@@ -212,14 +222,58 @@ public class Level implements ApplicationListener, InputProcessor {
 	   return false;
 	}
 
+	public void calculate_cost() {
+		for (int i = 0; i < this.width; i++)
+			for (int j = 0; j < this.height; j++) {
+				switch(layer.getCell(i, j).getTile().getId()) {
+					case street_tileid:
+						cost[i][j] = street_tilecost;
+						break;
+					case pavement_tileid:
+					case pedestrianwalk_tileid:
+						cost[i][j] = safe_tilecost;
+						break;
+					case wall_tileid:
+					default:	
+						cost[i][j] = wall_tilecost;
+						break;
+				}
+				
+			}
+	}
+	
+	public ArrayList<Vector2> getNeighbors(Vector2 current) {
+		ArrayList<Vector2> neighbors = new ArrayList<Vector2>();
+		if (current.x > 0)
+			neighbors.add(new Vector2(current.x - 1, current.y));
+		if (current.y > 0)
+			neighbors.add(new Vector2(current.x, current.y - 1));
+		if (current.x < this.width - 1)
+			neighbors.add(new Vector2(current.x + 1, current.y));
+		if (current.y < this.height - 1)
+			neighbors.add(new Vector2(current.x, current.y + 1));
+		if (current.x > 0 && current.y > 0)
+			neighbors.add(new Vector2(current.x - 1, current.y - 1));
+		if (current.x > 0 && current.y < this.height - 1)
+			neighbors.add(new Vector2(current.x - 1, current.y + 1));
+		if (current.x < this.width - 1 && current.y < this.height - 1)
+			neighbors.add(new Vector2(current.x + 1, current.y + 1));
+		if (current.x < this.width - 1 && current.y > 0)
+			neighbors.add(new Vector2(current.x + 1, current.y - 1));
+		return neighbors;
+	}
+	
 	@Override
 	public boolean touchDown (int x, int y, int pointer, int button) {
+	   y = tileheight * height - y; 	
 	   System.out.println("touchDown x: " + x + " y: " + y);
-	   if (place_idx < num_starfish) {
-		   starfish.get(place_idx).setPosition(x, tileheight * height - y);   
+	   /*if (place_idx < num_starfish) {
+		   starfish.get(place_idx).setPosition(x, y); //tileheight * height - y);   
 		   place_idx++;
 	   }
-	   else hero.gotoPoint(this, x, tileheight * height - y, false, 0);//hero.followRoute(starfish);
+	   else*/ 
+		   hero.gotoPoint(this, x, y); //tileheight * height - y);//, false, 0);
+	   //hero.followRoute(starfish);
 	   return false;
 	}
 

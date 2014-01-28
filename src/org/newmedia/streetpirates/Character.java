@@ -1,9 +1,8 @@
 package org.newmedia.streetpirates;
 
-import java.util.ArrayList;
-import java.util.Random;
 import java.util.*;
 
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -20,13 +19,14 @@ public class Character extends Image {
 	int validtile_id = 0;
 	Random generator;
 	long clock;
-	Date date;
+	//Date date;
+	boolean random_move;
 	
 	public static final int LEFT = 0;
 	public static final int RIGHT = 1;
 	public static final int DOWN = 2;
 	public static final int UP = 3;
-	public static final long delta = 1000;
+	public static final long delta = 5000;
 	
 	//public Character(Texture  texture, int tilex, int tiley, float scalex, float scaley, Stage stage) {
 	public Character(Texture  texture, int tilex, int tiley, int tilewidth, int tileheight, Stage stage, Level l) {
@@ -40,14 +40,19 @@ public class Character extends Image {
 		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());	
 		stage.addActor(this);
 		validtile_id = 0;
-		date = new Date();
-		clock = date.getTime();
-		generator = new Random(clock);
+		//date = new Date();
+		generator = new Random(System.currentTimeMillis());
+		clock = System.currentTimeMillis();
 		this.l = l;
+		this.random_move = false;
 	}
 	
 	public void set_validtile(int tileid) {
 		this.validtile_id = tileid;
+	}
+	
+	public void set_random_move() {
+		this.random_move = true;
 	}
 	
 	public void addClickListener() {
@@ -80,21 +85,25 @@ public class Character extends Image {
 		for (Actor a: this.getStage().getActors()) {
 			if (a!= this && overlapRectangles (a, this)) {
 			   //if (a.getActions(). != 0)
-				 //  a.removeAction(a.getActions().first());
+					//  a.removeAction(a.getActions().first());
 			   //if (this.getActions() != null)
-			   //this.removeAction(a.getActions().first());
+					//this.removeAction(a.getActions().first());
 			   //a.clearActions();
 			   //this.clearActions();
 			   //System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY());
 			   //System.out.println("Collision Widths:! A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
 		   }	
 			
-		 }
-		long newclock = date.getTime();
+		}
+		
+		//List<Action> listactions = this.getActions().asList();
+		if (this.random_move /*&& this.getActions().size() == 0*/ ) {
+		long newclock = System.currentTimeMillis();
 		if (newclock - clock > delta) {
 			clock = newclock;
-			System.out.println("will schedule a random move!");
-			RandomMove();
+			//System.out.println("will schedule a random move?" + clock + " " + newclock);
+			//RandomMove();
+		}
 		}
 	}
 	
@@ -123,29 +132,122 @@ public class Character extends Image {
 	
 	//TODO: Use Actor.clearActions() to clear all actions in actor, e.g. if collision happens?!
 	
-	public void gotoPoint(Level l, float x, float y, boolean hard, int tileid) {
+	public Stack<Vector2> getPath(int startx, int starty, int x, int y)
+	{
+	    //PriorityQueue<Vector2> openList = new PriorityQueue<Vector2>(10, new SearchNodeComparator());
+		ArrayList<Vector2> openList = new ArrayList<Vector2>();
+	    ArrayList<Vector2> closedList = new ArrayList<Vector2>();
+	    //ArrayList<Vector2> path = new ArrayList<Vector2>();
+	    Stack<Vector2> path = new Stack<Vector2>();
+	    
+	    int costpath[][] = new int[l.width][l.height];
+	    int costpathgoal[][] = new int[l.width][l.height];
+	    Vector2 parents[][] = new Vector2[l.width][l.height];
+
+	    Vector2 start = new Vector2(startx, starty);
+
+	    costpath[startx][starty] = 0;
+	    costpathgoal[startx][starty] = 0;
+
+	    openList.add(start);
+
+	    while (openList.size() > 0)
+	    {
+	    	int currentgoal = 1000000;
+	    	Vector2 current;
+	    	current = openList.get(0);
+	    	for (Vector2 d: openList) {
+	    		if (costpathgoal[(int)d.x][(int)d.y] < currentgoal)
+	    			current = d;
+	    	}
+
+	        	        
+	        if (current.x == x && current.y == y) {
+	        	break;
+	        }
+	        else
+	        {
+	            ArrayList<Vector2> neighbours = l.getNeighbors(current);
+	            
+	            for (int i = 0; i < neighbours.size(); i++)
+	            {
+	                Vector2 node = neighbours.get(i);
+	                int nodex = (int) node.x;
+	            	int nodey = (int) node.y;
+	                //System.out.print("Inspecting node" + node.getValue().toString());
+
+	                int distanceTraveled = costpath[(int)current.x][(int)current.y] + l.cost[nodex][nodey];
+	                int heuristic = java.lang.Math.abs(nodex - x) + java.lang.Math.abs(nodey - y);
+
+	                if (!openList.contains(node) && !closedList.contains(node))
+	                {
+
+	                    costpath[nodex][nodey] = distanceTraveled;
+	                    costpathgoal[nodex][nodey] = distanceTraveled + heuristic;
+	                    parents[nodex][nodey] = current;
+	                    openList.add(node);
+	                }
+	                else if(openList.contains(node))
+	                {
+	                    if (costpath[nodex][nodey] <= distanceTraveled)
+	                    {
+	                    	costpathgoal[nodex][nodey] = distanceTraveled + heuristic;
+	                    	parents[nodex][nodey] = current;
+	                    }
+	                }
+	            }
+	            openList.remove(current);
+	            closedList.add(current);
+	        }
+	    }
+	    boolean backtrack = true;
+	    int newx = x;
+	    int newy = y;
+	    while (backtrack == true) {
+	    	int currentx = newx;
+	    	int currenty = newy;
+	    	path.push(parents[currentx][currenty]);
+	    	newx = (int)parents[currentx][currenty].x;
+	    	newy = (int)parents[currentx][currenty].y;
+	    	if (newx == startx && newy == starty)
+	    		break;
+	    }
+	    return path;
+	}
+	
+	
+	public void gotoPoint(Level l, float x, float y) {//, boolean hard) { //, int tileid) {
 		int tilex = (int) (x / l.tilewidth);
 		int tiley = (int) (y / l.tileheight);
 		int mytilex = (int) (this.getX() / l.tilewidth);
 		int mytiley = (int) (this.getY() / l.tileheight);
+		Stack<Vector2> path;
 		if ((mytilex == tilex) || (mytiley == tiley)) {
 			this.addAction(addmoveToAction(x, y, 3f));	
 		}
 		else {
+			
+			SequenceAction sequence = new SequenceAction();
 			// the route can be ambiguous. 
 			// We could try to find either the safest or the least safe path.
 			// We don't need to find the optimal/safest route from a pavement. This is the player's part :)
-			if (tilex < mytilex)
+			
+			path = getPath(mytilex, mytiley, tilex, tiley);
+			
+			/*if (tilex < mytilex)
 				mytilex--;
 			else if (tilex > mytilex) 
 				mytilex++;
 			if (tiley < mytiley)
 				mytiley--;
 			else if (tiley > mytiley) 
-				mytiley++;
+				mytiley++;*/
 			
-			SequenceAction sequence = new SequenceAction();
-			sequence.addAction(addmoveToAction(mytilex * l.tilewidth, mytilex * l.tileheight, 3f));
+			while (path.empty() == false) {
+				Vector2 next = path.pop();
+				sequence.addAction(addmoveToAction(next.x * l.tilewidth, next.y * l.tileheight, 3f));
+				System.out.println("PATH x: " + next.x + " y: " + next.y);
+			}
 			
 			sequence.addAction(run(new java.lang.Runnable() {
 			    public void run () {
@@ -230,7 +332,7 @@ public class Character extends Image {
 		//System.out.println("Random move initiated? " + direction + " " + willmove);
 		if (willmove == true) {
 			System.out.println("Random move initiated " + direction);
-			sequence.addAction(addmoveToAction(mytilex * l.tilewidth, mytiley * l.tileheight, 1f));
+			sequence.addAction(addmoveToAction(mytilex * l.tilewidth, mytiley * l.tileheight, generator.nextFloat() * 3f + 0.5f));
 			//myActor.addAction(Actions.moveTo(100, 200, 0.7f, Interpolation.bounceOut));
 		}
 		
@@ -248,6 +350,7 @@ public class Character extends Image {
 		int tiley = (int)( getY() / l.tileheight);
 		if (l.is_tileid(target.getX(), target.getY(), tileid)) {
 			//try to move to target
+			
 		}
 		else {		
 		}
