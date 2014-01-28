@@ -20,10 +20,11 @@ import org.newmedia.streetpirates.Character;
 
 public class Character extends Actor {
 	Level l;
-	int textid = 0, valid_tiles, illegal_tiles, guard_tiles;
+	int textid = 0, valid_tiles, illegal_tiles, guard_tiles, immune_tiles;
 	int tileid_valid[]; //valid tile types to move on
 	int tileid_illegal[]; //illegal tile types to move on
 	int tileid_guard[]; //tile types to protect from target
+	int tileid_immune[]; //tile types to protect from target
 	Random generator;
 	long clock;
 	//Date date;
@@ -40,7 +41,7 @@ public class Character extends Actor {
 	public static final int DOWN = 2;
 	public static final int UP = 3;
 	public static final long delta = 5000;
-	public static final int MAX_TILE_TYPES = 5;
+	public static final int MAX_TILE_TYPES = 3;
 	
 	//public Character(Texture  texture, int tilex, int tiley, float scalex, float scaley, Stage stage) {
 	public Character(Texture texture[], int tilex, int tiley, int tilewidth, int tileheight, Stage stage, Level l) {
@@ -71,6 +72,7 @@ public class Character extends Actor {
 		tileid_valid = new int[MAX_TILE_TYPES];
 		tileid_guard = new int[MAX_TILE_TYPES];
 		tileid_illegal = new int[MAX_TILE_TYPES];
+		tileid_immune = new int[MAX_TILE_TYPES];
 		valid_tiles = 0;
 		guard_tiles = 0;
 		illegal_tiles = 0;
@@ -82,6 +84,9 @@ public class Character extends Actor {
 		this.in_action = false;
 	}
 	
+	public void set_moving(boolean set) {
+		moving = true;
+	}
 	public void set_validtile(int tileid) {
 		this.tileid_valid[valid_tiles] = tileid;
 		this.valid_tiles++;
@@ -90,6 +95,15 @@ public class Character extends Actor {
 	public void set_guardtile(int tileid) {
 		this.tileid_guard[guard_tiles] = tileid;
 		this.guard_tiles++;
+	}
+	
+	public void set_immunetile(int tileid) {
+		this.tileid_immune[immune_tiles] = tileid;
+		this.immune_tiles++;
+	}
+	
+	public int get_immune_tiles() {
+		return this.immune_tiles;
 	}
 	
 	public void set_random_move() {
@@ -151,6 +165,16 @@ public class Character extends Actor {
 			
 		}
 		
+		/* if target character has moved to an immune tile, cancel pending actions. 
+		 * We don't want a car to overrun a hero on a pedestrian walk because the random move
+		 * was planned before the hero moved there.
+		 * TODO: Ideally we should only stop actions that go the hero's location... how to do that?
+		 */
+		if (target != null && target.get_immune_tiles() == 0 && 
+				target.immune_tile(target.getX(), target.getY()) == false ) {
+			;//this.clearActions();
+		}
+		
 		//List<Action> listactions = this.getActions().asList();
 		if (this.random_move /*&& this.getActions().size() == 0*/ ) {
 		long newclock = System.currentTimeMillis();
@@ -172,6 +196,13 @@ public class Character extends Actor {
 		return moveAction;
 	}
 	
+	/*public void resize(int w, int h) {
+		//this.setX(getX() * l.tilewidth);
+		//this.setY(getY() * tileheight);
+		this.setScale((float)l.tilewidth / (float)this.imageregion[0].getRegionWidth(), (float)l.tileheight / (float)this.imageregion[0].getRegionHeight() );
+		this.setHeight(imageregion[0].getRegionHeight() * this.getScaleY());
+		this.setWidth(imageregion[0].getRegionWidth() * this.getScaleX());
+	}*/
 	
 	public void followRoute(ArrayList<Character> route) {
 		SequenceAction sequence = new SequenceAction();
@@ -359,6 +390,14 @@ public class Character extends Actor {
 		return false;
 	}
 	
+	public boolean immune_tile(float x, float y) {
+		for (int i = 0; i < immune_tiles; i++) {
+			if (l.is_tileid(x, y, tileid_immune[i]))
+				return true;
+		}
+		return false;
+	}
+	
 	public boolean illegal_tile(float x, float y) {
 		for (int i = 0; i < illegal_tiles; i++) {
 			if (l.is_tileid(x, y, tileid_illegal[i]))
@@ -366,7 +405,7 @@ public class Character extends Actor {
 		}
 		return false;
 	}
-	
+
 	public void RandomMove() {
 		boolean willmove = false;
 		int mytilex = (int) (this.getX() / l.tilewidth);
@@ -394,7 +433,11 @@ public class Character extends Actor {
 		switch(direction) {
 			case LEFT:
 				while (getX() > (count + 1) * l.tilewidth && 
-						(valid_tiles == 0 || valid_tile(this.getX() - (count + 1) *  l.tilewidth, this.getY()))) {
+						(valid_tiles == 0 || valid_tile(this.getX() - (count + 1) *  l.tilewidth, this.getY())) &&
+						(target == null || target.get_immune_tiles() == 0 ||
+						l.same_tile(this.getX() - (count + 1) *  l.tilewidth, this.getY(), target.getX(), target.getY()) == false || 
+						target.immune_tile(target.getX(), target.getY()) == false )
+						) {
 					count++;
 					willmove = true;
 					mytilex--;
@@ -402,7 +445,11 @@ public class Character extends Actor {
 				break;
 			case RIGHT:
 				while (getX() + (count + 1) * l.tilewidth < l.tilewidth * (l.width - 1) &&
-						(valid_tiles == 0 || valid_tile(this.getX() + (count + 1) * l.tilewidth, this.getY()))) {
+						(valid_tiles == 0 || valid_tile(this.getX() + (count + 1) * l.tilewidth, this.getY())) &&
+						(target == null || target.get_immune_tiles() == 0 ||
+						l.same_tile(this.getX() + (count + 1) *  l.tilewidth, this.getY(), target.getX(), target.getY()) == false || 
+						target.immune_tile(target.getX(), target.getY()) == false )
+						) {
 					count++;
 					mytilex++;
 					willmove = true;
@@ -410,7 +457,11 @@ public class Character extends Actor {
 				break;
 			case DOWN:
 				while (getY() > (count + 1 ) * l.tileheight && 
-						(valid_tiles == 0 || valid_tile(this.getX(), this.getY() - (count + 1 ) * l.tileheight))) {
+						(valid_tiles == 0 || valid_tile(this.getX(), this.getY() - (count + 1 ) * l.tileheight)) &&
+						(target == null || target.get_immune_tiles() == 0 ||
+						l.same_tile(this.getX(), this.getY() - (count + 1 ) * l.tileheight, target.getX(), target.getY()) == false || 
+						target.immune_tile(target.getX(), target.getY()) == false )
+						) {
 					count++;
 					willmove = true;
 					mytiley--;
@@ -418,7 +469,11 @@ public class Character extends Actor {
 				break;
 			case UP:
 				while (getY() + (count + 1) * l.tileheight < l.tileheight * (l.width - 1) && 
-						(valid_tiles == 0 || valid_tile(this.getX(), this.getY() + (count + 1) * l.tileheight))) {
+						(valid_tiles == 0 || valid_tile(this.getX(), this.getY() + (count + 1) * l.tileheight)) &&
+						(target == null || target.get_immune_tiles() == 0 ||
+						l.same_tile(this.getX(), this.getY() + (count + 1 ) * l.tileheight, target.getX(), target.getY()) == false || 
+						target.immune_tile(target.getX(), target.getY()) == false )
+						) {
 					count++;
 					mytiley++;
 					willmove = true;

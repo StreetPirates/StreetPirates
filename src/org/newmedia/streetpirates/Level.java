@@ -145,6 +145,7 @@ public class Level implements ApplicationListener, InputProcessor {
 		//starfish.add(new Character(texture_starfish, 11, 4, tilewidth, tileheight, stage));
 		//starfish.add(new Character(texture_starfish, 11, 5, tilewidth, tileheight, stage));
 		
+		hero.set_immunetile(pedestrianwalk_tileid);
 		//hero.followCharacter(starfish.get(0));
 		//starfish.get(0).addClickListener();
 		car.get(0).set_validtile(street_tileid);
@@ -191,8 +192,18 @@ public class Level implements ApplicationListener, InputProcessor {
 	}
 	
 	@Override
-	public void resize(int width, int height) {	
-		 stage.setViewport(width, height, true);
+	public void resize(int w, int h) {	
+		 stage.setViewport(w, h, true);
+		 // FIXME: resized game is broken
+		 /*tilewidth = tilewidth * w / this.width + w % this.width;
+		 tileheight = tileheight * w / this.height + w % this.height;
+		 for (Character c: car) {
+			 c.resize(w, h);
+		 }
+		 for (Character c: starfish) {
+			 c.resize(w, h);
+		 }
+		 hero.resize(w, h);*/
 	}
 	
 	@Override
@@ -203,6 +214,7 @@ public class Level implements ApplicationListener, InputProcessor {
 
 	@Override
 	public boolean keyUp (int keycode) {
+	   hero.set_moving(false);
 	   return false;
 	}
 
@@ -217,8 +229,19 @@ public class Level implements ApplicationListener, InputProcessor {
 			return false;
 	}
 	
+	public boolean same_tile(float x1, float y1, float x2, float y2) {
+		int tile1x = (int) (x1 / tilewidth);
+		int tile1y = (int) (y1 / tileheight);
+		int tile2x = (int) (x2 / tilewidth);
+		int tile2y = (int) (y2 / tileheight);
+		if (tile1x == tile2x && tile1y == tile2y)
+			return true;
+		return false;
+	}
+	
 	@Override
 	public boolean keyTyped (char character) {
+		hero.set_moving(true);
 		switch(character) {
 			case 'i':
 				//TODO: boundary check on edges of screen
@@ -237,7 +260,6 @@ public class Level implements ApplicationListener, InputProcessor {
 				if (hero.getX() < (this.width - 1) * this.tilewidth && !is_tileid(hero.getX() + hero_move, hero.getY(), wall_tileid))
 					hero.setPosition((float) (hero.getX() + hero_move), (float)(hero.getY()));
 				break;	
-				
 		}
 	   return false;
 	}
