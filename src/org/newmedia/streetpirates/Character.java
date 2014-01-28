@@ -20,7 +20,10 @@ import org.newmedia.streetpirates.Character;
 
 public class Character extends Actor {
 	Level l;
-	int validtile_id = 0, textid = 0;
+	int textid = 0, valid_tiles, illegal_tiles, guard_tiles;
+	int tileid_valid[]; //valid tile types to move on
+	int tileid_illegal[]; //illegal tile types to move on
+	int tileid_guard[]; //tile types to protect from target
 	Random generator;
 	long clock;
 	//Date date;
@@ -29,6 +32,7 @@ public class Character extends Actor {
 	Texture currentFrame;
 	TextureRegion imageregion[], currentFrameRegion;
 	Animation animation;
+	Character target;
 	float stateTime;
 	
 	public static final int LEFT = 0;
@@ -36,6 +40,7 @@ public class Character extends Actor {
 	public static final int DOWN = 2;
 	public static final int UP = 3;
 	public static final long delta = 5000;
+	public static final int MAX_TILE_TYPES = 5;
 	
 	//public Character(Texture  texture, int tilex, int tiley, float scalex, float scaley, Stage stage) {
 	public Character(Texture texture[], int tilex, int tiley, int tilewidth, int tileheight, Stage stage, Level l) {
@@ -63,7 +68,12 @@ public class Character extends Actor {
 		System.out.println("Character:! width = " + this.getWidth() + "height = " + this.getHeight() + " originx:  " + this.getX() + " originy: " + this.getY() );
 		
 		stage.addActor(this);
-		validtile_id = 0;
+		tileid_valid = new int[MAX_TILE_TYPES];
+		tileid_guard = new int[MAX_TILE_TYPES];
+		tileid_illegal = new int[MAX_TILE_TYPES];
+		valid_tiles = 0;
+		guard_tiles = 0;
+		illegal_tiles = 0;
 		clock = System.currentTimeMillis();
 		generator = new Random(clock);
 		this.l = l;
@@ -73,11 +83,21 @@ public class Character extends Actor {
 	}
 	
 	public void set_validtile(int tileid) {
-		this.validtile_id = tileid;
+		this.tileid_valid[valid_tiles] = tileid;
+		this.valid_tiles++;
+	}
+	
+	public void set_guardtile(int tileid) {
+		this.tileid_guard[guard_tiles] = tileid;
+		this.guard_tiles++;
 	}
 	
 	public void set_random_move() {
 		this.random_move = true;
+	}
+	
+	public void set_target(Character target) {
+		this.target = target;
 	}
 	
 	public void addClickListener() {
@@ -134,10 +154,11 @@ public class Character extends Actor {
 		//List<Action> listactions = this.getActions().asList();
 		if (this.random_move /*&& this.getActions().size() == 0*/ ) {
 		long newclock = System.currentTimeMillis();
-		if (newclock - clock > delta) {
+		if (newclock - clock > delta && in_action == false) {
 			clock = newclock;
 			//System.out.println("will schedule a random move?" + clock + " " + newclock);
 			//RandomMove();
+			moveToTileOrTarget();
 		}
 		}
 	}
@@ -322,8 +343,28 @@ public class Character extends Actor {
 	}
 	
 	
-	public void animate() {
-		;
+	public boolean valid_tile(float x, float y) {
+		for (int i = 0; i < valid_tiles; i++) {
+			if (l.is_tileid(x, y, tileid_valid[i]))
+				return true;
+		}
+		return false;
+	}
+	
+	public boolean guard_tile(float x, float y) {
+		for (int i = 0; i < guard_tiles; i++) {
+			if (l.is_tileid(x, y, tileid_guard[i]))
+				return true;
+		}
+		return false;
+	}
+	
+	public boolean illegal_tile(float x, float y) {
+		for (int i = 0; i < illegal_tiles; i++) {
+			if (l.is_tileid(x, y, tileid_illegal[i]))
+				return true;
+		}
+		return false;
 	}
 	
 	public void RandomMove() {
@@ -353,7 +394,7 @@ public class Character extends Actor {
 		switch(direction) {
 			case LEFT:
 				while (getX() > (count + 1) * l.tilewidth && 
-						(validtile_id == 0 || l.is_tileid(this.getX() - (count + 1) *  l.tilewidth, this.getY(), validtile_id))) {
+						(valid_tiles == 0 || valid_tile(this.getX() - (count + 1) *  l.tilewidth, this.getY()))) {
 					count++;
 					willmove = true;
 					mytilex--;
@@ -361,7 +402,7 @@ public class Character extends Actor {
 				break;
 			case RIGHT:
 				while (getX() + (count + 1) * l.tilewidth < l.tilewidth * (l.width - 1) &&
-						(validtile_id == 0 || l.is_tileid(this.getX() + (count + 1) * l.tilewidth, this.getY(), validtile_id))) {
+						(valid_tiles == 0 || valid_tile(this.getX() + (count + 1) * l.tilewidth, this.getY()))) {
 					count++;
 					mytilex++;
 					willmove = true;
@@ -369,7 +410,7 @@ public class Character extends Actor {
 				break;
 			case DOWN:
 				while (getY() > (count + 1 ) * l.tileheight && 
-						(validtile_id == 0 || l.is_tileid(this.getX(), this.getY() - (count + 1 ) * l.tileheight, validtile_id))) {
+						(valid_tiles == 0 || valid_tile(this.getX(), this.getY() - (count + 1 ) * l.tileheight))) {
 					count++;
 					willmove = true;
 					mytiley--;
@@ -377,7 +418,7 @@ public class Character extends Actor {
 				break;
 			case UP:
 				while (getY() + (count + 1) * l.tileheight < l.tileheight * (l.width - 1) && 
-						(validtile_id == 0 || l.is_tileid(this.getX(), this.getY() + (count + 1) * l.tileheight, validtile_id))) {
+						(valid_tiles == 0 || valid_tile(this.getX(), this.getY() + (count + 1) * l.tileheight))) {
 					count++;
 					mytiley++;
 					willmove = true;
@@ -403,14 +444,16 @@ public class Character extends Actor {
 		this.addAction(sequence);
 	}
 	
-	public void MoveToActionTileOrTarget(Level l, int tileid, Character target) {
-		int tilex = (int)( getX() / l.tilewidth);
-		int tiley = (int)( getY() / l.tileheight);
-		if (l.is_tileid(target.getX(), target.getY(), tileid)) {
-			//try to move to target
-			
+	public void moveToTileOrTarget() {
+		//int tilex = (int)( getX() / l.tilewidth);
+		//int tiley = (int)( getY() / l.tileheight);
+		if (target != null && guard_tile(target.getX(), target.getY())) {
+			//try to move to target, if they are on tile of type tileid
+			// e.g. car will find hero pirate, if he is on a street tile!
+			gotoPoint(l, target.getX(), target.getY());
 		}
 		else {		
+			RandomMove();
 		}
 	}
 
