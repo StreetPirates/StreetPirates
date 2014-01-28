@@ -30,6 +30,8 @@ public class Level implements ApplicationListener, InputProcessor {
 	private Texture texture_hero;
 	private Texture texture_starfish;
 	private Texture texture_bluecar_back, texture_bluecar_front, texture_bluecar_side;
+	private Texture texture_redcar_back, texture_redcar_front, texture_redcar_side;
+	private Texture texture_greencar_back, texture_greencar_front, texture_greencar_side;
 	//private SpriteCache cache;
 	//private String texture_file; 
 	//int tiledMapId;
@@ -53,7 +55,7 @@ public class Level implements ApplicationListener, InputProcessor {
 	
 	public int legal_car_tileid[] = {4, 10};
 	public int pavement_tileid = 7;
-	public int road_tileid = 4;
+	public int street_tileid = 4;
 	public int wall_tileid = 1;
 	public int pedestrianwalk_tileid = 10;
 	public int tilewidth, tileheight, width, height;
@@ -62,29 +64,22 @@ public class Level implements ApplicationListener, InputProcessor {
 	@Override
 	public void create() {		
 		
+		//tiledMap = new TmxMapLoader().load("assets/map/map.tmx");
 		tiledMap = new TmxMapLoader().load("assets/streetpirates-level1.tmx");
+		//tiledCity = new TmxMapLoader().load("assets/city/City_oct28.tmx");
 		prop = tiledMap.getProperties();
 		
 		texture_hero = new Texture(Gdx.files.internal("assets/pirate/front_walk1.png"));
 		texture_bluecar_back = new Texture(Gdx.files.internal("assets/cars/BlueCar_back.png"));
 		texture_bluecar_front = new Texture(Gdx.files.internal("assets/cars/BlueCar_front.png"));
 		texture_bluecar_side = new Texture(Gdx.files.internal("assets/cars/BlueCar_side.png"));
+		texture_redcar_back = new Texture(Gdx.files.internal("assets/cars/RedCar_back.png"));
+		texture_redcar_front = new Texture(Gdx.files.internal("assets/cars/RedCar_front.png"));
+		texture_redcar_side = new Texture(Gdx.files.internal("assets/cars/RedCar_side.png"));
+		texture_greencar_back = new Texture(Gdx.files.internal("assets/cars/GreenCar_back.png"));
+		texture_greencar_front = new Texture(Gdx.files.internal("assets/cars/GreenCar_front.png"));
+		texture_greencar_side = new Texture(Gdx.files.internal("assets/cars/GreenCar_side.png"));
 		texture_starfish = new Texture(Gdx.files.internal("assets/map/starfish.png"));//map_tiles.png"));
-		 
-		/*cache = new SpriteCache();
-		cache.beginCache();	
-		for(int y = 0; y < HEIGHT; y++) {
-			for(int x = 0; x < WIDTH; x++) {
-				int textureX = tileLayer[y][x] % 8;
-				int textureY = tileLayer[y][x] / 8;		
-				int tileX = x * TILE_SIZE;
-				int tileY = (HEIGHT - 1 - y) * TILE_SIZE;
-				cache.add(texture, tileX, tileY, 
-							 1 + textureX * (TILE_SIZE + 1), 1 + textureY * (TILE_SIZE+1), 
-							 TILE_SIZE, TILE_SIZE, Color.WHITE);
-			}
-		}
-		tiledMapId = cache.endCache();*/
 		
 		//get tilewidth, height from tiledMap properties? should be both 60? 
 		renderer = new OrthogonalTiledMapRenderer(tiledMap, 1/60f);
@@ -99,7 +94,7 @@ public class Level implements ApplicationListener, InputProcessor {
 		
 		for (int i = 0 ; i < layer.getWidth(); i++)
 			for (int j = 0 ; j < layer.getHeight(); j++)
-				System.out.println("cell (0,0): " + layer.getCell(i, j).getTile().getId());
+				System.out.println("cell(" + i + "," + j + "): " + layer.getCell(i, j).getTile().getId());
 		
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, columns, rows);
@@ -111,33 +106,38 @@ public class Level implements ApplicationListener, InputProcessor {
 		stage = new Stage();
 		stage.setCamera(camera);
 		
-		hero = new Character(texture_hero, 1, 1, tilewidth, tileheight, stage);
+		hero = new Character(texture_hero, 1, 1, tilewidth * 2, tileheight * 2, stage, this);
 		//hero.addmoveToAction(5, 7, tilewidth, tileheight, 10f);
 		
 		car = new ArrayList<Character>();
-		car.add(new Character(texture_bluecar_front, 6, 5, tilewidth, tileheight, stage));
+		car.add(new Character(texture_bluecar_front, 6, 6, tilewidth, tileheight, stage, this));
+		car.add(new Character(texture_greencar_front, 3, 6, tilewidth, tileheight, stage, this));
+		car.add(new Character(texture_redcar_front, 2, 4, tilewidth, tileheight, stage, this));
 		
 		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();
-		starfish.add(new Character(texture_starfish, 1, 8, tilewidth, tileheight, stage));
-		starfish.add(new Character(texture_starfish, 5, 8, tilewidth, tileheight, stage));
+		starfish.add(new Character(texture_starfish, 1, 8, tilewidth, tileheight, stage, this));
+		starfish.add(new Character(texture_starfish, 5, 8, tilewidth, tileheight, stage, this));
 		//starfish.add(new Character(texture_starfish, 11, 4, tilewidth, tileheight, stage));
 		//starfish.add(new Character(texture_starfish, 11, 5, tilewidth, tileheight, stage));
 		
 		//hero.followCharacter(starfish.get(0));
 		//starfish.get(0).addClickListener();
-
+		car.get(0).set_validtile(street_tileid);
+		car.get(0).RandomMove();
+		
+		car.get(1).set_validtile(street_tileid);
+		car.get(1).RandomMove();
+		
+		car.get(2).set_validtile(street_tileid);
+		car.get(2).RandomMove();
 	}
+	
 	
 	@Override
 	public void render() {		
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);		
 		//camera.update();		
-		//cache.setProjectionMatrix(cam.getCombinedMatrix());
-		//cache.begin();		
-		//cache.draw(tileMap);
-		//cache.end();
-		
 		
 		int layers_id[] = {0};
 		renderer.render(layers_id);
@@ -179,6 +179,8 @@ public class Level implements ApplicationListener, InputProcessor {
 	public boolean is_tileid(float x, float y, int tileid) {
 		int tilex = (int) (x / tilewidth);
 		int tiley = (int) (y / tileheight);
+		if (tilex >= this.width || tiley >= this.height)
+			return false;
 		if (layer.getCell(tilex, tiley).getTile().getId() == tileid)
 			return true;
 		else 
@@ -189,7 +191,7 @@ public class Level implements ApplicationListener, InputProcessor {
 	public boolean keyTyped (char character) {
 		switch(character) {
 			case 'i':
-				//TODO: boundary check
+				//TODO: boundary check on edges of screen
 				if (!is_tileid(hero.getX(), hero.getY() + hero_move, wall_tileid))
 					hero.setPosition((float) (hero.getX()), (float)(hero.getY() + hero_move));
 				break;
@@ -217,7 +219,7 @@ public class Level implements ApplicationListener, InputProcessor {
 		   starfish.get(place_idx).setPosition(x, tileheight * height - y);   
 		   place_idx++;
 	   }
-	   else hero.gotoPointSoft(this, x, tileheight * height - y);//hero.followRoute(starfish);
+	   else hero.gotoPoint(this, x, tileheight * height - y, false, 0);//hero.followRoute(starfish);
 	   return false;
 	}
 
@@ -234,7 +236,7 @@ public class Level implements ApplicationListener, InputProcessor {
    @Override
    public boolean mouseMoved (int x, int y) {
 	  //System.out.println("mouseMoved hello from console");
-	  handleclick(x,y); 
+	  //handleclick(x,y); 
       return false;
    }
 
