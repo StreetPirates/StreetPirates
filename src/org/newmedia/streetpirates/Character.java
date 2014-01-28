@@ -157,8 +157,10 @@ public class Character extends Image {
 	    	Vector2 current;
 	    	current = openList.get(0);
 	    	for (Vector2 d: openList) {
-	    		if (costpathgoal[(int)d.x][(int)d.y] < currentgoal)
+	    		if (costpathgoal[(int)d.x][(int)d.y] < currentgoal) {
 	    			current = d;
+	    			currentgoal = costpathgoal[(int)d.x][(int)d.y];
+	    		}
 	    	}
 
 	        	        
@@ -189,8 +191,9 @@ public class Character extends Image {
 	                }
 	                else if(openList.contains(node))
 	                {
-	                    if (costpath[nodex][nodey] <= distanceTraveled)
+	                    if (costpath[nodex][nodey] > distanceTraveled)
 	                    {
+	                    	costpath[nodex][nodey] = distanceTraveled;
 	                    	costpathgoal[nodex][nodey] = distanceTraveled + heuristic;
 	                    	parents[nodex][nodey] = current;
 	                    }
@@ -245,7 +248,7 @@ public class Character extends Image {
 			
 			while (path.empty() == false) {
 				Vector2 next = path.pop();
-				sequence.addAction(addmoveToAction(next.x * l.tilewidth, next.y * l.tileheight, 3f));
+				sequence.addAction(addmoveToAction(next.x * l.tilewidth, next.y * l.tileheight, 1f));
 				System.out.println("PATH x: " + next.x + " y: " + next.y);
 			}
 			

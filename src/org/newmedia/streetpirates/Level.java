@@ -63,7 +63,7 @@ public class Level implements ApplicationListener, InputProcessor {
 	public final int pedestrianwalk_tileid = 10;
 	public int street_tilecost = 1;
 	public int safe_tilecost = 2;
-	public int wall_tilecost = 100;
+	public int wall_tilecost = 1000;
 	public int tilewidth, tileheight, width, height;
 	public int hero_move = 5;
 	
