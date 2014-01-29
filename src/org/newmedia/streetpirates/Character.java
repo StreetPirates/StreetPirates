@@ -160,7 +160,7 @@ public class Character extends Actor {
 					//this.removeAction(a.getActions().first());
 			   //a.clearActions();
 			   //this.clearActions();
-			   System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
+			   //System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
 		   }	
 			
 		}
@@ -325,7 +325,7 @@ public class Character extends Actor {
 			x -= this.getWidth()/2;
 		if (y - this.getHeight()/2 >= 0)
 			y -= this.getHeight()/2;*/
-		
+		this.clearActions();
 		SequenceAction sequence = new SequenceAction();
 		this.moving = true;
 		this.in_action = true;
@@ -345,11 +345,11 @@ public class Character extends Actor {
 				Vector2 next = path.pop();
 				
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
-				System.out.println("PATH x: " + next.x + " y: " + next.y);
+				//System.out.println("PATH x: " + next.x + " y: " + next.y);
 			}
 			
 			sequence.addAction(moveTo(x, y, 0.5f));
-			System.out.println("LAST PATH x: " + x + " y: " + y);	
+			//System.out.println("LAST PATH x: " + x + " y: " + y);	
 			
 			
 		}
@@ -490,12 +490,12 @@ public class Character extends Actor {
 			//myActor.addAction(Actions.moveTo(100, 200, 0.7f, Interpolation.bounceOut));
 		}
 		
-		sequence.addAction(run(new java.lang.Runnable() {
+		/*sequence.addAction(run(new java.lang.Runnable() {
 		    public void run () {
 		    	//System.out.println("Random move completed ");
 		        RandomMove();
 		    }
-		}));
+		}));*/
 		this.addAction(sequence);
 	}
 	

@@ -59,9 +59,9 @@ public class Level implements ApplicationListener, InputProcessor {
 	public int cost[][];
 	public int car_cost[][];
 	public int legal_car_tileid[] = {4, 10};
-	public final int pavement_tileid = 7;
+	public final int pavement_tileid = 1;
 	public final int street_tileid = 4;
-	public final int wall_tileid = 1;
+	public final int wall_tileid = 7;
 	public final int pedestrianwalk_tileid = 10;
 	public int street_tilecost = 1;
 	public int safe_tilecost = 1;
@@ -155,8 +155,9 @@ public class Level implements ApplicationListener, InputProcessor {
 		car.get(0).set_target(hero);
 		
 		car.get(1).set_validtile(street_tileid);
+		car.get(1).set_guardtile(street_tileid);
 		car.get(1).set_random_move();
-		//car.get(1).set_target(hero);
+		car.get(1).set_target(hero);
 		
 		car.get(2).set_validtile(street_tileid);
 		car.get(2).set_random_move();
