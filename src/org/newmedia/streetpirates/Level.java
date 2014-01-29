@@ -30,6 +30,7 @@ import org.newmedia.streetpirates.Character;
 
 public class Level implements ApplicationListener, InputProcessor {
 	private Texture texture_hero[];
+	private Texture texture_compass[];
 	private Texture texture_starfish[];
 	private Texture texture_bluecar[], texture_bluecar_back, texture_bluecar_front, texture_bluecar_side;
 	private Texture texture_redcar[], texture_redcar_back, texture_redcar_front, texture_redcar_side;
@@ -54,6 +55,7 @@ public class Level implements ApplicationListener, InputProcessor {
 	private ArrayList<Character> badguy;
 	private ArrayList<Character> starfish;
 	private Character hero;
+	private Character compass;
 	private Screen screen;
     
 	public int cost[][];
@@ -73,7 +75,8 @@ public class Level implements ApplicationListener, InputProcessor {
 	public void create() {		
 		
 		//tiledMap = new TmxMapLoader().load("assets/map/map.tmx");
-		tiledMap = new TmxMapLoader().load("assets/streetpirates-level1.tmx");
+		//tiledMap = new TmxMapLoader().load("assets/streetpirates-level1.tmx");
+		tiledMap = new TmxMapLoader().load("assets/streetpirates-level1-withcompass.tmx");
 		//tiledCity = new TmxMapLoader().load("assets/city/City_oct28.tmx");
 		prop = tiledMap.getProperties();
 		texture_hero = new Texture[4];
@@ -81,6 +84,9 @@ public class Level implements ApplicationListener, InputProcessor {
 		texture_hero[1] = new Texture(Gdx.files.internal("assets/pirate/front_walk2.png"));
 		texture_hero[2] = new Texture(Gdx.files.internal("assets/pirate/front_walk3.png"));
 		texture_hero[3] = new Texture(Gdx.files.internal("assets/pirate/front_walk4.png"));
+		
+		texture_compass = new Texture[1];
+		texture_compass[0] = new Texture(Gdx.files.internal("assets/map/compass.png"));
 		
 		texture_bluecar = new Texture[1];
 		texture_bluecar[0] = new Texture(Gdx.files.internal("assets/cars/BlueCar_back.png"));
@@ -130,13 +136,13 @@ public class Level implements ApplicationListener, InputProcessor {
 		stage = new Stage();
 		stage.setCamera(camera);
 		
-		hero = new Character(texture_hero, 1, 1, tilewidth, tileheight, stage, this);
-		//hero.addmoveToAction(5, 7, tilewidth, tileheight, 10f);
+		hero = new Character(texture_hero, 0, 0, (float)1.0, stage, this);
+		compass = new Character(texture_compass, (float)13.5, 7, (float)2, stage, this);
 		
 		car = new ArrayList<Character>();
-		car.add(new Character(texture_bluecar, 6, 6, tilewidth, tileheight, stage, this));
-		car.add(new Character(texture_greencar, 3, 6, tilewidth, tileheight, stage, this));
-		car.add(new Character(texture_redcar, 2, 4, tilewidth, tileheight, stage, this));
+		car.add(new Character(texture_bluecar, 6, 6, (float)1.0, stage, this));
+		car.add(new Character(texture_greencar, 3, 6, (float)1.0, stage, this));
+		car.add(new Character(texture_redcar, 2, 4, (float)1.0, stage, this));
 		
 		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();
@@ -146,6 +152,7 @@ public class Level implements ApplicationListener, InputProcessor {
 		//starfish.add(new Character(texture_starfish, 11, 5, tilewidth, tileheight, stage));
 		
 		hero.set_immunetile(pedestrianwalk_tileid);
+		hero.set_illegaltile(wall_tileid);
 		//hero.followCharacter(starfish.get(0));
 		//starfish.get(0).addClickListener();
 		car.get(0).set_validtile(street_tileid);
@@ -304,6 +311,9 @@ public class Level implements ApplicationListener, InputProcessor {
 			neighbors.add(new Vector2(current.x + 1, current.y));
 		if (current.y < this.height - 1)
 			neighbors.add(new Vector2(current.x, current.y + 1));
+		
+		// TODO: decide if we use diagonal movement for hero. Cars should not use diagonal moving.
+		/* TODO: decide
 		if (current.x > 0 && current.y > 0)
 			neighbors.add(new Vector2(current.x - 1, current.y - 1));
 		if (current.x > 0 && current.y < this.height - 1)
@@ -312,6 +322,7 @@ public class Level implements ApplicationListener, InputProcessor {
 			neighbors.add(new Vector2(current.x + 1, current.y + 1));
 		if (current.x < this.width - 1 && current.y > 0)
 			neighbors.add(new Vector2(current.x + 1, current.y - 1));
+		*/	
 		return neighbors;
 	}
 	

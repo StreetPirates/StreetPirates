@@ -44,16 +44,16 @@ public class Character extends Actor {
 	public static final int MAX_TILE_TYPES = 3;
 	
 	//public Character(Texture  texture, int tilex, int tiley, float scalex, float scaley, Stage stage) {
-	public Character(Texture texture[], int tilex, int tiley, int tilewidth, int tileheight, Stage stage, Level l) {
+	public Character(Texture texture[], float tilex, float tiley, float scaling, Stage stage, Level l) {
 		//super(texture);
 		imageregion = new TextureRegion[texture.length];
 		for(int i = 0; i < texture.length; i++) {
 			imageregion[i] = new TextureRegion(texture[i]);
 		}
 		
-		this.setX(tilex * tilewidth);
-		this.setY(tiley * tileheight);
-		this.setScale((float)tilewidth / (float)texture[0].getWidth(), (float)tileheight / (float)texture[0].getHeight() );
+		this.setX(tilex * l.tilewidth);
+		this.setY(tiley * l.tileheight);
+		this.setScale((float)l.tilewidth / (float)texture[0].getWidth() * scaling, (float)l.tileheight / (float)texture[0].getHeight() * scaling );
 		//this.setHeight(texture[0].getHeight());
 		//this.setWidth(texture[0].getWidth());
 		this.setHeight(texture[0].getHeight() * this.getScaleY());
@@ -163,6 +163,9 @@ public class Character extends Actor {
 					//  a.removeAction(a.getActions().first());
 			   //if (this.getActions() != null)
 					//this.removeAction(a.getActions().first());
+			   /*TODO: moving boolean flag is reset in last action, so there is chance a character stays in in_Action/moving limbo (i.e. true flags) forever.
+			    * so find a better way of removing a specific action. or resetting the flag at draw function or elsewhere.
+			    */
 			   //a.clearActions();
 			   //this.clearActions();
 			   //System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
@@ -495,8 +498,8 @@ public class Character extends Actor {
 		//System.out.println("Random move initiated? " + direction + " " + willmove);
 		if (willmove == true) {
 			System.out.println("Random move initiated " + direction);
-			sequence.addAction(moveTo(mytilex * l.tilewidth, mytiley * l.tileheight, generator.nextFloat() * 3f + 0.5f));
-			//myActor.addAction(Actions.moveTo(100, 200, 0.7f, Interpolation.bounceOut));
+			//sequence.addAction(moveTo(mytilex * l.tilewidth, mytiley * l.tileheight, generator.nextFloat() * 3f + 0.5f));
+			gotoPoint(l, mytilex * l.tilewidth, mytiley * l.tileheight);
 		}
 		
 		/*sequence.addAction(run(new java.lang.Runnable() {
@@ -505,7 +508,8 @@ public class Character extends Actor {
 		        RandomMove();
 		    }
 		}));*/
-		this.addAction(sequence);
+		
+		//this.addAction(sequence);
 	}
 	
 	public void moveToTileOrTarget() {
