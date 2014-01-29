@@ -151,15 +151,21 @@ public class Level implements ApplicationListener, InputProcessor {
 		car.get(0).set_validtile(street_tileid);
 		car.get(0).set_validtile(pedestrianwalk_tileid);
 		car.get(0).set_guardtile(street_tileid);
+		car.get(0).set_illegaltile(pavement_tileid);
+		car.get(0).set_illegaltile(wall_tileid);
 		car.get(0).set_random_move();
 		car.get(0).set_target(hero);
 		
 		car.get(1).set_validtile(street_tileid);
 		car.get(1).set_guardtile(street_tileid);
+		car.get(1).set_illegaltile(pavement_tileid);
+		car.get(1).set_illegaltile(wall_tileid);
 		car.get(1).set_random_move();
 		car.get(1).set_target(hero);
 		
 		car.get(2).set_validtile(street_tileid);
+		car.get(2).set_illegaltile(pavement_tileid);
+		car.get(2).set_illegaltile(wall_tileid);
 		car.get(2).set_random_move();
 		//car.get(2).set_target(hero);
 	}

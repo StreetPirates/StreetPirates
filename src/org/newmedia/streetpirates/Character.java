@@ -102,6 +102,11 @@ public class Character extends Actor {
 		this.immune_tiles++;
 	}
 	
+	public void set_illegaltile(int tileid) {
+		this.tileid_illegal[illegal_tiles] = tileid;
+		this.illegal_tiles++;
+	}
+	
 	public int get_immune_tiles() {
 		return this.immune_tiles;
 	}
@@ -248,7 +253,7 @@ public class Character extends Actor {
 
 	    while (openList.size() > 0)
 	    {
-	    	int currentgoal = 1000000;
+	    	int currentgoal = 1000;
 	    	Vector2 current;
 	    	current = openList.get(0);
 	    	for (Vector2 d: openList) {
@@ -274,6 +279,10 @@ public class Character extends Actor {
 	                //System.out.print("Inspecting node" + node.getValue().toString());
 
 	                int distanceTraveled = costpath[(int)current.x][(int)current.y] + l.cost[nodex][nodey];
+	                if (illegal_tile(nodex * l.tilewidth, nodey * l.tileheight)) {
+	                	System.out.println("ILLEGAL TILE IN PATHFINDING: " + nodex +  " " + nodey);
+	                	distanceTraveled += 1000;
+	                }
 	                int heuristic = java.lang.Math.abs(nodex - x) + java.lang.Math.abs(nodey - y);
 
 	                if (!openList.contains(node) && !closedList.contains(node))
