@@ -36,6 +36,8 @@ public class Character extends Actor {
 	Character target;
 	float stateTime;
 	
+	public boolean pickable;
+	public boolean is_picked;
 	public static final int LEFT = 0;
 	public static final int RIGHT = 1;
 	public static final int DOWN = 2;
@@ -65,6 +67,7 @@ public class Character extends Actor {
 		
 		this.setVisible(true);
 		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
+		this.setTouchable(Touchable.enabled);
 		
 		System.out.println("Character:! width = " + this.getWidth() + "height = " + this.getHeight() + " originx:  " + this.getX() + " originy: " + this.getY() );
 		
@@ -79,14 +82,21 @@ public class Character extends Actor {
 		clock = System.currentTimeMillis();
 		generator = new Random(clock);
 		this.l = l;
+		this.pickable = false;
+		this.is_picked = false;
 		this.random_move = false;
 		this.moving = false;
 		this.in_action = false;
 	}
 	
 	public void set_moving(boolean set) {
-		moving = true;
+		moving = set;
 	}
+	
+	public void set_pickable(boolean pick) {
+		pickable = pick;
+	}
+	
 	public void set_validtile(int tileid) {
 		this.tileid_valid[valid_tiles] = tileid;
 		this.valid_tiles++;
@@ -119,18 +129,45 @@ public class Character extends Actor {
 		this.target = target;
 	}
 	
+	public class CharacterListener extends InputListener {
+		Character character;
+		
+		public CharacterListener(Character c) {
+			character = c;
+		}
+		
+		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            System.out.println("ACTOR touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY() + " actorx:" + getX() + " actory:" + getY());
+            if (character.pickable == true) {
+            	if (l.actor_picked == null) {
+            		
+            	    System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
+            		l.actor_picked = character;
+            	}
+            	else {
+            		System.out.println("ACTOR DROPPED touchDown x: " + x + " y: " + y);
+            		l.actor_dropped = true;
+            		l.route.add(character);
+            		//l.route.add(Vector2(character.getX(), character.getY());
+            		//.num_helpers++;
+            	}
+            }
+            else if (character == l.compass) {
+            	//l.setup_city();
+            	l.start_route = true;
+            	l.hero.followRoute(l.route);
+            }
+            return false;  // must return true for touchUp event to occur
+        }
+		
+        public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+        	//System.out.println("ACTOR touchDown x: " + x + " y: " + y);
+        }
+        
+	}
+	
 	public void addClickListener() {
-		this.addListener(
-		    new InputListener() {
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-                System.out.println("touchDown x: " + x + " y: " + y);
-                return true;  // must return true for touchUp event to occur
-            }
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
-            	System.out.println("touchDown x: " + x + " y: " + y);
-            }
-		    }
-		);
+		this.addListener(new CharacterListener(this));
 	}
 	
 	public static boolean overlapRectangles (Actor r1, Actor r2) {
@@ -189,7 +226,6 @@ public class Character extends Actor {
 		if (newclock - clock > delta && in_action == false) {
 			clock = newclock;
 			//System.out.println("will schedule a random move?" + clock + " " + newclock);
-			//RandomMove();
 			moveToTileOrTarget();
 		}
 		}
@@ -213,20 +249,51 @@ public class Character extends Actor {
 	}*/
 	
 	public void followRoute(ArrayList<Character> route) {
-		SequenceAction sequence = new SequenceAction();
+		int mytilex = (int) (this.getX() / l.tilewidth);
+		int mytiley = (int) (this.getY() / l.tileheight);
+		int tilex;
+		int tiley;
+		Stack<Vector2> path;
 		
-		for (Character next: route) {
-			MoveToAction moveAction = new MoveToAction();
-			moveAction.setPosition(next.getX(), next.getY());
-			moveAction.setDuration(3f);
-			sequence.addAction(moveAction);
+		this.clearActions();
+		SequenceAction sequence = new SequenceAction();
+		this.moving = true;
+		this.in_action = true;
+		
+		for(Character dest: route) {
+			tilex = (int) (dest.getX() / l.tilewidth);
+			tiley = (int) (dest.getY() / l.tileheight);
+			// the route can be ambiguous. 
+			// We could try to find either the safest or the least safe path.
+			// We don't need to find the optimal/safest route from a pavement. This is the player's part :)	
+			path = getPath(mytilex, mytiley, tilex, tiley);
+		
+			while (path.empty() == false) {
+				Vector2 next = path.pop();	
+				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
+				//System.out.println("PATH x: " + next.x + " y: " + next.y);
+			}
+			//TODO: maybe we just need to go to tile, not exact position for route? so comment next line...
+			//sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
+			//System.out.println("LAST PATH x: " + x + " y: " + y);
+			mytilex = tilex;
+			mytiley = tiley;
 		}
+		
+		sequence.addAction(run(new java.lang.Runnable() {
+		    public void run () {
+		        System.out.println("Action complete!");
+		        moving = false;
+		        in_action = false;
+		    }
+		}));
 		this.addAction(sequence);
 	}
 
 	//TODO: Fix scaling
 	//TODO: Accurate point clicking?!
 	//TODO: Fix bounds, don't let actors leave screen! can cause a crash
+	//TODO: Review all clearActions() calls to actors
 	//TODO: multiple valid TIleids e.g. for car to walk over pedestrianwalk
 	//TODO: Listener for starfish to pick and drop
 	//TODO: Use Actor.clearActions() to clear all actions in actor, e.g. if collision happens?!
@@ -265,7 +332,6 @@ public class Character extends Actor {
 	    			currentgoal = costpathgoal[(int)d.x][(int)d.y];
 	    		}
 	    	}
-
 	        	        
 	        if (current.x == x && current.y == y) {
 	        	break;
@@ -283,7 +349,7 @@ public class Character extends Actor {
 
 	                int distanceTraveled = costpath[(int)current.x][(int)current.y] + l.cost[nodex][nodey];
 	                if (illegal_tile(nodex * l.tilewidth, nodey * l.tileheight)) {
-	                	System.out.println("ILLEGAL TILE IN PATHFINDING: " + nodex +  " " + nodey);
+	                	//System.out.println("ILLEGAL TILE IN PATHFINDING: " + nodex +  " " + nodey);
 	                	distanceTraveled += 1000;
 	                }
 	                int heuristic = java.lang.Math.abs(nodex - x) + java.lang.Math.abs(nodey - y);
@@ -333,10 +399,6 @@ public class Character extends Actor {
 		int mytiley = (int) (this.getY() / l.tileheight);
 		Stack<Vector2> path;
 		
-		/*if (x - this.getWidth()/2 >= 0)
-			x -= this.getWidth()/2;
-		if (y - this.getHeight()/2 >= 0)
-			y -= this.getHeight()/2;*/
 		this.clearActions();
 		SequenceAction sequence = new SequenceAction();
 		this.moving = true;
@@ -349,21 +411,17 @@ public class Character extends Actor {
 			
 			// the route can be ambiguous. 
 			// We could try to find either the safest or the least safe path.
-			// We don't need to find the optimal/safest route from a pavement. This is the player's part :)
-			
+			// We don't need to find the optimal/safest route from a pavement. This is the player's part :)	
 			path = getPath(mytilex, mytiley, tilex, tiley);
-			
+		
 			while (path.empty() == false) {
 				Vector2 next = path.pop();
 				
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
 				//System.out.println("PATH x: " + next.x + " y: " + next.y);
 			}
-			
 			sequence.addAction(moveTo(x, y, 0.5f));
-			//System.out.println("LAST PATH x: " + x + " y: " + y);	
-			
-			
+			//System.out.println("LAST PATH x: " + x + " y: " + y);		
 		}
 		
 		sequence.addAction(run(new java.lang.Runnable() {
@@ -375,6 +433,7 @@ public class Character extends Actor {
 		}));
 		this.addAction(sequence);
 	}
+	
 	
 	public void followCharacter(Character next) {
 		//this.addAction(addmoveToAction(next.getX(), next.getY(), 3f));
@@ -425,21 +484,6 @@ public class Character extends Actor {
 		int direction;
 		int count = 0;
 		SequenceAction sequence = new SequenceAction();
-			
-		/*if (validtile_id != 0) {
-			//find all directions with valid tile
-			if (is_tileid(this.getX() - l.tilewidth, this.getY(), validtile_id))
-				cango_up = true;			
-			if (is_tileid(this.getX() + l.tilewidth, this.getY(), validtile_id))
-				cango_down = true;
-			if (is_tileid(this.getX(), this.getY() - l.tileheight, validtile_id))
-				cango_right = true;
-			if (is_tileid(this.getX(), this.getY() + l.tileheight, validtile_id))
-				cango[LEFT] = true;	
-		}
-		else {
-			direction = generator.nextInt() % 4;
-		}*/
 		
 		direction = generator.nextInt(4);
 		switch(direction) {
@@ -501,20 +545,9 @@ public class Character extends Actor {
 			//sequence.addAction(moveTo(mytilex * l.tilewidth, mytiley * l.tileheight, generator.nextFloat() * 3f + 0.5f));
 			gotoPoint(l, mytilex * l.tilewidth, mytiley * l.tileheight);
 		}
-		
-		/*sequence.addAction(run(new java.lang.Runnable() {
-		    public void run () {
-		    	//System.out.println("Random move completed ");
-		        RandomMove();
-		    }
-		}));*/
-		
-		//this.addAction(sequence);
 	}
 	
 	public void moveToTileOrTarget() {
-		//int tilex = (int)( getX() / l.tilewidth);
-		//int tiley = (int)( getY() / l.tileheight);
 		if (target != null && guard_tile(target.getX(), target.getY())) {
 			//try to move to target, if they are on tile of type tileid
 			// e.g. car will find hero pirate, if he is on a street tile!

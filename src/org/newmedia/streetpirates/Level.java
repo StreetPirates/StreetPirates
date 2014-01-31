@@ -13,7 +13,10 @@ import com.badlogic.gdx.maps.tiled.*;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.*;
@@ -28,16 +31,13 @@ import java.util.Arrays;
 
 import org.newmedia.streetpirates.Character;
 
-public class Level implements ApplicationListener, InputProcessor {
+public class Level implements Screen { //, InputProcessor {
 	private Texture texture_hero[];
 	private Texture texture_compass[];
 	private Texture texture_starfish[];
 	private Texture texture_bluecar[], texture_bluecar_back, texture_bluecar_front, texture_bluecar_side;
 	private Texture texture_redcar[], texture_redcar_back, texture_redcar_front, texture_redcar_side;
 	private Texture texture_greencar[], texture_greencar_back, texture_greencar_front, texture_greencar_side;
-	//private SpriteCache cache;
-	//private String texture_file; 
-	//int tiledMapId;
 	private OrthographicCamera camera;
 	private TiledMap tiledMap;
 	private TiledMap tiledCity;
@@ -48,16 +48,17 @@ public class Level implements ApplicationListener, InputProcessor {
 	private int columns;
 	private int rows;
 	private int num_starfish = 2, place_idx = 0;
-	private Stage stage;
-	
-	//private Character[] car;
+	private PirateGame game;
+	public Stage stage;
 	private ArrayList<Character> car;
 	private ArrayList<Character> badguy;
 	private ArrayList<Character> starfish;
-	private Character hero;
-	private Character compass;
-	private Screen screen;
+	public Character compass;
+	public Character hero;
     
+	public Character actor_picked;
+	public boolean actor_dropped;
+	public ArrayList<Character> route;
 	public int cost[][];
 	public int car_cost[][];
 	public int legal_car_tileid[] = {4, 10};
@@ -70,10 +71,13 @@ public class Level implements ApplicationListener, InputProcessor {
 	public int wall_tilecost = 1000;
 	public int tilewidth, tileheight, width, height;
 	public int hero_move = 5;
+	public int num_helpers;
+	public boolean start_route;
 	
-	@Override
-	public void create() {		
+	//@Override
+	public Level(PirateGame game) {		
 		
+		this.game = game;
 		//tiledMap = new TmxMapLoader().load("assets/map/map.tmx");
 		//tiledMap = new TmxMapLoader().load("assets/streetpirates-level1.tmx");
 		tiledMap = new TmxMapLoader().load("assets/streetpirates-level1-withcompass.tmx");
@@ -105,17 +109,17 @@ public class Level implements ApplicationListener, InputProcessor {
 		//texture_starfish = new Texture(Gdx.files.internal("assets/map/starfish.png"));//map_tiles.png"));
 		
 		texture_starfish = new Texture[1];
-		texture_starfish[0] = new Texture(Gdx.files.internal("assets/map/starfish.png"));//map_tiles.png"));
-		//get tilewidth, height from tiledMap properties? should be both 60? 
-		renderer = new OrthogonalTiledMapRenderer(tiledMap, 1/60f);
+		texture_starfish[0] = new Texture(Gdx.files.internal("assets/map/starfish.png"));//map_tiles.png")); 
+		
 		layer = (TiledMapTileLayer)tiledMap.getLayers().get(0); // assuming the layer at index on contains tiles
 		columns = layer.getWidth();
 		rows = layer.getHeight();
-		
 		tilewidth = prop.get("tilewidth", Integer.class);
 		tileheight = prop.get("tileheight", Integer.class);
 		width = prop.get("width", Integer.class);
 		height = prop.get("height", Integer.class);
+		
+		renderer = new OrthogonalTiledMapRenderer(tiledMap, 1/(float)tilewidth); //1/60f
 		
 		for (int i = 0 ; i < layer.getWidth(); i++)
 			for (int j = 0 ; j < layer.getHeight(); j++)
@@ -123,15 +127,11 @@ public class Level implements ApplicationListener, InputProcessor {
 		
 		cost = new int[this.width][this.height];
 		car_cost = new int[this.width][this.height];
-		calculate_cost();
-		
+		calculate_cost();	
 		
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, columns, rows);
 		renderer.setView(camera);
-		
-	    Gdx.input.setInputProcessor(this);
-		//Gdx.input.setInputProcessor(stage);
 		
 		stage = new Stage();
 		stage.setCamera(camera);
@@ -146,14 +146,19 @@ public class Level implements ApplicationListener, InputProcessor {
 		
 		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();
-		//starfish.add(new Character(texture_starfish, 1, 8, tilewidth, tileheight, stage, this));
-		//starfish.add(new Character(texture_starfish, 5, 8, tilewidth, tileheight, stage, this));
-		//starfish.add(new Character(texture_starfish, 11, 4, tilewidth, tileheight, stage));
-		//starfish.add(new Character(texture_starfish, 11, 5, tilewidth, tileheight, stage));
+		starfish.add(new Character(texture_starfish, 1, 8, (float)1.0, stage, this));
+		starfish.add(new Character(texture_starfish, 5, 8, (float)1.0, stage, this));
+		starfish.add(new Character(texture_starfish, 11, 4, (float)1.0, stage, this));
+		//starfish.add(new Character(texture_starfish, 11, 5, (float)1.0, stage, this));
 		
 		hero.set_immunetile(pedestrianwalk_tileid);
 		hero.set_illegaltile(wall_tileid);
 		//hero.followCharacter(starfish.get(0));
+		starfish.get(0).set_pickable(true);
+		starfish.get(1).set_pickable(true);
+		starfish.get(2).set_pickable(true);
+		//starfish.get(3).set_pickable(true);
+		
 		//starfish.get(0).addClickListener();
 		car.get(0).set_validtile(street_tileid);
 		car.get(0).set_validtile(pedestrianwalk_tileid);
@@ -175,20 +180,105 @@ public class Level implements ApplicationListener, InputProcessor {
 		car.get(2).set_illegaltile(wall_tileid);
 		car.get(2).set_random_move();
 		//car.get(2).set_target(hero);
+		route = new ArrayList<Character>();
+		actor_picked = null;
+		actor_dropped = false;
+		start_route = false;
+		num_helpers = starfish.size();
 	}
 	
+	public void setup_city() {
+		;
+	}
 	
 	@Override
-	public void render() {		
-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);		
-		//camera.update();		
-		
+	public void render(float delta) {		
+		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		int layers_id[] = {0};
 		renderer.render(layers_id);
-		stage.act(Gdx.graphics.getDeltaTime());
+		stage.act(Gdx.graphics.getDeltaTime());//delta);
 		stage.draw();
 		
 	}
+	
+	public class LevelListener extends InputListener {
+		Level l;
+		public LevelListener(Level level) {
+			l = level;
+		}
+		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+           //y = tileheight * height - y;
+		   System.out.println("STAGE touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY());
+           //System.out.println("STAGE touchDown x: " + x + " y: " + y);
+      	   //if (place_idx < num_starfish) {
+      		 //  starfish.get(place_idx).setPosition(x, y); //tileheight * height - y);   
+      		 //  place_idx++;
+      	   //}
+      	   //else
+           if (l.actor_picked == null && l.start_route == false)
+      		   l.hero.gotoPoint(l, x, y);
+           if (l.actor_dropped == true) {
+        	   l.actor_picked = null;
+        	   l.actor_dropped = false;
+           }
+      	   //hero.followRoute(starfish);
+      	   return true;  // must return true for touchUp event to occur
+    	}
+    	public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+    		System.out.println("STAGE touchUp x: " + x + " y: " + y);
+    	}
+    
+    	public boolean keyTyped(InputEvent event, char character) {
+    		System.out.println("STAGE keyTyped x: " + character);
+    		
+    		hero.set_moving(true);
+    		switch(character) {
+    			case 'i':
+    				//TODO: boundary check on edges of screen
+    				if (hero.getY() < (l.height - 1) * l.tileheight && !is_tileid(hero.getX(), hero.getY() + hero_move, wall_tileid))
+    					hero.setPosition((float) (hero.getX()), (float)(hero.getY() + hero_move));
+    				break;
+    			case 'k':
+    				if (hero.getY() > hero_move && !is_tileid(hero.getX(), hero.getY() - hero_move, wall_tileid))
+    					hero.setPosition((float) (hero.getX()), (float)(hero.getY() - hero_move));
+    				break;
+    			case 'j':
+    				if (hero.getX() > hero_move && !is_tileid(hero.getX() - hero_move, hero.getY(), wall_tileid))
+    					hero.setPosition((float) (hero.getX() - hero_move), (float)(hero.getY()));
+    				break;
+    			case 'l':
+    				if (hero.getX() < (l.width - 1) * l.tilewidth && !is_tileid(hero.getX() + hero_move, hero.getY(), wall_tileid))
+    					hero.setPosition((float) (hero.getX() + hero_move), (float)(hero.getY()));
+    				break;	
+    		}
+    		    		
+    	   return false;
+    	}
+    	
+    	public boolean mouseMoved(InputEvent event, float x, float y) {
+    		if (l.actor_picked != null) {
+    			l.actor_picked.setX(event.getStageX());
+    			l.actor_picked.setY(event.getStageY());
+    		}
+    		return true;
+    	}
+	}
+	
+	@Override
+    public void show() {
+         // called when this screen is set as the screen with game.setScreen();
+		starfish.get(0).addClickListener();
+		starfish.get(1).addClickListener();
+		starfish.get(2).addClickListener();
+		compass.addClickListener();
+		stage.addListener(new LevelListener(this));
+		Gdx.input.setInputProcessor(stage);
+    }
+
+	@Override
+    public void hide() {
+         // called when current screen changes from this to a different screen
+    }
 	
 	@Override
 	public void pause() {	
@@ -220,6 +310,7 @@ public class Level implements ApplicationListener, InputProcessor {
 		 hero.resize(w, h);*/
 	}
 	
+	/*
 	@Override
 	public boolean keyDown (int keycode) {
 	   //
@@ -230,7 +321,7 @@ public class Level implements ApplicationListener, InputProcessor {
 	public boolean keyUp (int keycode) {
 	   hero.set_moving(false);
 	   return false;
-	}
+	}*/
 
 	public boolean is_tileid(float x, float y, int tileid) {
 		int tilex = (int) (x / tilewidth);
@@ -252,31 +343,11 @@ public class Level implements ApplicationListener, InputProcessor {
 			return true;
 		return false;
 	}
-	
+	/*
 	@Override
 	public boolean keyTyped (char character) {
-		hero.set_moving(true);
-		switch(character) {
-			case 'i':
-				//TODO: boundary check on edges of screen
-				if (hero.getY() < (this.height - 1) * this.tileheight && !is_tileid(hero.getX(), hero.getY() + hero_move, wall_tileid))
-					hero.setPosition((float) (hero.getX()), (float)(hero.getY() + hero_move));
-				break;
-			case 'k':
-				if (hero.getY() > hero_move && !is_tileid(hero.getX(), hero.getY() - hero_move, wall_tileid))
-					hero.setPosition((float) (hero.getX()), (float)(hero.getY() - hero_move));
-				break;
-			case 'j':
-				if (hero.getX() > hero_move && !is_tileid(hero.getX() - hero_move, hero.getY(), wall_tileid))
-					hero.setPosition((float) (hero.getX() - hero_move), (float)(hero.getY()));
-				break;
-			case 'l':
-				if (hero.getX() < (this.width - 1) * this.tilewidth && !is_tileid(hero.getX() + hero_move, hero.getY(), wall_tileid))
-					hero.setPosition((float) (hero.getX() + hero_move), (float)(hero.getY()));
-				break;	
-		}
-	   return false;
-	}
+		
+	}*/
 
 	public void calculate_cost() {
 		for (int i = 0; i < this.width; i++)
@@ -326,15 +397,15 @@ public class Level implements ApplicationListener, InputProcessor {
 		return neighbors;
 	}
 	
-	@Override
+	/*@Override
 	public boolean touchDown (int x, int y, int pointer, int button) {
 	   y = tileheight * height - y; 	
 	   System.out.println("touchDown x: " + x + " y: " + y);
-	   /*if (place_idx < num_starfish) {
-		   starfish.get(place_idx).setPosition(x, y); //tileheight * height - y);   
-		   place_idx++;
-	   }
-	   else*/ 
+	   //if (place_idx < num_starfish) {
+		 //  starfish.get(place_idx).setPosition(x, y); //tileheight * height - y);   
+		 //  place_idx++;
+	   //}
+	   //else 
 		   hero.gotoPoint(this, x, y); //tileheight * height - y);//, false, 0);
 	   //hero.followRoute(starfish);
 	   return false;
@@ -360,7 +431,7 @@ public class Level implements ApplicationListener, InputProcessor {
    @Override
    public boolean scrolled (int amount) {
       return false;
-   }
+   }*/
 	   
    boolean handleclick(int x, int y) {
 	   
