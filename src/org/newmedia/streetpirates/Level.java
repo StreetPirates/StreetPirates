@@ -53,9 +53,9 @@ public class Level implements Screen { //, InputProcessor {
 	private ArrayList<Character> car;
 	private ArrayList<Character> badguy;
 	private ArrayList<Character> starfish;
+	
 	public Character compass;
 	public Character hero;
-    
 	public Character actor_picked;
 	public boolean actor_dropped;
 	public ArrayList<Character> route;
@@ -73,6 +73,7 @@ public class Level implements Screen { //, InputProcessor {
 	public int hero_move = 5;
 	public int num_helpers;
 	public boolean start_route;
+	public int tileid_illegal_lowbound;
 	
 	//@Override
 	public Level(PirateGame game) {		
@@ -185,6 +186,8 @@ public class Level implements Screen { //, InputProcessor {
 		actor_dropped = false;
 		start_route = false;
 		num_helpers = starfish.size();
+		/* tiles with id >= tileid will be illegal */
+		tileid_illegal_lowbound = 19;
 	}
 	
 	public void setup_city() {
@@ -224,25 +227,25 @@ public class Level implements Screen { //, InputProcessor {
     	}
     
     	public boolean keyTyped(InputEvent event, char character) {
-    		System.out.println("STAGE keyTyped x: " + character);
+    		//System.out.println("STAGE keyTyped x: " + character);
     		
     		hero.set_moving(true);
     		switch(character) {
     			case 'i':
     				//TODO: boundary check on edges of screen
-    				if (hero.getY() < (l.height - 1) * l.tileheight && !is_tileid(hero.getX(), hero.getY() + hero_move, wall_tileid))
+    				if (hero.getY() < (l.height - 1) * l.tileheight && !hero.illegal_tile(hero.getX(), hero.getY() + hero_move))
     					hero.setPosition((float) (hero.getX()), (float)(hero.getY() + hero_move));
     				break;
     			case 'k':
-    				if (hero.getY() > hero_move && !is_tileid(hero.getX(), hero.getY() - hero_move, wall_tileid))
+    				if (hero.getY() > hero_move && !hero.illegal_tile(hero.getX(), hero.getY() - hero_move))
     					hero.setPosition((float) (hero.getX()), (float)(hero.getY() - hero_move));
     				break;
     			case 'j':
-    				if (hero.getX() > hero_move && !is_tileid(hero.getX() - hero_move, hero.getY(), wall_tileid))
+    				if (hero.getX() > hero_move && !hero.illegal_tile(hero.getX() - hero_move, hero.getY()))
     					hero.setPosition((float) (hero.getX() - hero_move), (float)(hero.getY()));
     				break;
     			case 'l':
-    				if (hero.getX() < (l.width - 1) * l.tilewidth && !is_tileid(hero.getX() + hero_move, hero.getY(), wall_tileid))
+    				if (hero.getX() < (l.width - 1) * l.tilewidth && !hero.illegal_tile(hero.getX() + hero_move, hero.getY()))
     					hero.setPosition((float) (hero.getX() + hero_move), (float)(hero.getY()));
     				break;	
     		}
@@ -304,6 +307,15 @@ public class Level implements Screen { //, InputProcessor {
 		 }
 		 hero.resize(w, h);*/
 	}
+	
+	public int getTileId(float x, float y) {
+		int tilex = (int) (x / tilewidth);
+		int tiley = (int) (y / tileheight);
+		if (tilex >= this.width || tiley >= this.height)
+			return 0;
+		return layer.getCell(tilex, tiley).getTile().getId();
+	}
+	
 	
 	public boolean is_tileid(float x, float y, int tileid) {
 		int tilex = (int) (x / tilewidth);

@@ -445,34 +445,40 @@ public class Character extends Actor {
 	
 	
 	public boolean valid_tile(float x, float y) {
+		int tileid = l.getTileId(x, y);
 		for (int i = 0; i < valid_tiles; i++) {
-			if (l.is_tileid(x, y, tileid_valid[i]))
+			if (tileid == tileid_valid[i])
 				return true;
 		}
 		return false;
 	}
 	
 	public boolean guard_tile(float x, float y) {
+		int tileid = l.getTileId(x, y);
 		for (int i = 0; i < guard_tiles; i++) {
-			if (l.is_tileid(x, y, tileid_guard[i]))
+			if (tileid == tileid_guard[i])
 				return true;
 		}
 		return false;
 	}
 	
 	public boolean immune_tile(float x, float y) {
+		int tileid = l.getTileId(x, y);
 		for (int i = 0; i < immune_tiles; i++) {
-			if (l.is_tileid(x, y, tileid_immune[i]))
+			if (tileid == tileid_immune[i])
 				return true;
 		}
 		return false;
 	}
 	
 	public boolean illegal_tile(float x, float y) {
+		int tileid = l.getTileId(x, y);
 		for (int i = 0; i < illegal_tiles; i++) {
-			if (l.is_tileid(x, y, tileid_illegal[i]))
+			if (tileid == tileid_illegal[i])
 				return true;
 		}
+		if (tileid >= l.tileid_illegal_lowbound)
+			return true;
 		return false;
 	}
 
