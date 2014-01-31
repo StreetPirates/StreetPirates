@@ -110,7 +110,7 @@ public class Level implements Screen { //, InputProcessor {
 		//texture_starfish = new Texture(Gdx.files.internal("assets/map/starfish.png"));//map_tiles.png"));
 		
 		texture_starfish = new Texture[1];
-		texture_starfish[0] = new Texture(Gdx.files.internal("assets/map/starfish.png"));//map_tiles.png")); 
+		texture_starfish[0] = new Texture(Gdx.files.internal("assets/map/starfish-alpha.png"));//map_tiles.png")); 
 		
 		layer = (TiledMapTileLayer)tiledMap.getLayers().get(0); // assuming the layer at index on contains tiles
 		columns = layer.getWidth();
@@ -254,9 +254,10 @@ public class Level implements Screen { //, InputProcessor {
     	}
     	
     	public boolean mouseMoved(InputEvent event, float x, float y) {
+    		//tweak coordinates... We want the moved point to be rougly in the "middle" of of actor, not bottom-left coordinates
     		if (l.actor_picked != null) {
-    			l.actor_picked.setX(event.getStageX());
-    			l.actor_picked.setY(event.getStageY());
+    			l.actor_picked.setX(event.getStageX() - actor_picked.getWidth()/2);
+    			l.actor_picked.setY(event.getStageY() - actor_picked.getHeight()/2);
     		}
     		return true;
     	}

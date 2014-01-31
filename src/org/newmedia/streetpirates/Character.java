@@ -250,8 +250,9 @@ public class Character extends Actor {
 	public void followRoute(ArrayList<Character> route) {
 		int mytilex = (int) (this.getX() / l.tilewidth);
 		int mytiley = (int) (this.getY() / l.tileheight);
-		int tilex;
-		int tiley;
+		int tilex, tiley;
+		float destx = this.getX(), desty = this.getY();
+		
 		Stack<Vector2> path;
 		
 		this.clearActions();
@@ -260,8 +261,11 @@ public class Character extends Actor {
 		this.in_action = true;
 		
 		for(Character dest: route) {
-			tilex = (int) (dest.getX() / l.tilewidth);
-			tiley = (int) (dest.getY() / l.tileheight);
+			//tweak coordinates... We want the rout eto pass through middle (sort of) of actor, not bottom-left coordinates
+			destx = dest.getX() + dest.getWidth()/4;
+			desty = dest.getY() + dest.getHeight()/4;
+			tilex = (int) (destx / l.tilewidth);
+			tiley = (int) (desty / l.tileheight);
 			// the route can be ambiguous. 
 			// We could try to find either the safest or the least safe path.
 			// We don't need to find the optimal/safest route from a pavement. This is the player's part :)	
@@ -279,6 +283,7 @@ public class Character extends Actor {
 			mytiley = tiley;
 		}
 		
+		sequence.addAction(moveTo(destx, desty, 0.5f));
 		sequence.addAction(run(new java.lang.Runnable() {
 		    public void run () {
 		        System.out.println("Action complete!");
@@ -397,6 +402,14 @@ public class Character extends Actor {
 		int mytilex = (int) (this.getX() / l.tilewidth);
 		int mytiley = (int) (this.getY() / l.tileheight);
 		Stack<Vector2> path;
+		
+		//tweak coordinates... We want the chosen point to be rougly in the "middle" of of actor, not bottom-left coordinates
+		if (x >= this.getWidth() / 2) {
+			x -= this.getWidth()/2;
+		}
+		if (y >= this.getHeight() / 4) {
+			y -= this.getHeight()/4;
+		}
 		
 		this.clearActions();
 		SequenceAction sequence = new SequenceAction();

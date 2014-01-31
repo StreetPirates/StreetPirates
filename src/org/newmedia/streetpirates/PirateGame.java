@@ -11,8 +11,9 @@ public class PirateGame extends Game {
 	   //Level menuScreen;
 	   @Override
        public void create() {
+		       //menuScreen = new MenuScreen(this);
                mapLevel = new Level(this);
-               //cityLevel = new Level(this);
+               //cityLevel = new CityLevel(this);
                setScreen(mapLevel);              
        }
 	   
