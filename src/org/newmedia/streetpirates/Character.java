@@ -92,6 +92,10 @@ public class Character extends Actor {
 		moving = set;
 	}
 	
+	public void set_in_action(boolean set) {
+		in_action = set;
+	}
+	
 	public void set_pickable(boolean pick) {
 		pickable = pick;
 	}
@@ -155,6 +159,7 @@ public class Character extends Actor {
             	//l.setup_city();
             	l.start_route = true;
             	l.hero.followRoute(l.route);
+            	l.city_enabled = true;
             }
             return false;  // must return true for touchUp event to occur
         }
@@ -169,9 +174,13 @@ public class Character extends Actor {
 		this.addListener(new CharacterListener(this));
 	}
 	
-	public static boolean overlapRectangles (Actor r1, Actor r2) {
-        if (r1.getX() < r2.getX() + r2.getWidth() && r1.getX() + r1.getWidth() > r2.getX() &&
-        		r1.getY() < r2.getY() + r2.getHeight() && r1.getY() + r1.getHeight() > r2.getY())
+	/* fulldim of 1.0 means the overlap will trigger when the full bounding boxes start to collide
+	 * fulldim of 0.5 means the overlap will trigger when the boxes are merged into each other by roughly half
+	 * etc. 
+	 */
+	public static boolean overlapRectangles (Actor r1, Actor r2, float fulldim) {
+        if (r1.getX() < r2.getX() + r2.getWidth() * fulldim && r1.getX() + r1.getWidth() * fulldim > r2.getX() &&
+        		r1.getY() < r2.getY() + r2.getHeight() * fulldim && r1.getY() + r1.getHeight() * fulldim > r2.getY())
             return true;
         else
             return false;
@@ -194,7 +203,8 @@ public class Character extends Actor {
 
 		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
 		for (Actor a: this.getStage().getActors()) {
-			if (a!= this && overlapRectangles (a, this)) {
+			Character c = (Character)a;
+			if (c!= this && overlapRectangles (c, this, (float)0.5)) {
 			   //if (a.getActions(). != 0)
 					//  a.removeAction(a.getActions().first());
 			   //if (this.getActions() != null)
@@ -202,8 +212,12 @@ public class Character extends Actor {
 			   /*TODO: moving boolean flag is reset in last action, so there is chance a character stays in in_Action/moving limbo (i.e. true flags) forever.
 			    * so find a better way of removing a specific action. or resetting the flag at draw function or elsewhere.
 			    */
-			   //a.clearActions();
-			   //this.clearActions();
+			    c.clearActions();
+			    this.clearActions();
+		        c.set_moving(false);
+		        c.set_in_action(false);
+		        this.set_moving(false);
+		        this.set_in_action(false);
 			   //System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
 		   }	
 			
@@ -403,12 +417,14 @@ public class Character extends Actor {
 		int mytiley = (int) (this.getY() / l.tileheight);
 		Stack<Vector2> path;
 		
-		//tweak coordinates... We want the chosen point to be rougly in the "middle" of of actor, not bottom-left coordinates
-		if (x >= this.getWidth() / 2) {
-			x -= this.getWidth()/2;
-		}
-		if (y >= this.getHeight() / 4) {
-			y -= this.getHeight()/4;
+		//tweak coordinates for hero only... We want the chosen point to be rougly in the "middle" of of actor, not bottom-left coordinates
+		if (this == l.hero) { 
+			if (x >= this.getWidth() / 2) {
+				x -= this.getWidth()/2;
+			}
+			if (y >= this.getHeight() / 4) {
+				y -= this.getHeight()/4;
+			}
 		}
 		
 		this.clearActions();
@@ -416,10 +432,10 @@ public class Character extends Actor {
 		this.moving = true;
 		this.in_action = true;
 		
-		if ((mytilex == tilex) || (mytiley == tiley)) {
+		/*if ((mytilex == tilex) || (mytiley == tiley)) {
 			sequence.addAction(moveTo(x, y, 3f));	
 		}
-		else {	
+		else {*/	
 			
 			// the route can be ambiguous. 
 			// We could try to find either the safest or the least safe path.
@@ -434,7 +450,7 @@ public class Character extends Actor {
 			}
 			sequence.addAction(moveTo(x, y, 0.5f));
 			//System.out.println("LAST PATH x: " + x + " y: " + y);		
-		}
+		//}
 		
 		sequence.addAction(run(new java.lang.Runnable() {
 		    public void run () {
@@ -487,11 +503,11 @@ public class Character extends Actor {
 	public boolean illegal_tile(float x, float y) {
 		int tileid = l.getTileId(x, y);
 		for (int i = 0; i < illegal_tiles; i++) {
-			if (tileid == tileid_illegal[i])
+			if (tileid == tileid_illegal[i] && this == l.hero) {
+					System.out.println("ILLEGAL PATH x: " + x + " y: " + y);
 				return true;
+			}
 		}
-		if (tileid >= l.tileid_illegal_lowbound)
-			return true;
 		return false;
 	}
 

@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteCache;
+import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.*;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
@@ -43,8 +44,8 @@ public class Level implements Screen { //, InputProcessor {
 	private TiledMap tiledCity;
 	private TmxMapLoader maploader;
 	private MapProperties prop;
-	private OrthogonalTiledMapRenderer renderer;
-	private	TiledMapTileLayer layer;
+	private OrthogonalTiledMapRenderer renderer, cityrenderer;
+	private	TiledMapTileLayer layer, citylayer;
 	private int columns;
 	private int rows;
 	private int num_starfish = 2, place_idx = 0;
@@ -59,13 +60,36 @@ public class Level implements Screen { //, InputProcessor {
 	public Character actor_picked;
 	public boolean actor_dropped;
 	public ArrayList<Character> route;
+	public int tiletypes[][];
 	public int cost[][];
 	public int car_cost[][];
-	public int legal_car_tileid[] = {4, 10};
+	
+	/* map tileset ids hardcoded 
 	public final int pavement_tileid = 1;
 	public final int street_tileid = 4;
 	public final int wall_tileid = 7;
 	public final int pedestrianwalk_tileid = 10;
+	public final int tileid_illegal_lowbound = 19;
+	public final int types[] = {7, 19, 1, 10, 4};
+	*/
+	
+	/* city tileset ids hardcoded */
+	public final int TILE_TYPES = 5;
+	public final int TILE_ILLEGAL_ID = 1;
+	public final int TILE_PAVEMENT_ID = 2;
+	public final int TILE_PEDESTRIANWALK_ID = 3;
+	public final int TILE_STREET_ID = 4;
+	public final int TILE_UNKNOWN_ID = 5;
+	/* from stronger to weakest id type. In case types overlap in tile layers, the stronger type logically applies.
+	 * E.g. a tile with a layer of pavement and street, is a pavement logically. This happens on rounded pavement corners.
+	 * E.g. 
+	 */
+	public final int tile_pavement_types[] = {1, 37, 57, 39, 59};
+	public final int tile_pedestrianwalk_types[] = {55};
+	public final int tile_street_types[] = {11};
+	
+	public final int types[] = {7, 1, 10, 11};
+	
 	public int street_tilecost = 1;
 	public int safe_tilecost = 1;
 	public int wall_tilecost = 1000;
@@ -73,7 +97,7 @@ public class Level implements Screen { //, InputProcessor {
 	public int hero_move = 5;
 	public int num_helpers;
 	public boolean start_route;
-	public int tileid_illegal_lowbound;
+	public boolean city_enabled;
 	
 	//@Override
 	public Level(PirateGame game) {		
@@ -82,7 +106,7 @@ public class Level implements Screen { //, InputProcessor {
 		//tiledMap = new TmxMapLoader().load("assets/map/map.tmx");
 		//tiledMap = new TmxMapLoader().load("assets/streetpirates-level1.tmx");
 		tiledMap = new TmxMapLoader().load("assets/streetpirates-level1-withcompass.tmx");
-		//tiledCity = new TmxMapLoader().load("assets/city/City_oct28.tmx");
+		tiledCity = new TmxMapLoader().load("assets/streetpirates-city1-withcompass.tmx");
 		prop = tiledMap.getProperties();
 		texture_hero = new Texture[4];
 		texture_hero[0] = new Texture(Gdx.files.internal("assets/pirate/front_walk1.png"));
@@ -113,6 +137,7 @@ public class Level implements Screen { //, InputProcessor {
 		texture_starfish[0] = new Texture(Gdx.files.internal("assets/map/starfish-alpha.png"));//map_tiles.png")); 
 		
 		layer = (TiledMapTileLayer)tiledMap.getLayers().get(0); // assuming the layer at index on contains tiles
+		citylayer = (TiledMapTileLayer)tiledCity.getLayers().get(1); // assuming the layer at index on contains tiles
 		columns = layer.getWidth();
 		rows = layer.getHeight();
 		tilewidth = prop.get("tilewidth", Integer.class);
@@ -120,12 +145,23 @@ public class Level implements Screen { //, InputProcessor {
 		width = prop.get("width", Integer.class);
 		height = prop.get("height", Integer.class);
 		
-		renderer = new OrthogonalTiledMapRenderer(tiledMap, 1/(float)tilewidth); //1/60f
+		renderer = new OrthogonalTiledMapRenderer(tiledMap, 1/(float)tilewidth);
+		cityrenderer = new OrthogonalTiledMapRenderer(tiledCity, 1/(float)tilewidth);
 		
 		for (int i = 0 ; i < layer.getWidth(); i++)
-			for (int j = 0 ; j < layer.getHeight(); j++)
-				System.out.println("cell(" + i + "," + j + "): " + layer.getCell(i, j).getTile().getId());
+			for (int j = 0 ; j < layer.getHeight(); j++) {
+				//if (layer.getCell(i, j).getTile().getId() != citylayer.getCell(i, j).getTile().getId()) {
+					//System.out.println("cell(" + i + "," + j + "): " + layer.getCell(i, j).getTile().getId() + " city: " + citylayer.getCell(i, j).getTile().getId());
+				//}
+				//System.out.println("cell(" + i + "," + j + "): " + layer.getCell(i, j).getTile().getId());
+			}
+
+		for (int i = 0 ; i < citylayer.getWidth(); i++)
+			for (int j = 0 ; j < citylayer.getHeight(); j++) {
+				//System.out.println("width " + citylayer.getWidth() + "height: " + citylayer.getHeight() + " " + "cell(" + i + "," + j + "): " + citylayer.getCell(i, j));//.getTile().getId());
+			}
 		
+		tiletypes = create_types_tilemap(tiledCity); 
 		cost = new int[this.width][this.height];
 		car_cost = new int[this.width][this.height];
 		calculate_cost();	
@@ -133,6 +169,7 @@ public class Level implements Screen { //, InputProcessor {
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, columns, rows);
 		renderer.setView(camera);
+		cityrenderer.setView(camera);
 		
 		stage = new Stage();
 		stage.setCamera(camera);
@@ -152,34 +189,25 @@ public class Level implements Screen { //, InputProcessor {
 		starfish.add(new Character(texture_starfish, 11, 4, (float)1.0, stage, this));
 		//starfish.add(new Character(texture_starfish, 11, 5, (float)1.0, stage, this));
 		
-		hero.set_immunetile(pedestrianwalk_tileid);
-		hero.set_illegaltile(wall_tileid);
+		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
+		hero.set_illegaltile(TILE_ILLEGAL_ID);
 		//hero.followCharacter(starfish.get(0));
-		starfish.get(0).set_pickable(true);
-		starfish.get(1).set_pickable(true);
-		starfish.get(2).set_pickable(true);
-		//starfish.get(3).set_pickable(true);
 		
-		//starfish.get(0).addClickListener();
-		car.get(0).set_validtile(street_tileid);
-		car.get(0).set_validtile(pedestrianwalk_tileid);
-		car.get(0).set_guardtile(street_tileid);
-		car.get(0).set_illegaltile(pavement_tileid);
-		car.get(0).set_illegaltile(wall_tileid);
-		car.get(0).set_random_move();
-		car.get(0).set_target(hero);
+		for(int i = 0; i < starfish.size(); i++) {
+			starfish.get(i).set_pickable(true);	
+		}
+
+		for(int i = 0; i < car.size(); i++) {
+			
+			car.get(i).set_validtile(TILE_STREET_ID);
+			car.get(i).set_validtile(TILE_PEDESTRIANWALK_ID);
+			car.get(i).set_illegaltile(TILE_PAVEMENT_ID);
+			car.get(i).set_illegaltile(TILE_ILLEGAL_ID);
+			car.get(i).set_guardtile(TILE_STREET_ID);
+			car.get(i).set_random_move();
+			car.get(i).set_target(hero);	
+		}
 		
-		car.get(1).set_validtile(street_tileid);
-		car.get(1).set_guardtile(street_tileid);
-		car.get(1).set_illegaltile(pavement_tileid);
-		car.get(1).set_illegaltile(wall_tileid);
-		car.get(1).set_random_move();
-		car.get(1).set_target(hero);
-		
-		car.get(2).set_validtile(street_tileid);
-		car.get(2).set_illegaltile(pavement_tileid);
-		car.get(2).set_illegaltile(wall_tileid);
-		car.get(2).set_random_move();
 		//car.get(2).set_target(hero);
 		route = new ArrayList<Character>();
 		actor_picked = null;
@@ -187,7 +215,58 @@ public class Level implements Screen { //, InputProcessor {
 		start_route = false;
 		num_helpers = starfish.size();
 		/* tiles with id >= tileid will be illegal */
-		tileid_illegal_lowbound = 19;
+		city_enabled = false;
+	}
+	
+	public int getTileType(int id) {
+		for (int i = 0; i < tile_street_types.length; i++) {
+			if (id == this.tile_street_types[i])
+				return TILE_STREET_ID;
+		}
+		for (int i = 0; i < tile_pavement_types.length; i++) {
+			if (id == this.tile_pavement_types[i])
+				return TILE_PAVEMENT_ID;
+		}
+		for (int i = 0; i < tile_pedestrianwalk_types.length; i++) {
+			if (id == this.tile_pedestrianwalk_types[i])
+				return TILE_PEDESTRIANWALK_ID;
+		}
+		//if (id == -1)
+			//return TILE_UNKNOWN_ID;
+		return TILE_ILLEGAL_ID;
+	}
+	
+	public int[][] create_types_tilemap(TiledMap map) {
+		//MapProperties prop = tiledMap.getProperties();
+		int type[][];
+		TiledMapTileLayer layer;
+		layer = (TiledMapTileLayer)map.getLayers().get(0); // assuming all layers have same dimension
+		type = new int[layer.getWidth()][layer.getHeight()];
+		
+		for (int i = 0 ; i < layer.getWidth(); i++)
+			for (int j = 0 ; j < layer.getHeight(); j++) {
+				type[i][j] = TILE_UNKNOWN_ID;
+				for(MapLayer l: map.getLayers()) {
+				layer = (TiledMapTileLayer) l;
+				TiledMapTileLayer.Cell cell = layer.getCell(i, j);
+				if (cell != null) { 
+					int newid = cell.getTile().getId();
+					int newidtype = getTileType(newid);
+					int idtype = type[i][j]; //(type[i][j] == -1) ? TILE_UNKNOWN_ID : getTileType(type[i][j]);
+					System.out.println("type(" + i + "," + j + "): " + idtype + " newidtype " + newidtype);
+					if (newidtype < idtype) {
+						type[i][j] = newidtype;
+						System.out.println("type(" + i + "," + j + "): changed to " + newidtype);
+					}
+				}
+			}
+		}
+		for (int i = 0 ; i < citylayer.getWidth(); i++)
+			for (int j = 0 ; j < citylayer.getHeight(); j++) {
+				//System.out.println("type(" + i + "," + j + "): " + type[i][j]);
+			}
+		
+		return type;
 	}
 	
 	public void setup_city() {
@@ -198,7 +277,11 @@ public class Level implements Screen { //, InputProcessor {
 	public void render(float delta) {		
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		int layers_id[] = {0};
-		renderer.render(layers_id);
+		int city_layers_id[] = {0, 1};
+		if (city_enabled == false)
+			renderer.render(layers_id);
+		else
+			cityrenderer.render(city_layers_id);
 		stage.act(Gdx.graphics.getDeltaTime());//delta);
 		stage.draw();
 		
@@ -213,11 +296,15 @@ public class Level implements Screen { //, InputProcessor {
            //y = tileheight * height - y;
 		   System.out.println("STAGE touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY());
            //System.out.println("STAGE touchDown x: " + x + " y: " + y);
-           if (l.actor_picked == null && l.start_route == false)
+           if (l.actor_picked == null && l.start_route == false) {
       		   l.hero.gotoPoint(l, x, y);
+           }
            if (l.actor_dropped == true) {
         	   l.actor_picked = null;
         	   l.actor_dropped = false;
+           }
+           if (l.start_route == true) {
+        	   l.start_route = false;
            }
       	   //hero.followRoute(starfish);
       	   return true;  // must return true for touchUp event to occur
@@ -230,6 +317,7 @@ public class Level implements Screen { //, InputProcessor {
     		//System.out.println("STAGE keyTyped x: " + character);
     		
     		hero.set_moving(true);
+    		hero.clearActions();
     		switch(character) {
     			case 'i':
     				//TODO: boundary check on edges of screen
@@ -266,9 +354,9 @@ public class Level implements Screen { //, InputProcessor {
 	@Override
     public void show() {
          // called when this screen is set as the screen with game.setScreen();
-		starfish.get(0).addClickListener();
-		starfish.get(1).addClickListener();
-		starfish.get(2).addClickListener();
+		for(int i = 0; i < starfish.size(); i++) {
+			starfish.get(i).addClickListener();	
+		}
 		compass.addClickListener();
 		stage.addListener(new LevelListener(this));
 		Gdx.input.setInputProcessor(stage);
@@ -314,19 +402,7 @@ public class Level implements Screen { //, InputProcessor {
 		int tiley = (int) (y / tileheight);
 		if (tilex >= this.width || tiley >= this.height)
 			return 0;
-		return layer.getCell(tilex, tiley).getTile().getId();
-	}
-	
-	
-	public boolean is_tileid(float x, float y, int tileid) {
-		int tilex = (int) (x / tilewidth);
-		int tiley = (int) (y / tileheight);
-		if (tilex >= this.width || tiley >= this.height)
-			return false;
-		if (layer.getCell(tilex, tiley).getTile().getId() == tileid)
-			return true;
-		else 
-			return false;
+		return tiletypes[tilex][tiley];//layer.getCell(tilex, tiley).getTile().getId();
 	}
 	
 	public boolean same_tile(float x1, float y1, float x2, float y2) {
@@ -342,17 +418,17 @@ public class Level implements Screen { //, InputProcessor {
 	public void calculate_cost() {
 		for (int i = 0; i < this.width; i++)
 			for (int j = 0; j < this.height; j++) {
-				switch(layer.getCell(i, j).getTile().getId()) {
-					case street_tileid:
+				switch(tiletypes[i][j]) { //layer.getCell(i, j).getTile().getId()) {
+					case TILE_STREET_ID:
 						cost[i][j] = street_tilecost;
 						car_cost[i][j] = street_tilecost;
 						break;
-					case pavement_tileid:
-					case pedestrianwalk_tileid:
+					case TILE_PAVEMENT_ID:
+					case TILE_PEDESTRIANWALK_ID:
 						cost[i][j] = safe_tilecost;
 						car_cost[i][j] = wall_tilecost;
 						break;
-					case wall_tileid:
+					case TILE_ILLEGAL_ID:
 					default:	
 						cost[i][j] = wall_tilecost;
 						car_cost[i][j] = wall_tilecost;
