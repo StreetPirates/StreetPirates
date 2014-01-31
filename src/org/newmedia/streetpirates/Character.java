@@ -47,7 +47,6 @@ public class Character extends Actor {
 	
 	//public Character(Texture  texture, int tilex, int tiley, float scalex, float scaley, Stage stage) {
 	public Character(Texture texture[], float tilex, float tiley, float scaling, Stage stage, Level l) {
-		//super(texture);
 		imageregion = new TextureRegion[texture.length];
 		for(int i = 0; i < texture.length; i++) {
 			imageregion[i] = new TextureRegion(texture[i]);

@@ -210,11 +210,6 @@ public class Level implements Screen { //, InputProcessor {
            //y = tileheight * height - y;
 		   System.out.println("STAGE touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY());
            //System.out.println("STAGE touchDown x: " + x + " y: " + y);
-      	   //if (place_idx < num_starfish) {
-      		 //  starfish.get(place_idx).setPosition(x, y); //tileheight * height - y);   
-      		 //  place_idx++;
-      	   //}
-      	   //else
            if (l.actor_picked == null && l.start_route == false)
       		   l.hero.gotoPoint(l, x, y);
            if (l.actor_dropped == true) {
@@ -310,19 +305,6 @@ public class Level implements Screen { //, InputProcessor {
 		 hero.resize(w, h);*/
 	}
 	
-	/*
-	@Override
-	public boolean keyDown (int keycode) {
-	   //
-	   return false;
-	}
-
-	@Override
-	public boolean keyUp (int keycode) {
-	   hero.set_moving(false);
-	   return false;
-	}*/
-
 	public boolean is_tileid(float x, float y, int tileid) {
 		int tilex = (int) (x / tilewidth);
 		int tiley = (int) (y / tileheight);
@@ -343,11 +325,6 @@ public class Level implements Screen { //, InputProcessor {
 			return true;
 		return false;
 	}
-	/*
-	@Override
-	public boolean keyTyped (char character) {
-		
-	}*/
 
 	public void calculate_cost() {
 		for (int i = 0; i < this.width; i++)
@@ -396,42 +373,6 @@ public class Level implements Screen { //, InputProcessor {
 		*/	
 		return neighbors;
 	}
-	
-	/*@Override
-	public boolean touchDown (int x, int y, int pointer, int button) {
-	   y = tileheight * height - y; 	
-	   System.out.println("touchDown x: " + x + " y: " + y);
-	   //if (place_idx < num_starfish) {
-		 //  starfish.get(place_idx).setPosition(x, y); //tileheight * height - y);   
-		 //  place_idx++;
-	   //}
-	   //else 
-		   hero.gotoPoint(this, x, y); //tileheight * height - y);//, false, 0);
-	   //hero.followRoute(starfish);
-	   return false;
-	}
-
-	@Override
-	public boolean touchUp (int x, int y, int pointer, int button) { 
-	   return false;
-	}
-
-   @Override
-   public boolean touchDragged (int x, int y, int pointer) {
-      return false;
-   }
-
-   @Override
-   public boolean mouseMoved (int x, int y) {
-	  //System.out.println("mouseMoved hello from console");
-	  //handleclick(x,y); 
-      return false;
-   }
-
-   @Override
-   public boolean scrolled (int amount) {
-      return false;
-   }*/
 	   
    boolean handleclick(int x, int y) {
 	   
