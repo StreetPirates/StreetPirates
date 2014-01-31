@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteCache;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.*;
@@ -18,8 +19,15 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.*;
 
 //import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -54,6 +62,7 @@ public class Level implements Screen { //, InputProcessor {
 	private ArrayList<Character> car;
 	private ArrayList<Character> badguy;
 	private ArrayList<Character> starfish;
+	private Skin buttonSkin;
 	
 	public Character compass;
 	public Character hero;
@@ -98,6 +107,9 @@ public class Level implements Screen { //, InputProcessor {
 	public int num_helpers;
 	public boolean start_route;
 	public boolean city_enabled;
+	Texture imgbutton;
+	TextureRegion imgbuttonregion;
+	Window window;
 	
 	//@Override
 	public Level(PirateGame game) {		
@@ -184,9 +196,9 @@ public class Level implements Screen { //, InputProcessor {
 		
 		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();
-		starfish.add(new Character(texture_starfish, 1, 8, (float)1.0, stage, this));
-		starfish.add(new Character(texture_starfish, 5, 8, (float)1.0, stage, this));
-		starfish.add(new Character(texture_starfish, 11, 4, (float)1.0, stage, this));
+		starfish.add(new Character(texture_starfish, 10, 2, (float)1.0, stage, this));
+		starfish.add(new Character(texture_starfish, 11, 1, (float)1.0, stage, this));
+		starfish.add(new Character(texture_starfish, 12, 0, (float)1.0, stage, this));
 		//starfish.add(new Character(texture_starfish, 11, 5, (float)1.0, stage, this));
 		
 		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
@@ -216,6 +228,21 @@ public class Level implements Screen { //, InputProcessor {
 		num_helpers = starfish.size();
 		/* tiles with id >= tileid will be illegal */
 		city_enabled = false;
+		
+		/*buttonSkin = new Skin(Gdx.files.internal("assets/ui/uiskin.json"));
+		imgbutton = new Texture(Gdx.files.internal("assets/ui/uiskin.png"));
+		imgbuttonregion = new TextureRegion(imgbutton);
+		Button imgButton = new Button(new Image(imgbuttonregion), buttonSkin);
+		ImageButtonStyle style = new ImageButtonStyle(buttonSkin.get(ButtonStyle.class));
+		window = new Window("Dialog", buttonSkin);
+		window.getButtonTable().add(new TextButton("X", buttonSkin)).height(window.getPadTop());
+		window.setPosition(100, 100);
+		window.add(imgButton);
+		window.pack();
+		window.setVisible(true);
+		stage.addActor(window);
+		//TextButton tbf = new TextButton("myButton", buttonSkin.getStyle(TextButtonStyle.class));
+		*/
 	}
 	
 	public int getTileType(int id) {
@@ -231,8 +258,6 @@ public class Level implements Screen { //, InputProcessor {
 			if (id == this.tile_pedestrianwalk_types[i])
 				return TILE_PEDESTRIANWALK_ID;
 		}
-		//if (id == -1)
-			//return TILE_UNKNOWN_ID;
 		return TILE_ILLEGAL_ID;
 	}
 	
@@ -337,8 +362,22 @@ public class Level implements Screen { //, InputProcessor {
     					hero.setPosition((float) (hero.getX() + hero_move), (float)(hero.getY()));
     				break;	
     		}
-    		    		
-    	   return false;
+    	   //hero.set_moving(false);	    		
+    	   return true;
+    	}
+    	
+    	public boolean keyUp(InputEvent event, int keycode) {
+    		switch(keycode) {
+				case 'i':
+				case 'k':
+				case 'j':
+				case 'l':
+					hero.set_moving(false);
+					break;	
+				default:
+					break;
+    		}
+    		return true;
     	}
     	
     	public boolean mouseMoved(InputEvent event, float x, float y) {

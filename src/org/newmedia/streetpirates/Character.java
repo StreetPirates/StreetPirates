@@ -26,7 +26,7 @@ public class Character extends Actor {
 	int tileid_guard[]; //tile types to protect from target
 	int tileid_immune[]; //tile types to protect from target
 	Random generator;
-	long clock;
+	long clock, clock_lastmoved;
 	//Date date;
 	boolean random_move, in_action, moving;
 	SpriteBatch spriteBatch; 
@@ -42,7 +42,7 @@ public class Character extends Actor {
 	public static final int RIGHT = 1;
 	public static final int DOWN = 2;
 	public static final int UP = 3;
-	public static final long delta = 5000;
+	public static final long delta = 1000000;
 	public static final int MAX_TILE_TYPES = 3;
 	
 	//public Character(Texture  texture, int tilex, int tiley, float scalex, float scaley, Stage stage) {
@@ -78,7 +78,8 @@ public class Character extends Actor {
 		valid_tiles = 0;
 		guard_tiles = 0;
 		illegal_tiles = 0;
-		clock = System.currentTimeMillis();
+		clock = System.nanoTime();//currentTimeMillis();
+		clock_lastmoved = clock;
 		generator = new Random(clock);
 		this.l = l;
 		this.pickable = false;
@@ -203,8 +204,8 @@ public class Character extends Actor {
 
 		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
 		for (Actor a: this.getStage().getActors()) {
-			Character c = (Character)a;
-			if (c!= this && overlapRectangles (c, this, (float)0.5)) {
+			//Character c = (Character)a;
+			if (a!= this && overlapRectangles (a, this, (float)0.5)) {
 			   //if (a.getActions(). != 0)
 					//  a.removeAction(a.getActions().first());
 			   //if (this.getActions() != null)
@@ -212,13 +213,20 @@ public class Character extends Actor {
 			   /*TODO: moving boolean flag is reset in last action, so there is chance a character stays in in_Action/moving limbo (i.e. true flags) forever.
 			    * so find a better way of removing a specific action. or resetting the flag at draw function or elsewhere.
 			    */
-			    c.clearActions();
+			    
+				a.clearActions();
 			    this.clearActions();
-		        c.set_moving(false);
+			    
+		        /*c.set_moving(false);
 		        c.set_in_action(false);
 		        this.set_moving(false);
-		        this.set_in_action(false);
+		        this.set_in_action(false);*/
 			   //System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
+			    
+			    /* if a car or bad guy, we should pop a message, reset hero to starting position and retry map
+			    /*if (this == l.hero ||  a == l.hero){
+			    	l.hero.setPosition(0,0);
+			    }*/
 		   }	
 			
 		}
@@ -235,9 +243,12 @@ public class Character extends Actor {
 		
 		//List<Action> listactions = this.getActions().asList();
 		if (this.random_move /*&& this.getActions().size() == 0*/ ) {
-		long newclock = System.currentTimeMillis();
-		if (newclock - clock > delta && in_action == false) {
+		long newclock = System.nanoTime();//currentTimeMillis();
+		if (newclock - clock > delta && in_action == false || (newclock - clock_lastmoved > 5000 * delta)) {
+			in_action = false;
+			moving = false;
 			clock = newclock;
+			clock_lastmoved = newclock;
 			//System.out.println("will schedule a random move?" + clock + " " + newclock);
 			moveToTileOrTarget();
 		}
@@ -306,19 +317,22 @@ public class Character extends Actor {
 		    }
 		}));
 		this.addAction(sequence);
+		//clear the route!
+		route.clear();
 	}
 
-	//TODO: Fix scaling
-	//TODO: Accurate point clicking?!
+	//TODO: Handle collision with hero!!!! sometime he is hit even on pedwalk?!
+	//TODO: Menu + buttons + parrot + compass
+	//TODO: route needs to be modified when picking up a starfish again
+	//TODO: Add bad guys
+	//TODO: Add different randomness on moving actors
+	//TODO: Fix scaling and resize
+	//TODO: Accurate point clicking?! done
 	//TODO: Fix bounds, don't let actors leave screen! can cause a crash
-	//TODO: Review all clearActions() calls to actors
-	//TODO: multiple valid TIleids e.g. for car to walk over pedestrianwalk
-	//TODO: Listener for starfish to pick and drop
-	//TODO: Use Actor.clearActions() to clear all actions in actor, e.g. if collision happens?!
-	//TODO: Animations
-	//TODO: Menu + parrot + compass
+	//TODO: Review all clearActions() calls to actors. Use Actor.clearActions() to clear all actions in actor, e.g. if collision happens?!
+	//TODO: Animations, add side animations depending on direction of movement
+	//TODO: if hit by a car/bad guy, reset hero to beginning
 	//TODO: Intro storytelling
-	
 	
 	/* A* pathfinding on the fully connected tiledmap grid. Uses tile costs from Level class */
 	public Stack<Vector2> getPath(int startx, int starty, int x, int y)
@@ -367,8 +381,8 @@ public class Character extends Actor {
 
 	                int distanceTraveled = costpath[(int)current.x][(int)current.y] + l.cost[nodex][nodey];
 	                if (illegal_tile(nodex * l.tilewidth, nodey * l.tileheight)) {
-	                	//System.out.println("ILLEGAL TILE IN PATHFINDING: " + nodex +  " " + nodey);
-	                	distanceTraveled += 1000;
+	                	System.out.println("ILLEGAL TILE IN PATHFINDING: " + nodex +  " " + nodey);
+	                	distanceTraveled += 10000;
 	                }
 	                int heuristic = java.lang.Math.abs(nodex - x) + java.lang.Math.abs(nodey - y);
 
@@ -397,6 +411,7 @@ public class Character extends Actor {
 	    boolean backtrack = true;
 	    int newx = x;
 	    int newy = y;
+	    System.out.println("LAST PATH BUILD STACK");
 	    while (backtrack == true) {
 	    	int currentx = newx;
 	    	int currenty = newy;
@@ -432,10 +447,11 @@ public class Character extends Actor {
 		this.moving = true;
 		this.in_action = true;
 		
-		/*if ((mytilex == tilex) || (mytiley == tiley)) {
+		//TODO: this case is needed for now , otherwise the path planning for the same tile somehow  gies nullpointer exception
+		if (this == l.hero &&  (mytilex == tilex) || (mytiley == tiley)) {
 			sequence.addAction(moveTo(x, y, 3f));	
 		}
-		else {*/	
+		else {	
 			
 			// the route can be ambiguous. 
 			// We could try to find either the safest or the least safe path.
@@ -450,7 +466,7 @@ public class Character extends Actor {
 			}
 			sequence.addAction(moveTo(x, y, 0.5f));
 			//System.out.println("LAST PATH x: " + x + " y: " + y);		
-		//}
+		}
 		
 		sequence.addAction(run(new java.lang.Runnable() {
 		    public void run () {
@@ -503,7 +519,7 @@ public class Character extends Actor {
 	public boolean illegal_tile(float x, float y) {
 		int tileid = l.getTileId(x, y);
 		for (int i = 0; i < illegal_tiles; i++) {
-			if (tileid == tileid_illegal[i] && this == l.hero) {
+			if (tileid == tileid_illegal[i]) { // && this == l.hero) {
 					System.out.println("ILLEGAL PATH x: " + x + " y: " + y);
 				return true;
 			}
