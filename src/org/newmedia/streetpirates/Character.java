@@ -162,10 +162,10 @@ public class Character extends Actor {
             	}
             }
             else if (character == l.compass) {
-            	//l.setup_city();
             	l.start_route = true;
             	l.hero.followRoute(l.route);
-            	l.city_enabled = true;
+            	l.adventure_started = true;
+            	l.setup_adventure();
             }
             return false;  // must return true for touchUp event to occur
         }

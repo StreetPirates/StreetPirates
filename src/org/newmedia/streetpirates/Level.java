@@ -106,7 +106,7 @@ public class Level implements Screen { //, InputProcessor {
 	public int hero_move = 5;
 	public int num_helpers;
 	public boolean start_route;
-	public boolean city_enabled;
+	public boolean adventure_started;
 	Texture imgbutton;
 	TextureRegion imgbuttonregion;
 	Window window;
@@ -210,24 +210,22 @@ public class Level implements Screen { //, InputProcessor {
 		}
 
 		for(int i = 0; i < car.size(); i++) {
-			
 			car.get(i).set_validtile(TILE_STREET_ID);
 			car.get(i).set_validtile(TILE_PEDESTRIANWALK_ID);
 			car.get(i).set_illegaltile(TILE_PAVEMENT_ID);
 			car.get(i).set_illegaltile(TILE_ILLEGAL_ID);
 			car.get(i).set_guardtile(TILE_STREET_ID);
-			car.get(i).set_random_move();
-			car.get(i).set_target(hero);	
+			//car.get(i).set_random_move();
+			//car.get(i).set_target(hero);	
 		}
 		
-		//car.get(2).set_target(hero);
 		route = new ArrayList<Character>();
 		actor_picked = null;
 		actor_dropped = false;
 		start_route = false;
 		num_helpers = starfish.size();
 		/* tiles with id >= tileid will be illegal */
-		city_enabled = false;
+		adventure_started = false;
 		
 		/*buttonSkin = new Skin(Gdx.files.internal("assets/ui/uiskin.json"));
 		imgbutton = new Texture(Gdx.files.internal("assets/ui/uiskin.png"));
@@ -299,8 +297,11 @@ public class Level implements Screen { //, InputProcessor {
 		return type;
 	}
 	
-	public void setup_city() {
-		;
+	public void setup_adventure() {
+		for(int i = 0; i < car.size(); i++) {
+			car.get(i).set_random_move();
+			car.get(i).set_target(hero);	
+		}
 	}
 	
 	@Override
@@ -308,7 +309,7 @@ public class Level implements Screen { //, InputProcessor {
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		int layers_id[] = {0};
 		int city_layers_id[] = {0, 1};
-		if (city_enabled == false)
+		if (adventure_started == false)
 			renderer.render(layers_id);
 		else
 			cityrenderer.render(city_layers_id);
@@ -325,8 +326,7 @@ public class Level implements Screen { //, InputProcessor {
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
            //y = tileheight * height - y;
 		   System.out.println("STAGE touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY());
-           //System.out.println("STAGE touchDown x: " + x + " y: " + y);
-           if (l.actor_picked == null && l.start_route == false) {
+           if (adventure_started && l.actor_picked == null && l.start_route == false) {
       		   l.hero.gotoPoint(l, x, y);
            }
            if (l.actor_dropped == true) {
@@ -336,6 +336,7 @@ public class Level implements Screen { //, InputProcessor {
            if (l.start_route == true) {
         	   l.start_route = false;
            }
+           
       	   //hero.followRoute(starfish);
       	   return true;  // must return true for touchUp event to occur
     	}
@@ -345,7 +346,7 @@ public class Level implements Screen { //, InputProcessor {
     
     	public boolean keyTyped(InputEvent event, char character) {
     		//System.out.println("STAGE keyTyped x: " + character);
-    		
+    		if (adventure_started) {
     		hero.set_moving(true);
     		hero.clearActions();
     		switch(character) {
@@ -367,6 +368,7 @@ public class Level implements Screen { //, InputProcessor {
     					hero.setPosition((float) (hero.getX() + hero_move), (float)(hero.getY()));
     				break;	
     		}
+    	   }
     	   //hero.set_moving(false);	    		
     	   return true;
     	}
