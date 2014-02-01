@@ -87,6 +87,7 @@ public class Character extends Actor {
 		this.random_move = false;
 		this.moving = false;
 		this.in_action = false;
+		this.target = null;
 	}
 	
 	public void set_moving(boolean set) {
@@ -131,6 +132,10 @@ public class Character extends Actor {
 	
 	public void set_target(Character target) {
 		this.target = target;
+	}
+	
+	public Character get_target() {
+		return target;
 	}
 	
 	public class CharacterListener extends InputListener {
@@ -203,7 +208,8 @@ public class Character extends Actor {
         spriteBatch.end();
 
 		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
-		for (Actor a: this.getStage().getActors()) {
+		//for (Actor a: this.getStage().getActors()) {
+		for (Character a: l.getCars()) {
 			//Character c = (Character)a;
 			if (a!= this && overlapRectangles (a, this, (float)0.5)) {
 			   //if (a.getActions(). != 0)
@@ -217,16 +223,17 @@ public class Character extends Actor {
 				a.clearActions();
 			    this.clearActions();
 			    
-		        /*c.set_moving(false);
-		        c.set_in_action(false);
+		        a.set_moving(false);
+		        a.set_in_action(false);
 		        this.set_moving(false);
-		        this.set_in_action(false);*/
+		        this.set_in_action(false);
 			   //System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
 			    
-			    /* if a car or bad guy, we should pop a message, reset hero to starting position and retry map
-			    /*if (this == l.hero ||  a == l.hero){
+			    // if a car or bad guy, we should pop a message, reset hero to starting position and retry map
+			    // there's a problem here, only if actor has a target, e.g. if hero hits a starfish, it 's ok :)
+			    if ((this == l.hero ||  a == l.hero) && (this.target != null || a.get_target() != null)) {
 			    	l.hero.setPosition(0,0);
-			    }*/
+			    }
 		   }	
 			
 		}
@@ -236,9 +243,13 @@ public class Character extends Actor {
 		 * was planned before the hero moved there.
 		 * TODO: Ideally we should only stop actions that go the hero's location... how to do that?
 		 */
-		if (target != null && target.get_immune_tiles() == 0 && 
-				target.immune_tile(target.getX(), target.getY()) == false ) {
-			;//this.clearActions();
+		if (target != null && target.immune_tile(target.getX(), target.getY()) &&
+				//(java.lang.Math.abs(target.getX() - this.getX()) < l.tilewidth * 3) &&
+				//(java.lang.Math.abs(target.getY() - this.getY()) < l.tileheight * 3)
+				overlapRectangles (target, this, (float)2.0)
+				) {
+			System.out.println("AVOIDED PIRATE PEDESTRIAN! WHEYWEEEEE" + getX() + " " + getY());
+			this.clearActions();
 		}
 		
 		//List<Action> listactions = this.getActions().asList();
@@ -415,6 +426,7 @@ public class Character extends Actor {
 	    while (backtrack == true) {
 	    	int currentx = newx;
 	    	int currenty = newy;
+	    	System.out.println("STACK TILE IN PATHFINDING: " + currentx +  " " + currenty);
 	    	path.push(parents[currentx][currenty]);
 	    	newx = (int)parents[currentx][currenty].x;
 	    	newy = (int)parents[currentx][currenty].y;

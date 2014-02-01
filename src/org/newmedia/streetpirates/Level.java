@@ -245,6 +245,11 @@ public class Level implements Screen { //, InputProcessor {
 		*/
 	}
 	
+	
+	public ArrayList<Character> getCars() {
+		return car;
+	}
+	
 	public int getTileType(int id) {
 		for (int i = 0; i < tile_street_types.length; i++) {
 			if (id == this.tile_street_types[i])
