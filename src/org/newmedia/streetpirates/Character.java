@@ -54,7 +54,9 @@ public class Character extends Actor {
 		
 		this.setX(tilex * l.tilewidth);
 		this.setY(tiley * l.tileheight);
-		this.setScale((float)l.tilewidth / (float)texture[0].getWidth() * scaling, (float)l.tileheight / (float)texture[0].getHeight() * scaling );
+		float texture_ratio = (float)texture[0].getHeight()/ (float)texture[0].getWidth();
+		
+		this.setScale((float)l.tilewidth / (float)texture[0].getWidth() * scaling, (float)l.tileheight / (float)texture[0].getHeight() * scaling * texture_ratio );
 		//this.setHeight(texture[0].getHeight());
 		//this.setWidth(texture[0].getWidth());
 		this.setHeight(texture[0].getHeight() * this.getScaleY());
@@ -68,7 +70,7 @@ public class Character extends Actor {
 		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
 		this.setTouchable(Touchable.enabled);
 		
-		System.out.println("Character:! width = " + this.getWidth() + "height = " + this.getHeight() + " originx:  " + this.getX() + " originy: " + this.getY() );
+		//System.out.println("Character:! width = " + this.getWidth() + "height = " + this.getHeight() + " originx:  " + this.getX() + " originy: " + this.getY() );
 		
 		stage.addActor(this);
 		tileid_valid = new int[MAX_TILE_TYPES];
@@ -146,15 +148,14 @@ public class Character extends Actor {
 		}
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-            System.out.println("ACTOR touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY() + " actorx:" + getX() + " actory:" + getY());
+            //System.out.println("ACTOR touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY() + " actorx:" + getX() + " actory:" + getY());
             if (character.pickable == true) {
-            	if (l.actor_picked == null) {
-            		
-            	    System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
+            	if (l.actor_picked == null) {		
+            	    //System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
             		l.actor_picked = character;
             	}
             	else {
-            		System.out.println("ACTOR DROPPED touchDown x: " + x + " y: " + y);
+            		//System.out.println("ACTOR DROPPED touchDown x: " + x + " y: " + y);
             		l.actor_dropped = true;
             		l.route.add(character);
             		//l.route.add(Vector2(character.getX(), character.getY());
@@ -248,7 +249,7 @@ public class Character extends Actor {
 				//(java.lang.Math.abs(target.getY() - this.getY()) < l.tileheight * 3)
 				overlapRectangles (target, this, (float)2.0)
 				) {
-			System.out.println("AVOIDED PIRATE PEDESTRIAN! WHEYWEEEEE" + getX() + " " + getY());
+			//System.out.println("AVOIDED PIRATE PEDESTRIAN! WHEYWEEEEE" + getX() + " " + getY());
 			this.clearActions();
 		}
 		
@@ -322,7 +323,7 @@ public class Character extends Actor {
 		sequence.addAction(moveTo(destx, desty, 0.5f));
 		sequence.addAction(run(new java.lang.Runnable() {
 		    public void run () {
-		        System.out.println("Action complete!");
+		        //System.out.println("Action complete!");
 		        moving = false;
 		        in_action = false;
 		    }
@@ -392,7 +393,7 @@ public class Character extends Actor {
 
 	                int distanceTraveled = costpath[(int)current.x][(int)current.y] + l.cost[nodex][nodey];
 	                if (illegal_tile(nodex * l.tilewidth, nodey * l.tileheight)) {
-	                	System.out.println("ILLEGAL TILE IN PATHFINDING: " + nodex +  " " + nodey);
+	                	//System.out.println("ILLEGAL TILE IN PATHFINDING: " + nodex +  " " + nodey);
 	                	distanceTraveled += 10000;
 	                }
 	                int heuristic = java.lang.Math.abs(nodex - x) + java.lang.Math.abs(nodey - y);
@@ -422,11 +423,11 @@ public class Character extends Actor {
 	    boolean backtrack = true;
 	    int newx = x;
 	    int newy = y;
-	    System.out.println("LAST PATH BUILD STACK");
+	    //System.out.println("LAST PATH BUILD STACK");
 	    while (backtrack == true) {
 	    	int currentx = newx;
 	    	int currenty = newy;
-	    	System.out.println("STACK TILE IN PATHFINDING: " + currentx +  " " + currenty);
+	    	//System.out.println("STACK TILE IN PATHFINDING: " + currentx +  " " + currenty);
 	    	path.push(parents[currentx][currenty]);
 	    	newx = (int)parents[currentx][currenty].x;
 	    	newy = (int)parents[currentx][currenty].y;
@@ -482,7 +483,7 @@ public class Character extends Actor {
 		
 		sequence.addAction(run(new java.lang.Runnable() {
 		    public void run () {
-		        System.out.println("Action complete!");
+		        //System.out.println("Action complete!");
 		        moving = false;
 		        in_action = false;
 		    }
@@ -532,7 +533,7 @@ public class Character extends Actor {
 		int tileid = l.getTileId(x, y);
 		for (int i = 0; i < illegal_tiles; i++) {
 			if (tileid == tileid_illegal[i]) { // && this == l.hero) {
-					System.out.println("ILLEGAL PATH x: " + x + " y: " + y);
+				//System.out.println("ILLEGAL PATH x: " + x + " y: " + y);
 				return true;
 			}
 		}
@@ -603,7 +604,7 @@ public class Character extends Actor {
 		
 		//System.out.println("Random move initiated? " + direction + " " + willmove);
 		if (willmove == true) {
-			System.out.println("Random move initiated " + direction);
+			//System.out.println("Random move initiated " + direction);
 			//sequence.addAction(moveTo(mytilex * l.tilewidth, mytiley * l.tileheight, generator.nextFloat() * 3f + 0.5f));
 			gotoPoint(l, mytilex * l.tilewidth, mytiley * l.tileheight);
 		}

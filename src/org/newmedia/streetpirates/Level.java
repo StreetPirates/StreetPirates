@@ -44,6 +44,7 @@ public class Level implements Screen { //, InputProcessor {
 	private Texture texture_hero[];
 	private Texture texture_compass[];
 	private Texture texture_starfish[];
+	private Texture texture_treasure[];
 	private Texture texture_bluecar[], texture_bluecar_back, texture_bluecar_front, texture_bluecar_side;
 	private Texture texture_redcar[], texture_redcar_back, texture_redcar_front, texture_redcar_side;
 	private Texture texture_greencar[], texture_greencar_back, texture_greencar_front, texture_greencar_side;
@@ -62,6 +63,7 @@ public class Level implements Screen { //, InputProcessor {
 	private ArrayList<Character> car;
 	private ArrayList<Character> badguy;
 	private ArrayList<Character> starfish;
+	private Character treasure;
 	private Skin buttonSkin;
 	
 	public Character compass;
@@ -120,11 +122,15 @@ public class Level implements Screen { //, InputProcessor {
 		tiledMap = new TmxMapLoader().load("assets/streetpirates-level1-withcompass.tmx");
 		tiledCity = new TmxMapLoader().load("assets/streetpirates-city1-withcompass.tmx");
 		prop = tiledMap.getProperties();
+		
 		texture_hero = new Texture[4];
 		texture_hero[0] = new Texture(Gdx.files.internal("assets/pirate/front_walk1.png"));
 		texture_hero[1] = new Texture(Gdx.files.internal("assets/pirate/front_walk2.png"));
 		texture_hero[2] = new Texture(Gdx.files.internal("assets/pirate/front_walk3.png"));
 		texture_hero[3] = new Texture(Gdx.files.internal("assets/pirate/front_walk4.png"));
+		
+		texture_treasure = new Texture[1];
+		texture_treasure[0] = new Texture(Gdx.files.internal("assets/map/treasure1.png"));
 		
 		texture_compass = new Texture[1];
 		texture_compass[0] = new Texture(Gdx.files.internal("assets/map/compass.png"));
@@ -187,12 +193,13 @@ public class Level implements Screen { //, InputProcessor {
 		stage.setCamera(camera);
 		
 		hero = new Character(texture_hero, 0, 0, (float)1.0, stage, this);
-		compass = new Character(texture_compass, (float)13.5, 7, (float)2, stage, this);
+		treasure = new Character(texture_treasure, 11, 6, (float)2.0, stage, this);
+		compass = new Character(texture_compass, (float)13.5, 7, (float)2.5, stage, this);
 		
 		car = new ArrayList<Character>();
-		car.add(new Character(texture_bluecar, 6, 6, (float)1.0, stage, this));
-		car.add(new Character(texture_greencar, 3, 6, (float)1.0, stage, this));
-		car.add(new Character(texture_redcar, 2, 4, (float)1.0, stage, this));
+		car.add(new Character(texture_bluecar, 6, 6, (float)1.5, stage, this));
+		car.add(new Character(texture_greencar, 3, 6, (float)1.5, stage, this));
+		car.add(new Character(texture_redcar, 2, 4, (float)1.5, stage, this));
 		
 		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();
@@ -281,10 +288,10 @@ public class Level implements Screen { //, InputProcessor {
 					int newid = cell.getTile().getId();
 					int newidtype = getTileType(newid);
 					int idtype = type[i][j]; //(type[i][j] == -1) ? TILE_UNKNOWN_ID : getTileType(type[i][j]);
-					System.out.println("type(" + i + "," + j + "): " + idtype + " newidtype " + newidtype);
+					//System.out.println("type(" + i + "," + j + "): " + idtype + " newidtype " + newidtype);
 					if (newidtype < idtype) {
 						type[i][j] = newidtype;
-						System.out.println("type(" + i + "," + j + "): changed to " + newidtype);
+						//System.out.println("type(" + i + "," + j + "): changed to " + newidtype);
 					}
 				}
 			}
@@ -325,7 +332,7 @@ public class Level implements Screen { //, InputProcessor {
 		}
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
            //y = tileheight * height - y;
-		   System.out.println("STAGE touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY());
+		   //System.out.println("STAGE touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY());
            if (adventure_started && l.actor_picked == null && l.start_route == false) {
       		   l.hero.gotoPoint(l, x, y);
            }
@@ -341,7 +348,7 @@ public class Level implements Screen { //, InputProcessor {
       	   return true;  // must return true for touchUp event to occur
     	}
     	public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
-    		System.out.println("STAGE touchUp x: " + x + " y: " + y);
+    		//System.out.println("STAGE touchUp x: " + x + " y: " + y);
     	}
     
     	public boolean keyTyped(InputEvent event, char character) {
