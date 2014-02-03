@@ -177,6 +177,44 @@ public class Character extends Actor {
         
 	}
 	
+	public class ParrotListener extends InputListener {
+		Character character;
+		
+		public ParrotListener(Character c) {
+			character = c;
+		}
+		
+		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+            //System.out.println("ACTOR touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY() + " actorx:" + getX() + " actory:" + getY());
+            if (character.pickable == true) {
+            	if (l.actor_picked == null) {		
+            	    //System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
+            		l.actor_picked = character;
+            	}
+            	else {
+            		//System.out.println("ACTOR DROPPED touchDown x: " + x + " y: " + y);
+            		l.actor_dropped = true;
+            		l.route.add(character);
+            		//l.route.add(Vector2(character.getX(), character.getY());
+            		//.num_helpers++;
+            	}
+            }
+            else if (character == l.compass) {
+            	l.start_route = true;
+            	l.hero.followRoute(l.route);
+            	l.adventure_started = true;
+            	l.setup_adventure();
+            }
+            return false;  // must return true for touchUp event to occur
+        }
+		
+        public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+        	//System.out.println("ACTOR touchDown x: " + x + " y: " + y);
+        }
+        
+	}
+	
+	
 	public void addClickListener() {
 		this.addListener(new CharacterListener(this));
 	}
@@ -333,11 +371,12 @@ public class Character extends Actor {
 		route.clear();
 	}
 
-	//TODO: Handle collision with hero!!!! sometime he is hit even on pedwalk?!
+	
 	//TODO: Menu + buttons + parrot + compass
+	//TODO: make route visible with toes while making them
 	//TODO: route needs to be modified when picking up a starfish again
 	//TODO: Add bad guys
-	//TODO: Add different randomness on moving actors
+	//TODO: Add different randomness on moving actors or make preset routes
 	//TODO: Fix scaling and resize
 	//TODO: Accurate point clicking?! done
 	//TODO: Fix bounds, don't let actors leave screen! can cause a crash

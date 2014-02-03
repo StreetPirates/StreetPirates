@@ -6,15 +6,17 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Gdx.*;
 
 public class PirateGame extends Game {
-	   Level mapLevel;
-	   Level cityLevel;
+	   Level level;
+	   Menu menu;
+	   //Level cityLevel;
 	   //Level menuScreen;
 	   @Override
        public void create() {
 		       //menuScreen = new MenuScreen(this);
-               mapLevel = new Level(this);
+               level = new Level(this);
                //cityLevel = new CityLevel(this);
-               setScreen(mapLevel);              
+               setScreen(level);
+               
        }
 	   
 	   

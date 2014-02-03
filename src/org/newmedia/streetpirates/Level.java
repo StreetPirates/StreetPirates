@@ -45,9 +45,11 @@ public class Level implements Screen { //, InputProcessor {
 	private Texture texture_compass[];
 	private Texture texture_starfish[];
 	private Texture texture_treasure[];
+	private Texture texture_parrot[];
 	private Texture texture_bluecar[], texture_bluecar_back, texture_bluecar_front, texture_bluecar_side;
 	private Texture texture_redcar[], texture_redcar_back, texture_redcar_front, texture_redcar_side;
 	private Texture texture_greencar[], texture_greencar_back, texture_greencar_front, texture_greencar_side;
+	private Texture texture_bandits_grey[], texture_bandits_brown[], texture_bandits_purple[];
 	private OrthographicCamera camera;
 	private TiledMap tiledMap;
 	private TiledMap tiledCity;
@@ -61,9 +63,10 @@ public class Level implements Screen { //, InputProcessor {
 	private PirateGame game;
 	public Stage stage;
 	private ArrayList<Character> car;
-	private ArrayList<Character> badguy;
+	private ArrayList<Character> bandit;
 	private ArrayList<Character> starfish;
 	private Character treasure;
+	private Character parrot;
 	private Skin buttonSkin;
 	
 	public Character compass;
@@ -154,6 +157,17 @@ public class Level implements Screen { //, InputProcessor {
 		texture_starfish = new Texture[1];
 		texture_starfish[0] = new Texture(Gdx.files.internal("assets/map/starfish-alpha.png"));//map_tiles.png")); 
 		
+		texture_parrot = new Texture[1];
+		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));//map_tiles.png"));
+		
+		texture_bandits_purple = new Texture[1];
+		texture_bandits_purple[0] = new Texture(Gdx.files.internal("assets/city/bandits-purple.png"));//map_tiles.png"));
+		texture_bandits_brown = new Texture[1];
+		texture_bandits_brown[0] = new Texture(Gdx.files.internal("assets/city/bandits-brown.png"));//map_tiles.png"));
+		texture_bandits_grey = new Texture[1];
+		texture_bandits_grey[0] = new Texture(Gdx.files.internal("assets/city/bandits-grey.png"));//map_tiles.png"));
+		
+		
 		layer = (TiledMapTileLayer)tiledMap.getLayers().get(0); // assuming the layer at index on contains tiles
 		citylayer = (TiledMapTileLayer)tiledCity.getLayers().get(1); // assuming the layer at index on contains tiles
 		columns = layer.getWidth();
@@ -192,10 +206,16 @@ public class Level implements Screen { //, InputProcessor {
 		stage = new Stage();
 		stage.setCamera(camera);
 		
-		hero = new Character(texture_hero, 0, 0, (float)1.0, stage, this);
+		
 		treasure = new Character(texture_treasure, 11, 6, (float)2.0, stage, this);
 		compass = new Character(texture_compass, (float)13.5, 7, (float)2.5, stage, this);
+		parrot = new Character(texture_parrot, (float)13.5, 0, (float)2.0, stage, this);
 		
+		bandit = new ArrayList<Character>();
+		bandit.add(new Character(texture_bandits_purple, 1, 8, (float)2.0, stage, this));
+		bandit.add(new Character(texture_bandits_grey, 10, 3, (float)2.0, stage, this));
+		bandit.add(new Character(texture_bandits_brown, 9, 7, (float)2.0, stage, this));
+				
 		car = new ArrayList<Character>();
 		car.add(new Character(texture_bluecar, 6, 6, (float)1.5, stage, this));
 		car.add(new Character(texture_greencar, 3, 6, (float)1.5, stage, this));
@@ -208,6 +228,7 @@ public class Level implements Screen { //, InputProcessor {
 		starfish.add(new Character(texture_starfish, 12, 0, (float)1.0, stage, this));
 		//starfish.add(new Character(texture_starfish, 11, 5, (float)1.0, stage, this));
 		
+		hero = new Character(texture_hero, 0, 0, (float)1.0, stage, this);
 		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
 		hero.set_illegaltile(TILE_ILLEGAL_ID);
 		//hero.followCharacter(starfish.get(0));
