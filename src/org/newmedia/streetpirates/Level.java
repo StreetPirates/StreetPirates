@@ -78,6 +78,7 @@ public class Level implements Screen { //, InputProcessor {
 	public boolean actor_dropped;
 	public ArrayList<Character> route;
 	public ArrayList<Character> footstep;
+	public ArrayList<Character> characters; /*all characters in one list?*/
 	public int tiletypes[][];
 	public int cost[][];
 	public int car_cost[][];
@@ -213,6 +214,8 @@ public class Level implements Screen { //, InputProcessor {
 		stage = new Stage();
 		stage.setCamera(camera);
 		
+		characters = new ArrayList<Character>();
+		
 		treasure = new Character(texture_treasure, 11, 6, (float)2.0, stage, this);
 		compass = new Character(texture_compass, (float)13.5, 7, (float)2.5, stage, this);
 		parrot = new Character(texture_parrot, (float)13.5, 0, (float)2.0, stage, this);
@@ -250,6 +253,7 @@ public class Level implements Screen { //, InputProcessor {
 		hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
 		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
 		hero.set_illegaltile(TILE_ILLEGAL_ID);
+		hero.set_goal(treasure);
 		//hero.followCharacter(starfish.get(0));
 		
 		for(int i = 0; i < starfish.size(); i++) {

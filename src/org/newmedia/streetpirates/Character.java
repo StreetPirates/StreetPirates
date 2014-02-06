@@ -33,7 +33,7 @@ public class Character extends Actor {
 	Texture currentFrame;
 	TextureRegion imageregion[], currentFrameRegion;
 	Animation animation;
-	Character target;
+	Character target, goal;
 	float stateTime;
 	int movingDirection;
 	int lastCollision, routeDirection;
@@ -95,6 +95,7 @@ public class Character extends Actor {
 		this.in_action = false;
 		this.inCollision = false;
 		this.target = null;
+		this.goal = null;
 		this.useAutoRoute = false;
 	}
 	
@@ -140,6 +141,10 @@ public class Character extends Actor {
 	
 	public void set_target(Character target) {
 		this.target = target;
+	}
+	
+	public void set_goal(Character target) {
+		this.goal = target;
 	}
 	
 	public Character get_target() {
@@ -219,7 +224,7 @@ public class Character extends Actor {
 		//for (Actor a: this.getStage().getActors()) {
 		for (Character a: l.getCars()) {
 			//Character c = (Character)a;
-			if (a!= this && overlapRectangles (a, this, (float)0.5) && !this.inCollision) {
+			if (a!= this && overlapRectangles (a, this, (float)0.6) && !this.inCollision) {
 			   //if (a.getActions(). != 0)
 					//  a.removeAction(a.getActions().first());
 			   //if (this.getActions() != null)
@@ -231,16 +236,21 @@ public class Character extends Actor {
 				a.clearActions();
 			    this.clearActions();
 			    this.inCollision = true;
+			    a.inCollision = true;
 			    this.set_moving(false);
 		        this.set_in_action(false);
 		        
 			    a.set_moving(false);
 		        a.set_in_action(false);
 		        
-		        if (a.useAutoRoute)
+		        if (a.useAutoRoute) { 
 		        	a.routeDirection = ~a.routeDirection;
-		        if (this.useAutoRoute)
+		        	System.out.println("other way collision!");
+		        }
+		        if (this.useAutoRoute) {
 		        	this.routeDirection = ~this.routeDirection;
+		        	System.out.println("other way collision!");
+		        }
 			    System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
 			    
 			    // if a car or bad guy, we should pop a message, reset hero to starting position and retry map
@@ -250,6 +260,11 @@ public class Character extends Actor {
 			    }
 		   }	
 			
+		}
+		
+		if (this == l.hero && overlapRectangles (l.hero.goal, this, (float)0.4)) {
+				// need victory message - You reached the treasure!
+		    	l.hero.setPosition(0,0);
 		}
 		
 		if (this.inCollision) {
@@ -391,17 +406,16 @@ public class Character extends Actor {
 			
 			tilex = (int) (dest.x) / l.tilewidth;
 			tiley = (int) (dest.y) / l.tileheight;	
-			System.out.println("PATH x: " + mytilex + " y: " + mytiley + " x:" + tilex + " y:" + tiley);
+			//System.out.println("PATH x: " + mytilex + " y: " + mytiley + " x:" + tilex + " y:" + tiley);
 			path = getPath(mytilex, mytiley, tilex, tiley);
 		
 			while (path.empty() == false) {
 				Vector2 next = path.pop();	
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
-				System.out.println("PUTPATH x: " + next.x + " y: " + next.y);
+				//System.out.println("PUTPATH x: " + next.x + " y: " + next.y);
 			}
 			//TODO: maybe we just need to go to tile, not exact position for route? so comment next line...
 			//sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
-			//System.out.println("LAST PATH x: " + x + " y: " + y);
 			mytilex = tilex;
 			mytiley = tiley;
 		}
@@ -442,7 +456,6 @@ public class Character extends Actor {
 		System.out.println("DRAW FOOTLIST x: " + tilex + " y: " + tiley);
 		while (path.empty() == false) {
 			Vector2 next = path.pop();	
-			System.out.println("DRAWFOOT x: " + next.x + " y: " + next.y);
 			l.footstep.add(new Character(l.texture_footstep, next.x, next.y, (float)0.75, this.getStage(), l));
 		}
 	}
@@ -742,6 +755,4 @@ public class Character extends Actor {
 			RandomMove();
 		}*/
 	}
-
-
 }
