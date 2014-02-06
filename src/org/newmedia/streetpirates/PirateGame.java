@@ -14,10 +14,14 @@ public class PirateGame extends Game {
        public void create() {
 		       //menuScreen = new MenuScreen(this);
                level = new Level(this);
+               menu = new Menu(this);
                //cityLevel = new CityLevel(this);
+               //setScreen(menu);
                setScreen(level);
                
        }
 	   
-	   
+	   public Level getCurrentLevel() {
+		   return level;
+	   }
 }

@@ -50,6 +50,8 @@ public class Level implements Screen { //, InputProcessor {
 	private Texture texture_redcar[], texture_redcar_back, texture_redcar_front, texture_redcar_side;
 	private Texture texture_greencar[], texture_greencar_back, texture_greencar_front, texture_greencar_side;
 	private Texture texture_bandits_grey[], texture_bandits_brown[], texture_bandits_purple[];
+	private Texture texture_pirateflag[];
+	public Texture texture_footstep[];
 	private OrthographicCamera camera;
 	private TiledMap tiledMap;
 	private TiledMap tiledCity;
@@ -65,6 +67,7 @@ public class Level implements Screen { //, InputProcessor {
 	private ArrayList<Character> car;
 	private ArrayList<Character> bandit;
 	private ArrayList<Character> starfish;
+	private Character pirateflag;
 	private Character treasure;
 	private Character parrot;
 	private Skin buttonSkin;
@@ -74,18 +77,10 @@ public class Level implements Screen { //, InputProcessor {
 	public Character actor_picked;
 	public boolean actor_dropped;
 	public ArrayList<Character> route;
+	public ArrayList<Character> footstep;
 	public int tiletypes[][];
 	public int cost[][];
 	public int car_cost[][];
-	
-	/* map tileset ids hardcoded 
-	public final int pavement_tileid = 1;
-	public final int street_tileid = 4;
-	public final int wall_tileid = 7;
-	public final int pedestrianwalk_tileid = 10;
-	public final int tileid_illegal_lowbound = 19;
-	public final int types[] = {7, 19, 1, 10, 4};
-	*/
 	
 	/* city tileset ids hardcoded */
 	public final int TILE_TYPES = 5;
@@ -101,6 +96,10 @@ public class Level implements Screen { //, InputProcessor {
 	public final int tile_pavement_types[] = {1, 37, 57, 39, 59};
 	public final int tile_pedestrianwalk_types[] = {55};
 	public final int tile_street_types[] = {11};
+	public Vector2 routeCar[][];
+	//public Vector2 routeCarA[] = { new Vector2(100, 100), new Vector2(600, 400) };
+	//public Vector2 routeCarB[] = { new Vector2(400, 550), new Vector2(500, 260) };
+	//public Vector2 routeCarC[] = { new Vector2(100, 350), new Vector2(400, 350) };
 	
 	public final int types[] = {7, 1, 10, 11};
 	
@@ -167,6 +166,14 @@ public class Level implements Screen { //, InputProcessor {
 		texture_bandits_grey = new Texture[1];
 		texture_bandits_grey[0] = new Texture(Gdx.files.internal("assets/city/bandits-grey.png"));//map_tiles.png"));
 		
+		texture_pirateflag = new Texture[1];
+		texture_pirateflag[0] = new Texture(Gdx.files.internal("assets/map/pirateflag.png")); 
+		
+		texture_footstep = new Texture[1];
+		texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/footstepsblue.png"));
+		
+		texture_parrot = new Texture[1];
+		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));//map_tiles.png"));
 		
 		layer = (TiledMapTileLayer)tiledMap.getLayers().get(0); // assuming the layer at index on contains tiles
 		citylayer = (TiledMapTileLayer)tiledCity.getLayers().get(1); // assuming the layer at index on contains tiles
@@ -206,20 +213,32 @@ public class Level implements Screen { //, InputProcessor {
 		stage = new Stage();
 		stage.setCamera(camera);
 		
-		
 		treasure = new Character(texture_treasure, 11, 6, (float)2.0, stage, this);
 		compass = new Character(texture_compass, (float)13.5, 7, (float)2.5, stage, this);
 		parrot = new Character(texture_parrot, (float)13.5, 0, (float)2.0, stage, this);
+		pirateflag = new Character(texture_pirateflag, (float)13.5, 3, (float)2.0, stage, this);
+		
+		footstep = new ArrayList<Character>();
 		
 		bandit = new ArrayList<Character>();
-		bandit.add(new Character(texture_bandits_purple, 1, 8, (float)2.0, stage, this));
-		bandit.add(new Character(texture_bandits_grey, 10, 3, (float)2.0, stage, this));
-		bandit.add(new Character(texture_bandits_brown, 9, 7, (float)2.0, stage, this));
+		bandit.add(new Character(texture_bandits_purple, 1, 8, (float)2.5, stage, this));
+		bandit.add(new Character(texture_bandits_grey, 10, 3, (float)2.5, stage, this));
+		bandit.add(new Character(texture_bandits_brown, 9, 7, (float)2.5, stage, this));
 				
 		car = new ArrayList<Character>();
-		car.add(new Character(texture_bluecar, 6, 6, (float)1.5, stage, this));
-		car.add(new Character(texture_greencar, 3, 6, (float)1.5, stage, this));
-		car.add(new Character(texture_redcar, 2, 4, (float)1.5, stage, this));
+		car.add(new Character(texture_bluecar, 6, 6, (float)2.0, stage, this));
+		car.add(new Character(texture_greencar, 3, 6, (float)2.0, stage, this));
+		car.add(new Character(texture_redcar, 2, 3, (float)2.0, stage, this));
+		
+		routeCar = new Vector2[3][2];
+		/*routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(11 * tilewidth, 4 * tileheight);
+		routeCar[1][0] = new Vector2(2 * tilewidth, 4 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
+		routeCar[2][0] = new Vector2(2 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 3 * tileheight);*/
+		
+		routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(2 * tilewidth, 4 * tileheight);
+		routeCar[1][0] = new Vector2(2 * tilewidth, 1 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
+		routeCar[2][0] = new Vector2(2 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 3 * tileheight);
+		
 		
 		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();
@@ -228,7 +247,7 @@ public class Level implements Screen { //, InputProcessor {
 		starfish.add(new Character(texture_starfish, 12, 0, (float)1.0, stage, this));
 		//starfish.add(new Character(texture_starfish, 11, 5, (float)1.0, stage, this));
 		
-		hero = new Character(texture_hero, 0, 0, (float)1.0, stage, this);
+		hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
 		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
 		hero.set_illegaltile(TILE_ILLEGAL_ID);
 		//hero.followCharacter(starfish.get(0));
@@ -237,6 +256,10 @@ public class Level implements Screen { //, InputProcessor {
 			starfish.get(i).set_pickable(true);	
 		}
 
+		for(int i = 0; i < bandit.size(); i++) {
+			bandit.get(i).set_target(hero);
+		}
+		
 		for(int i = 0; i < car.size(); i++) {
 			car.get(i).set_validtile(TILE_STREET_ID);
 			car.get(i).set_validtile(TILE_PEDESTRIANWALK_ID);
@@ -244,7 +267,8 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(i).set_illegaltile(TILE_ILLEGAL_ID);
 			car.get(i).set_guardtile(TILE_STREET_ID);
 			//car.get(i).set_random_move();
-			//car.get(i).set_target(hero);	
+			//car.get(i).set_target(hero);
+			car.get(i).addAutoRoute(routeCar[i]);
 		}
 		
 		route = new ArrayList<Character>();
@@ -255,20 +279,22 @@ public class Level implements Screen { //, InputProcessor {
 		/* tiles with id >= tileid will be illegal */
 		adventure_started = false;
 		
-		/*buttonSkin = new Skin(Gdx.files.internal("assets/ui/uiskin.json"));
+		buttonSkin = new Skin(Gdx.files.internal("assets/ui/uiskin.json"));
 		imgbutton = new Texture(Gdx.files.internal("assets/ui/uiskin.png"));
 		imgbuttonregion = new TextureRegion(imgbutton);
 		Button imgButton = new Button(new Image(imgbuttonregion), buttonSkin);
-		ImageButtonStyle style = new ImageButtonStyle(buttonSkin.get(ButtonStyle.class));
+		//ImageButtonStyle style = new ImageButtonStyle(buttonSkin.get(ButtonStyle.class));
 		window = new Window("Dialog", buttonSkin);
 		window.getButtonTable().add(new TextButton("X", buttonSkin)).height(window.getPadTop());
 		window.setPosition(100, 100);
+		window.row().fill().expandX();
 		window.add(imgButton);
+		window.row();
 		window.pack();
 		window.setVisible(true);
 		stage.addActor(window);
 		//TextButton tbf = new TextButton("myButton", buttonSkin.getStyle(TextButtonStyle.class));
-		*/
+		
 	}
 	
 	
@@ -330,6 +356,13 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(i).set_random_move();
 			car.get(i).set_target(hero);	
 		}
+		for(int i = 0; i < footstep.size(); i++) {
+			footstep.get(i).setVisible(false);
+			footstep.get(i).setSize(0,0);
+			footstep.get(i).setPosition(0,0);
+			
+		}
+		footstep.clear();
 	}
 	
 	@Override

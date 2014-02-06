@@ -28,13 +28,18 @@ public class Character extends Actor {
 	Random generator;
 	long clock, clock_lastmoved;
 	//Date date;
-	boolean random_move, in_action, moving;
+	boolean random_move, in_action, moving, inCollision;
 	SpriteBatch spriteBatch; 
 	Texture currentFrame;
 	TextureRegion imageregion[], currentFrameRegion;
 	Animation animation;
 	Character target;
 	float stateTime;
+	int movingDirection;
+	int lastCollision, routeDirection;
+	boolean useAutoRoute;
+	Vector2 autoRoute[];
+	Vector2 autoRouteReverse[];
 	
 	public boolean pickable;
 	public boolean is_picked;
@@ -64,8 +69,6 @@ public class Character extends Actor {
 		this.animation = new Animation(0.1f, imageregion);
 		spriteBatch = new SpriteBatch();
 		
-		//this.setSize(width, height);
-		
 		this.setVisible(true);
 		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
 		this.setTouchable(Touchable.enabled);
@@ -77,6 +80,7 @@ public class Character extends Actor {
 		tileid_guard = new int[MAX_TILE_TYPES];
 		tileid_illegal = new int[MAX_TILE_TYPES];
 		tileid_immune = new int[MAX_TILE_TYPES];
+		lastCollision = -1;
 		valid_tiles = 0;
 		guard_tiles = 0;
 		illegal_tiles = 0;
@@ -89,7 +93,9 @@ public class Character extends Actor {
 		this.random_move = false;
 		this.moving = false;
 		this.in_action = false;
+		this.inCollision = false;
 		this.target = null;
+		this.useAutoRoute = false;
 	}
 	
 	public void set_moving(boolean set) {
@@ -157,6 +163,7 @@ public class Character extends Actor {
             	else {
             		//System.out.println("ACTOR DROPPED touchDown x: " + x + " y: " + y);
             		l.actor_dropped = true;
+            		character.addFootsteps(l.route);
             		l.route.add(character);
             		//l.route.add(Vector2(character.getX(), character.getY());
             		//.num_helpers++;
@@ -176,44 +183,6 @@ public class Character extends Actor {
         }
         
 	}
-	
-	public class ParrotListener extends InputListener {
-		Character character;
-		
-		public ParrotListener(Character c) {
-			character = c;
-		}
-		
-		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-            //System.out.println("ACTOR touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY() + " actorx:" + getX() + " actory:" + getY());
-            if (character.pickable == true) {
-            	if (l.actor_picked == null) {		
-            	    //System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
-            		l.actor_picked = character;
-            	}
-            	else {
-            		//System.out.println("ACTOR DROPPED touchDown x: " + x + " y: " + y);
-            		l.actor_dropped = true;
-            		l.route.add(character);
-            		//l.route.add(Vector2(character.getX(), character.getY());
-            		//.num_helpers++;
-            	}
-            }
-            else if (character == l.compass) {
-            	l.start_route = true;
-            	l.hero.followRoute(l.route);
-            	l.adventure_started = true;
-            	l.setup_adventure();
-            }
-            return false;  // must return true for touchUp event to occur
-        }
-		
-        public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
-        	//System.out.println("ACTOR touchDown x: " + x + " y: " + y);
-        }
-        
-	}
-	
 	
 	public void addClickListener() {
 		this.addListener(new CharacterListener(this));
@@ -250,7 +219,7 @@ public class Character extends Actor {
 		//for (Actor a: this.getStage().getActors()) {
 		for (Character a: l.getCars()) {
 			//Character c = (Character)a;
-			if (a!= this && overlapRectangles (a, this, (float)0.5)) {
+			if (a!= this && overlapRectangles (a, this, (float)0.5) && !this.inCollision) {
 			   //if (a.getActions(). != 0)
 					//  a.removeAction(a.getActions().first());
 			   //if (this.getActions() != null)
@@ -261,12 +230,18 @@ public class Character extends Actor {
 			    
 				a.clearActions();
 			    this.clearActions();
-			    
-		        a.set_moving(false);
-		        a.set_in_action(false);
-		        this.set_moving(false);
+			    this.inCollision = true;
+			    this.set_moving(false);
 		        this.set_in_action(false);
-			   //System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
+		        
+			    a.set_moving(false);
+		        a.set_in_action(false);
+		        
+		        if (a.useAutoRoute)
+		        	a.routeDirection = ~a.routeDirection;
+		        if (this.useAutoRoute)
+		        	this.routeDirection = ~this.routeDirection;
+			    System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
 			    
 			    // if a car or bad guy, we should pop a message, reset hero to starting position and retry map
 			    // there's a problem here, only if actor has a target, e.g. if hero hits a starfish, it 's ok :)
@@ -276,6 +251,21 @@ public class Character extends Actor {
 		   }	
 			
 		}
+		
+		if (this.inCollision) {
+			int currentCollisions = 0;
+			   for (Character a: l.getCars()) {
+					//Character c = (Character)a;
+					if (a!= this && overlapRectangles (a, this, (float)0.5)) {
+						currentCollisions++;
+						break;
+					}
+			   }
+			   if (currentCollisions == 0) {
+				   System.out.println("Reset collision!");
+				   this.inCollision = false;   
+			   }
+		   }
 		
 		/* if target character has moved to an immune tile, cancel pending actions. 
 		 * We don't want a car to overrun a hero on a pedestrian walk because the random move
@@ -336,7 +326,7 @@ public class Character extends Actor {
 		this.in_action = true;
 		
 		for(Character dest: route) {
-			//tweak coordinates... We want the rout eto pass through middle (sort of) of actor, not bottom-left coordinates
+			//tweak coordinates... We want the route to pass through middle (sort of) of actor, not bottom-left coordinates
 			destx = dest.getX() + dest.getWidth()/4;
 			desty = dest.getY() + dest.getHeight()/4;
 			tilex = (int) (destx / l.tilewidth);
@@ -371,18 +361,104 @@ public class Character extends Actor {
 		route.clear();
 	}
 
+	public void addAutoRoute(Vector2 route[]) {
+		int size = route.length;
+		autoRoute = new Vector2[size];
+		autoRouteReverse = new Vector2[size];
+		for (int i = 0; i < size; i++) {
+			autoRoute[i] = route[i];
+			autoRouteReverse[size - i - 1] = route[i];
+		}
+		useAutoRoute = true;
+		routeDirection = 0;
+	}
+	
+	public void loopRoutePoints(Vector2 route[]) {
+		
+		Stack<Vector2> path;
+		int mytilex = (int) (this.getX() / l.tilewidth);
+		int mytiley = (int) (this.getY() / l.tileheight);
+		int tilex;
+		int tiley;
+		
+		this.clearActions();
+		SequenceAction sequence = new SequenceAction();
+		this.moving = true;
+		this.in_action = true;
+		
+		for(Vector2 dest: route) {
+			//tweak coordinates?... We want the route to pass through middle (sort of) of actor, not bottom-left coordinates
+			
+			tilex = (int) (dest.x) / l.tilewidth;
+			tiley = (int) (dest.y) / l.tileheight;	
+			System.out.println("PATH x: " + mytilex + " y: " + mytiley + " x:" + tilex + " y:" + tiley);
+			path = getPath(mytilex, mytiley, tilex, tiley);
+		
+			while (path.empty() == false) {
+				Vector2 next = path.pop();	
+				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
+				System.out.println("PUTPATH x: " + next.x + " y: " + next.y);
+			}
+			//TODO: maybe we just need to go to tile, not exact position for route? so comment next line...
+			//sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
+			//System.out.println("LAST PATH x: " + x + " y: " + y);
+			mytilex = tilex;
+			mytiley = tiley;
+		}
+		
+		sequence.addAction(run(new java.lang.Runnable() {
+		    public void run () {
+		        //System.out.println("Action complete!");
+		        moving = false;
+		        in_action = false;
+		        routeDirection = ~routeDirection;
+		    }
+		}));
+		this.addAction(sequence);
+	}
+
+	public void addFootsteps(ArrayList<Character> route) {
+		
+		int mytilex, mytiley, tilex, tiley;
+		float destx, desty;
+		
+		if (route.size() != 0) {
+			mytilex = (int) route.get(route.size()-1).getX() / l.tilewidth;
+			mytiley = (int) route.get(route.size()-1).getY() / l.tileheight;
+		}
+		else {
+			mytilex = (int) l.hero.getX() / l.tilewidth;
+			mytiley = (int) l.hero.getY() / l.tileheight;
+		}
+		
+		Stack<Vector2> path;
+		
+		//tweak coordinates... We want the route to pass through middle (sort of) of actor, not bottom-left coordinates
+		destx = this.getX() + this.getWidth()/4;
+		desty = this.getY() + this.getHeight()/4;
+		tilex = (int) (destx / l.tilewidth);
+		tiley = (int) (desty / l.tileheight);	
+		path = l.hero.getPath(mytilex, mytiley, tilex, tiley);
+		System.out.println("DRAW FOOTLIST x: " + tilex + " y: " + tiley);
+		while (path.empty() == false) {
+			Vector2 next = path.pop();	
+			System.out.println("DRAWFOOT x: " + next.x + " y: " + next.y);
+			l.footstep.add(new Character(l.texture_footstep, next.x, next.y, (float)0.75, this.getStage(), l));
+		}
+	}
+	
 	
 	//TODO: Menu + buttons + parrot + compass
 	//TODO: make route visible with toes while making them
 	//TODO: route needs to be modified when picking up a starfish again
 	//TODO: Add bad guys
-	//TODO: Add different randomness on moving actors or make preset routes
 	//TODO: Fix scaling and resize
 	//TODO: Accurate point clicking?! done
 	//TODO: Fix bounds, don't let actors leave screen! can cause a crash
 	//TODO: Review all clearActions() calls to actors. Use Actor.clearActions() to clear all actions in actor, e.g. if collision happens?!
 	//TODO: Animations, add side animations depending on direction of movement
 	//TODO: if hit by a car/bad guy, reset hero to beginning
+	//TODO: Add different randomness on moving actors or make preset routes
 	//TODO: Intro storytelling
 	
 	/* A* pathfinding on the fully connected tiledmap grid. Uses tile costs from Level class */
@@ -392,6 +468,9 @@ public class Character extends Actor {
 		ArrayList<Vector2> openList = new ArrayList<Vector2>();
 	    ArrayList<Vector2> closedList = new ArrayList<Vector2>();
 	    Stack<Vector2> path = new Stack<Vector2>();
+	    
+	    if ((x == startx) && (y == starty))
+			return path;
 	    
 	    int costpath[][] = new int[l.width][l.height];
 	    int costpathgoal[][] = new int[l.width][l.height];
@@ -650,14 +729,18 @@ public class Character extends Actor {
 	}
 	
 	public void moveToTileOrTarget() {
-		if (target != null && guard_tile(target.getX(), target.getY())) {
+		if (useAutoRoute == true) {
+			loopRoutePoints(routeDirection == 0 ? autoRoute : autoRouteReverse);
+		}
+		/*
+		else if (target != null && guard_tile(target.getX(), target.getY())) {
 			//try to move to target, if they are on tile of type tileid
 			// e.g. car will find hero pirate, if he is on a street tile!
 			gotoPoint(l, target.getX(), target.getY());
 		}
-		else {		
+		else if (random_move == true){		
 			RandomMove();
-		}
+		}*/
 	}
 
 
