@@ -251,14 +251,14 @@ public class Level implements Screen { //, InputProcessor {
 		treasure = new Character(texture_treasure, 11, 6, (float)2.0, stage, this);
 		compass = new Character(texture_compass, (float)13.5, 7, (float)2.5, stage, this);
 		parrot = new Character(texture_parrot, (float)13.5, 0, (float)2.0, stage, this);
-		pirateflag = new Character(texture_pirateflag, (float)13.5, 3, (float)2.0, stage, this);
+		//pirateflag = new Character(texture_pirateflag, (float)13.5, 3, (float)2.0, stage, this);
 		
 		footstep = new ArrayList<Character>();
 		
 		bandit = new ArrayList<Character>();
-		bandit.add(new Character(texture_bandits_purple, 1, 8, (float)2.5, stage, this));
+		//bandit.add(new Character(texture_bandits_purple, 1, 8, (float)2.5, stage, this));
 		bandit.add(new Character(texture_bandits_grey, 10, 3, (float)2.5, stage, this));
-		bandit.add(new Character(texture_bandits_brown, 9, 7, (float)2.5, stage, this));
+		//bandit.add(new Character(texture_bandits_brown, 9, 7, (float)2.5, stage, this));
 				
 		car = new ArrayList<Character>();
 		car.add(new Character(texture_bluecar_front, 6, 6, (float)2.0, stage, this));
@@ -352,6 +352,10 @@ public class Level implements Screen { //, InputProcessor {
 	
 	public ArrayList<Character> getCars() {
 		return car;
+	}
+	
+	public ArrayList<Character> getBandits() {
+		return bandit;
 	}
 	
 	public int getTileType(int id) {
@@ -500,6 +504,7 @@ public class Level implements Screen { //, InputProcessor {
     	}
     	
     	public boolean keyUp(InputEvent event, int keycode) {
+    		System.out.println("STAGE keyUp x: " + keycode);
     		switch(keycode) {
 				case 'i':
 				case 'k':

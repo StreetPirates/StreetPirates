@@ -16,8 +16,8 @@ public class PirateGame extends Game {
                level = new Level(this);
                menu = new Menu(this);
                //cityLevel = new CityLevel(this);
-               //setScreen(menu);
-               setScreen(level);           
+               setScreen(menu);
+               //setScreen(level);           
        }
 	   
 	   public Level getCurrentLevel() {

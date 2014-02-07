@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -24,20 +25,28 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 public class Menu implements Screen { //implements Screen {
 	PirateGame game;
 	Stage stage;
+	Group background;
 	Texture menuTexture;
-	Texture startMap, makeMap, settings;
-	Texture pirateA[], pirateB[];
+	Texture startMap, makeMap, settings, instructions;
+	Texture pirateA[], pirateB[], storyTexture[];
 	Image menuImage;
 	private OrthographicCamera camera;
 	Skin skin;
 	
+	MenuCharacter heroA, heroB;
 	ArrayList<Button> btnlist;
-	Button startMapBtn, makeMapBtn, settingsBtn;
+	Button startMapBtn, makeMapBtn, settingsBtn, instructionsBtn;
+	ButtonListener startMapListener;
+	StoryListener instructionsListener, storyImageListener;
 	ArrayList<MenuCharacter> pirate;
+	public int storyIdx;
+	public boolean storyStarts;
+	
 	
 	/**
 	 * @param args
@@ -52,14 +61,16 @@ public class Menu implements Screen { //implements Screen {
 		TextureRegion imageregion[], currentFrameRegion;
 		boolean chosen, stickychosen;
 		
-		public MenuCharacter(Texture texture[], float x, float y) {
+		public MenuCharacter(Texture texture[], float x, float y, double scaling) {
 			spriteBatch = new SpriteBatch();
 			this.setPosition(x,  y);
-			this.setWidth(texture[0].getWidth());
-			this.setHeight(texture[0].getHeight());
+			this.setScale((float)scaling, (float)scaling);
+			this.setHeight(texture[0].getHeight() * this.getScaleY());
+			this.setWidth(texture[0].getWidth() * this.getScaleX());
 			this.setVisible(true);
 			this.setTouchable(Touchable.enabled);
 			this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
+			System.out.println("ACTOR PICKED touchDown x: " + getWidth() + " y: " + getHeight());
 			imageregion = new TextureRegion[2];
 			imageregion[0] = new TextureRegion(texture[0]);
 			imageregion[1] = new TextureRegion(texture[1]);
@@ -67,6 +78,7 @@ public class Menu implements Screen { //implements Screen {
 			stickychosen = false;
 		}
 		
+		@Override
 		public void draw(Batch batch, float parentAlpha) {
 			super.draw(batch,  parentAlpha);
 			
@@ -93,7 +105,7 @@ public class Menu implements Screen { //implements Screen {
 		}
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-			System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
+			//System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
 			//y = menu.menuImage.getHeight() - y;
 			if (event.getStageX() >= c.getX() && event.getStageX() < c.getRight() && event.getStageY() >= c.getY() && event.getStageY() < c.getTop())  {
 				System.out.println("PIRATE PICKED touchDown x: " + x + " y: " + y);
@@ -112,7 +124,7 @@ public class Menu implements Screen { //implements Screen {
 		
         public boolean mouseMoved(InputEvent event, float x, float y) {
         	boolean other_chosen = false;
-        	System.out.println("ACTOR MOUSE touchDown x: " + x + " y: " + y);
+        	//System.out.println("ACTOR MOUSE touchDown x: " + x + " y: " + y);
         	for (MenuCharacter other: menu.pirate) {
 				if (other != c && other.stickychosen == true) {
 					other_chosen = true;
@@ -138,7 +150,7 @@ public class Menu implements Screen { //implements Screen {
 		btn.setWidth(image.getWidth());
 		btn.setHeight(image.getHeight());
 		btnlist.add(btn);
-		stage.addActor(btn);
+		background.addActor(btn);
 		return btn;
 	}
 	
@@ -146,6 +158,9 @@ public class Menu implements Screen { //implements Screen {
 		this.game = game;
 		menuTexture = new Texture(Gdx.files.internal("assets/menu/menu_bg.jpg"));
 		menuImage = new Image(menuTexture);
+		menuImage.setBounds(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		//menuImage.setWidth(Gdx.graphics.getWidth());
+		//menuImage.setHeight(Gdx.graphics.getHeight());
 		skin = new Skin(Gdx.files.internal("assets/ui/uiskin.json"));
 		
 		pirate = new ArrayList<MenuCharacter>();
@@ -160,19 +175,32 @@ public class Menu implements Screen { //implements Screen {
 		startMap = new Texture(Gdx.files.internal("assets/menu/DialekseXarth.png"));
 		makeMap = new Texture(Gdx.files.internal("assets/menu/FtiakseXarth.png"));
 		settings = new Texture(Gdx.files.internal("assets/menu/Prosarmogh.png"));
+		instructions = new Texture(Gdx.files.internal("assets/menu/Odhgies_Omada.png"));
 		
+		storyTexture = new Texture[7]; 
+		storyTexture[0] = new Texture(Gdx.files.internal("assets/storytelling/storytelling0.jpg"));
+		storyTexture[1] = new Texture(Gdx.files.internal("assets/storytelling/storytelling1.jpg"));
+		storyTexture[2] = new Texture(Gdx.files.internal("assets/storytelling/storytelling2.jpg"));
+		storyTexture[3] = new Texture(Gdx.files.internal("assets/storytelling/storytelling3.jpg"));
+		storyTexture[4] = new Texture(Gdx.files.internal("assets/storytelling/storytelling4.jpg"));
+		storyTexture[5] = new Texture(Gdx.files.internal("assets/storytelling/storytelling5.jpg"));
+		storyTexture[6] = new Texture(Gdx.files.internal("assets/storytelling/storytelling6.jpg"));
 		
 		stage = new Stage();
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, 13, 10);
 		stage.setCamera(camera);
 		
-		stage.addActor(menuImage);
+		background = new Group();
+		background.setBounds(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		
 		menuImage.setVisible(true);
+		background.addActor(menuImage);
+		stage.addActor(background);
 		
-		pirate.add(new MenuCharacter(pirateA, 200, 150));
-		pirate.add(new MenuCharacter(pirateB, 400, 150));
-		
+		pirate.add(new MenuCharacter(pirateA, 260, 260, 0.8));
+        pirate.add(new MenuCharacter(pirateB, 460, 260, 0.8));
+
 		for (MenuCharacter c: pirate) {
 			stage.addActor(c);
 		}
@@ -181,7 +209,11 @@ public class Menu implements Screen { //implements Screen {
 		startMapBtn = newBtn(startMap, 40, 20);
 		makeMapBtn = newBtn(makeMap, 340, 20);
 		settingsBtn = newBtn(settings, 640, 20);
-		
+		instructionsBtn = newBtn(settings, 640, 400);
+		startMapListener = new ButtonListener(this.game);
+		instructionsListener = new StoryListener(this);
+		storyIdx = 0;
+		storyStarts = true;
 	}
 	
 	public class ButtonListener extends InputListener {
@@ -203,13 +235,58 @@ public class Menu implements Screen { //implements Screen {
         
 	}
 	
+	public class StoryListener extends InputListener {
+		Menu menu;
+		
+		public StoryListener(Menu menu) {
+			this.menu = menu;
+		}
+		
+		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+			//System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
+			if (menu.storyStarts == true) {
+				menu.storyImageListener = new StoryListener(this.menu);
+				menu.menuImage.addListener(menu.storyImageListener);
+				menu.setButtonsVisible(false);
+				menu.storyIdx = 0;
+				menu.storyStarts = false;
+			}
+			
+			if (menu.storyIdx >= 7) {
+				menu.menuImage.removeListener(menu.storyImageListener);
+				setButtonsVisible(true);
+				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(menuTexture)));
+				menu.storyStarts = true;
+			}
+			else {
+				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[menu.storyIdx % 7])));
+            	menu.storyIdx++;
+			}
+            return true;  // must return true for touchUp event to occur
+        }
+		
+        public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+        	//System.out.println("ACTOR touchDown x: " + x + " y: " + y);
+        }
+        
+	}
+	
+	
+	public void setButtonsVisible(boolean visible) {
+		for (Button btn: btnlist) {
+			btn.setVisible(visible);
+		}
+		for (MenuCharacter c: pirate) {
+			c.setVisible(visible);	
+		}
+	}
 	
 	@Override
 	public void render(float delta) {		
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		stage.act(Gdx.graphics.getDeltaTime());
-		stage.draw();
 		
+		stage.draw();
 	}
 	
 	@Override
@@ -217,13 +294,17 @@ public class Menu implements Screen { //implements Screen {
          // called when this screen is set as the screen with game.setScreen();
 		
 		for (Button btn: btnlist) {
-			btn.addListener(new ButtonListener(this.game));
+			;
 		}
+		
+		startMapBtn.addListener(startMapListener);
+		instructionsBtn.addListener(instructionsListener);
 		
 		for (MenuCharacter c: pirate) {
 			c.addListener(new MenuCharListener(this, c));	
 		}
 		
+		//menuImage.addListener(new MenuListener(this));
 		
 		Gdx.input.setInputProcessor(stage);
     }
@@ -252,4 +333,59 @@ public class Menu implements Screen { //implements Screen {
 	public void resize(int w, int h) {	
 		 stage.setViewport(w, h, true);
 	}
+	
+	public class MenuListener extends InputListener {
+		Menu menu;
+		
+		public MenuListener(Menu menu) {
+			this.menu = menu;
+		}
+		
+		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+			//System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
+			//y = menu.menuImage.getHeight() - y;
+			for (MenuCharacter c: menu.pirate) {
+				if (event.getStageX() >= c.getX() && event.getStageX() < c.getRight() && event.getStageY() >= c.getY() && event.getStageY() < c.getTop())  {
+					System.out.println("PIRATE PICKED touchDown x: " + x + " y: " + y);
+					c.chosen = true;
+					c.stickychosen = true;
+					for (MenuCharacter other: menu.pirate) {
+						if (other != c) {
+							other.chosen = false;
+	    					other.stickychosen = false;
+						}
+					}
+				}
+			}
+			
+            return true;  // must return true for touchUp event to occur
+        }
+		
+        public boolean mouseMoved(InputEvent event, float x, float y) {
+        	boolean other_chosen = false;
+        	//System.out.println("ACTOR MOUSE touchDown x: " + x + " y: " + y);
+        	for (MenuCharacter c: menu.pirate) {
+				if (c.stickychosen == true) {
+					other_chosen = true;
+				}
+			}
+        	
+        	if (other_chosen == false) {
+        		for (MenuCharacter c: menu.pirate) {
+        			if (event.getStageX() >= c.getX() && event.getStageX() < c.getRight() && event.getStageY() >= c.getY() && event.getStageY() < c.getTop())  {
+        				c.chosen = true;
+            			for (MenuCharacter other: menu.pirate) {
+            				if (other != c) {
+            					other.chosen = false;
+            				}
+            			}
+        			}
+        		}
+        	}	
+          	return false;
+        }
+	}
+	
+	
+	
 }

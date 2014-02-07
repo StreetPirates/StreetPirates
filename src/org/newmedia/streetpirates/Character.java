@@ -37,11 +37,11 @@ public class Character extends Actor {
 	float stateTime;
 	int currentFrameSeriesIdx, numberFrameSeries;
 	int movingDirection;
-	int lastCollision, routeDirection;
-	boolean useAutoRoute;
+	int lastCollision, routeDirection, currentDirection;
+	boolean useAutoRoute, inAutoRoute;
 	Vector2 autoRoute[];
 	Vector2 autoRouteReverse[];
-	Stack<Integer> directionFrame;
+	LinkedList<Stack<Integer>> directionFrame;
 	
 	public boolean pickable;
 	public boolean is_picked;
@@ -49,6 +49,7 @@ public class Character extends Actor {
 	public static final int RIGHT = 2;
 	public static final int DOWN = 0;
 	public static final int UP = 1;
+	public static final int CURRDIRECTION = -1;
 	public static final long delta = 1000000;
 	public static final int MAX_TILE_TYPES = 3;
 	
@@ -67,8 +68,6 @@ public class Character extends Actor {
 		float texture_ratio = (float)texture[0].getHeight()/ (float)texture[0].getWidth();
 		
 		this.setScale((float)l.tilewidth / (float)texture[0].getWidth() * scaling, (float)l.tileheight / (float)texture[0].getHeight() * scaling * texture_ratio );
-		//this.setHeight(texture[0].getHeight());
-		//this.setWidth(texture[0].getWidth());
 		this.setHeight(texture[0].getHeight() * this.getScaleY());
 		this.setWidth(texture[0].getWidth() * this.getScaleX());
 		this.animation[0] = new Animation(0.1f, imageregion[0]);
@@ -102,7 +101,9 @@ public class Character extends Actor {
 		this.target = null;
 		this.goal = null;
 		this.useAutoRoute = false;
-		this.directionFrame = new Stack<Integer>();
+		this.inAutoRoute = false;
+		this.directionFrame = new LinkedList<Stack<Integer>>();
+		this.currentDirection = DOWN;
 	}
 	
 	public void addFrameSeries(Texture texture[]) {
@@ -241,22 +242,17 @@ public class Character extends Actor {
 		//for (Actor a: this.getStage().getActors()) {
 		for (Character a: l.getCars()) {
 			//Character c = (Character)a;
-			if (a!= this && overlapRectangles (a, this, (float)0.6) && !this.inCollision) {
-			   //if (a.getActions(). != 0)
-					//  a.removeAction(a.getActions().first());
-			   //if (this.getActions() != null)
-					//this.removeAction(a.getActions().first());
+			if (a!= this && overlapRectangles (a, this, (float)0.3) && !this.inCollision) {
 			   /*TODO: moving boolean flag is reset in last action, so there is chance a character stays in in_Action/moving limbo (i.e. true flags) forever.
 			    * so find a better way of removing a specific action. or resetting the flag at draw function or elsewhere.
 			    */
 			    
-				a.clearActions();
-			    this.clearActions();
+				a.flushActionsFrames();
+				this.flushActionsFrames();
 			    this.inCollision = true;
 			    a.inCollision = true;
 			    this.set_moving(false);
 		        this.set_in_action(false);
-		        
 			    a.set_moving(false);
 		        a.set_in_action(false);
 		        
@@ -272,11 +268,17 @@ public class Character extends Actor {
 			    
 			    // if a car or bad guy, we should pop a message, reset hero to starting position and retry map
 			    // there's a problem here, only if actor has a target, e.g. if hero hits a starfish, it 's ok :)
-			    if ((this == l.hero ||  a == l.hero) && (this.target != null || a.get_target() != null)) {
-			    	l.hero.setPosition(0,0);
+			    if (this == a.get_target()) {
+			    	this.setPosition(0,0);
 			    }
 		   }	
 			
+		}
+		
+		for (Character a: l.getBandits()) {
+			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4)) {
+				this.setPosition(0,0);
+			}
 		}
 		
 		if (this == l.hero && overlapRectangles (l.hero.goal, this, (float)0.4)) {
@@ -309,8 +311,7 @@ public class Character extends Actor {
 				//(java.lang.Math.abs(target.getY() - this.getY()) < l.tileheight * 3)
 				overlapRectangles (target, this, (float)2.0)
 				) {
-			//System.out.println("AVOIDED PIRATE PEDESTRIAN! WHEYWEEEEE" + getX() + " " + getY());
-			this.clearActions();
+			this.flushActionsFrames();
 		}
 		
 		//List<Action> listactions = this.getActions().asList();
@@ -344,6 +345,42 @@ public class Character extends Actor {
 		this.setWidth(imageregion[0].getRegionWidth() * this.getScaleX());
 	}*/
 	
+	public void addFrameChangeAction(SequenceAction sequence) {
+		sequence.addAction(run(new java.lang.Runnable() {
+		    public void run () {
+		    		Stack<Integer> dirstack = directionFrame.peekFirst();
+		    		if (dirstack != null && dirstack.empty()) {
+		    			directionFrame.remove();
+		    			dirstack = directionFrame.peekFirst();
+		    		}
+		    		if (dirstack != null) {
+		    			int dir = dirstack.pop();
+		    			if (dir != CURRDIRECTION) {
+		    				currentDirection = dir;
+		    				//System.out.println("DIRECTIONFRAME SERIES: " + dir);
+		        			setFrameSeriesIdx(dir);	      
+		    			}
+		    			else {
+		    				setFrameSeriesIdx(currentDirection);
+		    			}
+		    		}
+		    }
+		}));
+	}
+	
+	public void endRouteSequence(SequenceAction sequence) {
+		sequence.addAction(run(new java.lang.Runnable() {
+		    public void run () {
+		        System.out.println("Action complete!");
+		        moving = false;
+		        in_action = false;
+		        if (directionFrame.peekFirst() != null) {
+		        	directionFrame.remove();
+		        }
+		    }
+		}));
+	}
+	
 	public void followRoute(ArrayList<Character> route) {
 		int mytilex = (int) (this.getX() / l.tilewidth);
 		int mytiley = (int) (this.getY() / l.tileheight);
@@ -352,7 +389,7 @@ public class Character extends Actor {
 		
 		Stack<Vector2> path;
 		
-		this.clearActions();
+		this.flushActionsFrames();
 		SequenceAction sequence = new SequenceAction();
 		this.moving = true;
 		this.in_action = true;
@@ -372,14 +409,7 @@ public class Character extends Actor {
 				Vector2 next = path.pop();
 				
 				if (numberFrameSeries > 1) {
-				sequence.addAction(run(new java.lang.Runnable() {
-				    public void run () {
-				    
-				    		int dir = directionFrame.pop();
-				    		System.out.println("DIRECTIONFRAME SERIES: " + dir);
-				        	setFrameSeriesIdx(dir);    	
-				    }
-				}));
+					addFrameChangeAction(sequence);
 				}
 				
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
@@ -391,15 +421,10 @@ public class Character extends Actor {
 			mytilex = tilex;
 			mytiley = tiley;
 		}
-		
+		//TODO: no matching directionFrame for this move
 		sequence.addAction(moveTo(destx, desty, 0.5f));
-		sequence.addAction(run(new java.lang.Runnable() {
-		    public void run () {
-		        //System.out.println("Action complete!");
-		        moving = false;
-		        in_action = false;
-		    }
-		}));
+		
+		endRouteSequence(sequence);
 		this.addAction(sequence);
 		//clear the route!
 		route.clear();
@@ -435,24 +460,18 @@ public class Character extends Actor {
 			
 			tilex = (int) (dest.x) / l.tilewidth;
 			tiley = (int) (dest.y) / l.tileheight;	
-			//System.out.println("PATH x: " + mytilex + " y: " + mytiley + " x:" + tilex + " y:" + tiley);
+			System.out.println("PATH x: " + mytilex + " y: " + mytiley + " x:" + tilex + " y:" + tiley);
 			path = getPath(mytilex, mytiley, tilex, tiley);
 		
 			while (path.empty() == false) {
 				Vector2 next = path.pop();
 				
-				if (numberFrameSeries > 1) {
-				sequence.addAction(run(new java.lang.Runnable() {
-				    public void run () {
-				    		int dir = directionFrame.pop();
-				    		System.out.println("DIRECTIONFRAME SERIES: " + dir);
-				        	setFrameSeriesIdx(dir);
-				    }
-				}));
-				}
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
-				//System.out.println("PUTPATH x: " + next.x + " y: " + next.y);
+				if (numberFrameSeries > 1) {
+					addFrameChangeAction(sequence);
+				}
 			}
+			
 			//TODO: maybe we just need to go to tile, not exact position for route? so comment next line...
 			//sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
 			mytilex = tilex;
@@ -461,12 +480,18 @@ public class Character extends Actor {
 		
 		sequence.addAction(run(new java.lang.Runnable() {
 		    public void run () {
-		        //System.out.println("Action complete!");
+		        System.out.println("ROUTE HAHAHAHA Action complete!");
 		        moving = false;
 		        in_action = false;
+		        if (directionFrame.peekFirst() != null) {
+		        	directionFrame.remove();
+		        }
 		        routeDirection = ~routeDirection;
+		        inAutoRoute = false;
 		    }
 		}));
+			
+		
 		this.addAction(sequence);
 	}
 
@@ -503,16 +528,13 @@ public class Character extends Actor {
 	
 	
 	//TODO: Menu + buttons + parrot + compass
-	//TODO: Intro storytelling
 	//TODO: route needs to be modified when picking up a starfish again
 	//TODO: Some characters should not collide with each other,
 	//TODO: Fix scaling and resize
 	//TODO: Accurate point clicking?! done
 	//TODO: Review all clearActions() calls to actors. Use Actor.clearActions() to clear all actions in actor, e.g. if collision happens?!
-	//TODO: Animations, add side animations depending on direction of movement
-	//TODO: if hit by a car/bad guy, reset hero to beginning
+	//TODO: Animations, add side animations depending on direction of movement done
 	//TODO: Add different randomness on moving actors or make preset routes
-	
 	
 	/* A* pathfinding on the fully connected tiledmap grid. Uses tile costs from Level class */
 	public Stack<Vector2> getPath(int startx, int starty, int x, int y)
@@ -521,6 +543,7 @@ public class Character extends Actor {
 		ArrayList<Vector2> openList = new ArrayList<Vector2>();
 	    ArrayList<Vector2> closedList = new ArrayList<Vector2>();
 	    Stack<Vector2> path = new Stack<Vector2>();
+	    Stack<Integer> direction = new Stack<Integer>();
 	    
 	    if ((x == startx) && (y == starty))
 			return path;
@@ -603,29 +626,32 @@ public class Character extends Actor {
 	    	newx = (int)parents[currentx][currenty].x;
 	    	newy = (int)parents[currentx][currenty].y;
 	    	if (this.numberFrameSeries > 1) {
-	    		//System.out.println("DIRECIONFRAME PUSH!");
-	    		directionFrame.push(getDirection(newx, newy, currentx, currenty));
+	    		int dir = getDirection(newx, newy, currentx, currenty);
+	    		
+	    		direction.push(dir);
+	    		
 	    	}
 	    	if (newx == startx && newy == starty)
 	    		break;
 	    }
+	    directionFrame.add(direction);
 	    return path;
 	}
 	
 	public int getDirection(int oldx, int oldy, int newx, int newy) {
 		if (oldy == newy) {
-			if (oldx <= newx) 
+			if (oldx < newx) 
 				return RIGHT;
-			else 
+			else if (oldx > newx)
 				return LEFT;
 		}
 		if (oldx == newx) {
-			if (oldy <= newy)
+			if (oldy < newy)
 				return UP;
-			else  
+			else if (oldy > newy)
 				return DOWN;
 		}
-		return UP;
+		return CURRDIRECTION;
 	}
 	
 	public void gotoPoint(Level l, float x, float y) {//, boolean hard) { //, int tileid) {
@@ -645,7 +671,7 @@ public class Character extends Actor {
 			}
 		}
 		
-		this.clearActions();
+		this.flushActionsFrames();
 		SequenceAction sequence = new SequenceAction();
 		this.moving = true;
 		this.in_action = true;
@@ -665,42 +691,28 @@ public class Character extends Actor {
 				Vector2 next = path.pop();
 				
 				if (numberFrameSeries > 1) {
-				sequence.addAction(run(new java.lang.Runnable() {
-				    public void run () {
-				    		int dir = directionFrame.pop();
-				    		System.out.println("DIRECTIONFRAME SERIES: " + dir);
-				        	setFrameSeriesIdx(dir);   	
-				    }
-				}));
+					addFrameChangeAction(sequence);
 				}
 				
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
 				//System.out.println("PATH x: " + next.x + " y: " + next.y);
 			}
+			//TODO: no matching directionFrame for this move
 			sequence.addAction(moveTo(x, y, 0.5f));
 			//System.out.println("LAST PATH x: " + x + " y: " + y);		
 		}
-		
-		sequence.addAction(run(new java.lang.Runnable() {
-		    public void run () {
-		        //System.out.println("Action complete!");
-		        moving = false;
-		        in_action = false;        
-		    }
-		}));
+		endRouteSequence(sequence);
 		
 		this.addAction(sequence);
 	}
 	
-	
-	
-	public void followCharacter(Character next) {
-		//this.addAction(addmoveToAction(next.getX(), next.getY(), 3f));
-		MoveToAction moveAction = new MoveToAction();
-		moveAction.setPosition(next.getX(), next.getY());
-		//moveAction.setPosition(tilex * tilewidth, tiley * tileheight);
-		moveAction.setDuration(3f);
-		this.addAction(moveAction);
+	public void flushActionsFrames() {
+		this.clearActions();
+		Stack<Integer> a;
+		while ((a = this.directionFrame.pollFirst()) != null) {
+			a.clear();
+		}
+		
 	}
 	
 	
@@ -803,8 +815,6 @@ public class Character extends Actor {
 			default:
 				break;
 		}
-		
-		//System.out.println("Random move initiated? " + direction + " " + willmove);
 		if (willmove == true) {
 			//System.out.println("Random move initiated " + direction);
 			//sequence.addAction(moveTo(mytilex * l.tilewidth, mytiley * l.tileheight, generator.nextFloat() * 3f + 0.5f));
@@ -813,10 +823,11 @@ public class Character extends Actor {
 	}
 	
 	public void moveToTileOrTarget() {
-		if (useAutoRoute == true) {
+		if (useAutoRoute == true && inAutoRoute == false) {
 			loopRoutePoints(routeDirection == 0 ? autoRoute : autoRouteReverse);
+			inAutoRoute = true;
 		}
-		/*
+		
 		else if (target != null && guard_tile(target.getX(), target.getY())) {
 			//try to move to target, if they are on tile of type tileid
 			// e.g. car will find hero pirate, if he is on a street tile!
@@ -824,6 +835,6 @@ public class Character extends Actor {
 		}
 		else if (random_move == true){		
 			RandomMove();
-		}*/
+		}
 	}
 }
