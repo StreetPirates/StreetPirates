@@ -192,12 +192,9 @@ public class Character extends Actor {
             	else {
             		int tilex = (int) l.actor_picked.getX()/l.tilewidth;
             		int tiley = (int) l.actor_picked.getY()/l.tileheight;
-            		System.out.println("ACTOR DROPPED touchDown cx: " + l.actor_picked.getX() + "tilex: " + tilex + "cy: " + l.actor_picked.getY() + "tiley: " + tiley);
-            		System.out.println("ACTOR DROPPED touchDown cx: " + character.getX() + "cy: " + character.getY());
             		l.actor_dropped = true;
             		character.addFootsteps(l.route);
             		l.route.add(character);
-            		//l.route.add(Vector2(character.getX(), character.getY());
             	}
             }
             else if (character == l.compass) {
@@ -222,6 +219,7 @@ public class Character extends Actor {
 	 * fulldim of 0.5 means the overlap will trigger when the boxes are merged into each other by roughly half
 	 * etc. 
 	 */
+	//TODO: separate collision percentag crietria for x, y. More specifically, focus on lower part of hero (where feet are)
 	public static boolean overlapRectangles (Actor r1, Actor r2, float fulldim) {
         if (r1.getX() < r2.getX() + r2.getWidth() * fulldim && r1.getX() + r1.getWidth() * fulldim > r2.getX() &&
         		r1.getY() < r2.getY() + r2.getHeight() * fulldim && r1.getY() + r1.getHeight() * fulldim > r2.getY())
@@ -252,12 +250,10 @@ public class Character extends Actor {
 		 * was planned before the hero moved there.
 		 * TODO: Ideally we should only stop actions that go the hero's location... how to do that?
 		 */
-		if (target != null && target.immune_tile(target.getX(), target.getY()) &&
-				//(java.lang.Math.abs(target.getX() - this.getX()) < l.tilewidth * 3) &&
-				//(java.lang.Math.abs(target.getY() - this.getY()) < l.tileheight * 3)
+		if (target != null && target.immune_tile(target.getX() + target.getWidth()/2, target.getY()) &&
 				overlapRectangles (target, this, (float)1.7)
 				) {
-			System.out.println("AVOIDED PIRATE PEDESTRIAN! WHEYWEEEEE" + getX() + " " + getY());
+			//System.out.println("AVOIDED PIRATE PEDESTRIAN! WHEYWEEEEE" + getX() + " " + getY());
 			this.flushActionsFrames();
 			if (this.useAutoRoute) { 
 	        	this.inAutoRoute = false;
@@ -273,6 +269,13 @@ public class Character extends Actor {
 			    * so find a better way of removing a specific action. or resetting the flag at draw function or elsewhere.
 			    */
 			    
+			    // if a car or bad guy, we should pop a message, reset hero to starting position and retry map
+			    // there's a problem here, only if actor has a target, e.g. if hero hits a starfish, it 's ok :)
+			    if (this == a.get_target()) {
+			    	this.setPosition(0,0);
+			    	break;
+			    }
+				
 				a.flushActionsFrames();
 				this.flushActionsFrames();
 			    this.inCollision = true;
@@ -285,25 +288,18 @@ public class Character extends Actor {
 		        if (a.useAutoRoute) { 
 		        	a.routeDirection = ~a.routeDirection;
 		        	a.inAutoRoute = false;
-		        	System.out.println("other way collision!");
 		        }
 		        if (this.useAutoRoute) {
 		        	a.inAutoRoute = false;
 		        	this.routeDirection = ~this.routeDirection;
-		        	System.out.println("other way collision!");
 		        }
 			    /*System.out.println("Collision! A.x = " + this.getX() + "A.y = " 
 			    		+ this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() 
 			    		+ " A.width = " + this.getWidth() + "A.height = " + this.getHeight() 
 			    		+ "B.width = " + a.getWidth() + "B.height = " + a.getHeight());*/
 			    
-			    System.out.println("Collision! " + this.currentDirection + " " + a.currentDirection);
-			    
-			    // if a car or bad guy, we should pop a message, reset hero to starting position and retry map
-			    // there's a problem here, only if actor has a target, e.g. if hero hits a starfish, it 's ok :)
-			    if (this == a.get_target()) {
-			    	this.setPosition(0,0);
-			    }
+			    //System.out.println("Collision! " + this.currentDirection + " " + a.currentDirection);
+			 
 		   }	
 			
 		}
@@ -329,7 +325,7 @@ public class Character extends Actor {
 					}
 			   }
 			   if (currentCollisions == 0) {
-				   System.out.println("Reset collision! " + currentDirection );
+				   //System.out.println("Reset collision! " + currentDirection );
 				   this.inCollision = false;   
 			   }
 		   }
@@ -474,7 +470,6 @@ public class Character extends Actor {
 		SequenceAction sequence = new SequenceAction();
 		this.moving = true;
 		this.in_action = true;
-		System.out.println("width: " + this.getWidth() + "height: " + this.getHeight());
 		for(Vector2 dest: route) {
 			//tweak coordinates?... We want the route to pass through middle (sort of) of actor, not bottom-left coordinates
 			
@@ -609,7 +604,7 @@ public class Character extends Actor {
 
 	                int distanceTraveled = costpath[(int)current.x][(int)current.y] + l.cost[nodex][nodey];
 	                if (illegal_tile(nodex * l.tilewidth, nodey * l.tileheight)) {
-	                	//System.out.println("ILLEGAL TILE IN PATHFINDING: " + nodex +  " " + nodey);
+	                	
 	                	distanceTraveled += 10000;
 	                }
 	                int heuristic = java.lang.Math.abs(nodex - x) + java.lang.Math.abs(nodey - y);
@@ -647,11 +642,13 @@ public class Character extends Actor {
 	    	path.push(parents[currentx][currenty]);
 	    	newx = (int)parents[currentx][currenty].x;
 	    	newy = (int)parents[currentx][currenty].y;
+	    	
+	    	//if (illegal_tile(newx, newy))
+    			//System.out.println("ILLEGAL TILE IN PATH: " + currentx +  " " + currenty);
+	    	
 	    	if (this.numberFrameSeries > 1) {
 	    		int dir = getDirection(newx, newy, currentx, currenty);
-	    		
 	    		direction.push(dir);
-	    		
 	    	}
 	    	if (newx == startx && newy == starty)
 	    		break;
@@ -685,7 +682,7 @@ public class Character extends Actor {
 		Stack<Vector2> path;
 		
 		//tweak coordinates for hero only... We want the chosen point to be rougly in the "middle" of of actor, not bottom-left coordinates
-		System.out.println("PATH x: " + x + " y: " + y + "width: " + this.getWidth() + "height: " + this.getHeight());
+		//System.out.println("PATH x: " + x + " y: " + y + "width: " + this.getWidth() + "height: " + this.getHeight());
 		if (this == l.hero) { 
 			if (x >= this.getWidth() / 2) {
 				x -= this.getWidth()/2;
@@ -740,7 +737,6 @@ public class Character extends Actor {
 	
 	public ArrayList<Vector2> getTileList(float x, float y) {
 		ArrayList<Vector2> tiles = new ArrayList<Vector2>();
-		
 		int tilex = (int) (x / l.tilewidth);
 		int tiley = (int) (y / l.tileheight);
 		tiles.add(new Vector2(tilex, tiley));
@@ -751,13 +747,13 @@ public class Character extends Actor {
 		width -= l.tilewidth;
 		height -= l.tileheight;
 		
-		while (width > l.tilewidth/2 ) {
+		while (width > l.tilewidth) {
 			tilexExtra++;
 			tiles.add(new Vector2(tilexExtra, tiley));
 			width -= l.tilewidth;
 		}
 		
-		while (height > l.tileheight/2) {
+		while (height > l.tileheight) {
 			tileyExtra++;
 			tiles.add(new Vector2(tilex, tileyExtra));
 			height -= l.tileheight;
@@ -796,7 +792,6 @@ public class Character extends Actor {
 	
 	public boolean illegal_tile(float x, float y) {
 		int tileid = l.getTileId(x, y);
-		
 		for (int i = 0; i < illegal_tiles; i++) {
 			if (tileid == tileid_illegal[i]) {
 				return true;
@@ -879,10 +874,14 @@ public class Character extends Actor {
 			inAutoRoute = true;
 		}
 		
-		else if (target != null && guard_tile(target.getX(), target.getY())) {
+		else if (target != null && guard_tile(target.getX() + target.getWidth()/2, target.getY())) {
 			//try to move to target, if they are on tile of type tileid
 			// e.g. car will find hero pirate, if he is on a street tile!
-			gotoPoint(l, target.getX(), target.getY(), 0.04f);
+			int tilex = (int)((target.getX() + target.getWidth()/2)/l.tilewidth);
+			int tiley = (int)target.getY()/l.tileheight;
+			//System.out.println("ATTACK " + target.getX() + " " + target.getY() + " tilex: " +tilex + "tiley: " + tiley);
+			gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.04f);
+			//gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.04f);
 		}
 		else if (random_move == true){		
 			RandomMove();

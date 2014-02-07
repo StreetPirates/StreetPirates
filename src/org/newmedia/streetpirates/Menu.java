@@ -70,7 +70,7 @@ public class Menu implements Screen { //implements Screen {
 			this.setVisible(true);
 			this.setTouchable(Touchable.enabled);
 			this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
-			System.out.println("ACTOR PICKED touchDown x: " + getWidth() + " y: " + getHeight());
+			//System.out.println("ACTOR PICKED touchDown x: " + getWidth() + " y: " + getHeight());
 			imageregion = new TextureRegion[2];
 			imageregion[0] = new TextureRegion(texture[0]);
 			imageregion[1] = new TextureRegion(texture[1]);
@@ -198,8 +198,8 @@ public class Menu implements Screen { //implements Screen {
 		background.addActor(menuImage);
 		stage.addActor(background);
 		
-		pirate.add(new MenuCharacter(pirateA, 300, 240, 0.8));
-        pirate.add(new MenuCharacter(pirateB, 450, 240, 0.8));
+		pirate.add(new MenuCharacter(pirateA, 320, 240, 0.8));
+        pirate.add(new MenuCharacter(pirateB, 520, 240, 0.8));
 
 		for (MenuCharacter c: pirate) {
 			stage.addActor(c);
@@ -209,7 +209,7 @@ public class Menu implements Screen { //implements Screen {
 		startMapBtn = newBtn(startMap, 40, 20);
 		makeMapBtn = newBtn(makeMap, 340, 20);
 		settingsBtn = newBtn(settings, 640, 20);
-		instructionsBtn = newBtn(settings, 640, 400);
+		instructionsBtn = newBtn(instructions, 700, 450);
 		startMapListener = new ButtonListener(this.game);
 		instructionsListener = new StoryListener(this);
 		storyIdx = 0;

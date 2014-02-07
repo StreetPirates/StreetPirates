@@ -247,8 +247,17 @@ public class Level implements Screen { //, InputProcessor {
 		stage.setCamera(camera);
 		
 		characters = new ArrayList<Character>();
-		
+
 		treasure = new Character(texture_treasure, 11, 6, (float)2.0, stage, this);
+		
+		hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
+		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
+		hero.set_illegaltile(TILE_ILLEGAL_ID);
+		hero.set_goal(treasure);
+		hero.addFrameSeries(texture_hero_back);
+		hero.addFrameSeries(texture_hero_right);
+		hero.addFrameSeries(texture_hero_left);
+		
 		compass = new Character(texture_compass, (float)13.5, 7, (float)2.5, stage, this);
 		parrot = new Character(texture_parrot, (float)13.5, 0, (float)2.0, stage, this);
 		//pirateflag = new Character(texture_pirateflag, (float)13.5, 3, (float)2.0, stage, this);
@@ -284,23 +293,12 @@ public class Level implements Screen { //, InputProcessor {
 		routeCar[1][0] = new Vector2(1 * tilewidth, 3 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
 		routeCar[2][0] = new Vector2(2 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 4 * tileheight);
 		
-		
 		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();
 		starfish.add(new Character(texture_starfish, 10, 2, (float)1.0, stage, this));
 		starfish.add(new Character(texture_starfish, 11, 1, (float)1.0, stage, this));
 		starfish.add(new Character(texture_starfish, 12, 0, (float)1.0, stage, this));
 		//starfish.add(new Character(texture_starfish, 11, 5, (float)1.0, stage, this));
-		
-		hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
-		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
-		hero.set_illegaltile(TILE_ILLEGAL_ID);
-		hero.set_goal(treasure);
-		
-		hero.addFrameSeries(texture_hero_back);
-		hero.addFrameSeries(texture_hero_right);
-		hero.addFrameSeries(texture_hero_left);
-		//hero.followCharacter(starfish.get(0));
 		
 		for(int i = 0; i < starfish.size(); i++) {
 			starfish.get(i).set_pickable(true);	
@@ -377,7 +375,7 @@ public class Level implements Screen { //, InputProcessor {
 					//System.out.println("type(" + i + "," + j + "): " + idtype + " newidtype " + newidtype);
 					if (newidtype < idtype) {
 						type[i][j] = newidtype;
-						System.out.println("type(" + i + "," + j + "): changed to " + newidtype);
+						//System.out.println("type(" + i + "," + j + "): changed to " + newidtype);
 					}
 				}
 			}
@@ -459,25 +457,25 @@ public class Level implements Screen { //, InputProcessor {
     		switch(character) {
     			case 'i':
     				//TODO: boundary check on edges of screen
-    				if (hero.getY() < (l.height - 1) * l.tileheight && !hero.illegal_tile(hero.getX(), hero.getY() + hero_move)) {
+    				if (hero.getY() < (l.height - 1) * l.tileheight && !hero.illegal_tile(hero.getX() + hero.getWidth()/2, hero.getY() + hero_move)) {
     					hero.setPosition((float) (hero.getX()), (float)(hero.getY() + hero_move));
     					hero.setFrameSeriesIdx(1);
     				}
     				break;
     			case 'k':
-    				if (hero.getY() > hero_move && !hero.illegal_tile(hero.getX(), hero.getY() - hero_move)) {
+    				if (hero.getY() > hero_move && !hero.illegal_tile(hero.getX() + hero.getWidth()/2, hero.getY() - hero_move)) {
     					hero.setPosition((float) (hero.getX()), (float)(hero.getY() - hero_move));
     					hero.setFrameSeriesIdx(0);
     				}
     				break;
     			case 'j':
-    				if (hero.getX() > hero_move && !hero.illegal_tile(hero.getX() - hero_move, hero.getY())) {
+    				if (hero.getX() > hero_move && !hero.illegal_tile(hero.getX()  + hero.getWidth()/2 - hero_move, hero.getY())) {
     					hero.setPosition((float) (hero.getX() - hero_move), (float)(hero.getY()));
     					hero.setFrameSeriesIdx(3);
     				}
     				break;
     			case 'l':
-    				if (hero.getX() < (l.width - 1) * l.tilewidth && !hero.illegal_tile(hero.getX() + hero_move, hero.getY())) {
+    				if (hero.getX() < (l.width - 1) * l.tilewidth && !hero.illegal_tile(hero.getX() + hero.getWidth()/2 + hero_move, hero.getY())) {
     					hero.setPosition((float) (hero.getX() + hero_move), (float)(hero.getY()));
     					hero.setFrameSeriesIdx(2);
     				}
