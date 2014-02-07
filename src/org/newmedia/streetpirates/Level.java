@@ -262,18 +262,18 @@ public class Level implements Screen { //, InputProcessor {
 				
 		car = new ArrayList<Character>();
 		car.add(new Character(texture_bluecar_front, 6, 6, (float)2.0, stage, this));
-		//car.add(new Character(texture_redcar_front, 3, 6, (float)2.0, stage, this));
-		//car.add(new Character(texture_greencar_front, 2, 3, (float)2.0, stage, this));
+		car.add(new Character(texture_redcar_front, 3, 6, (float)2.0, stage, this));
+		car.add(new Character(texture_greencar_front, 2, 3, (float)2.0, stage, this));
 		
 		car.get(0).addFrameSeries(texture_bluecar_back);
 		car.get(0).addFrameSeries(texture_bluecar_right);
 		car.get(0).addFrameSeries(texture_bluecar_left);
-		/*car.get(1).addFrameSeries(texture_redcar_back);
+		car.get(1).addFrameSeries(texture_redcar_back);
 		car.get(1).addFrameSeries(texture_redcar_right);
 		car.get(1).addFrameSeries(texture_redcar_left);
 		car.get(2).addFrameSeries(texture_greencar_back);
 		car.get(2).addFrameSeries(texture_greencar_right);
-		car.get(2).addFrameSeries(texture_greencar_left);*/
+		car.get(2).addFrameSeries(texture_greencar_left);
 		
 		routeCar = new Vector2[3][2];
 		/*routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(11 * tilewidth, 4 * tileheight);
@@ -319,7 +319,7 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(i).set_illegaltile(TILE_ILLEGAL_ID);
 			car.get(i).set_guardtile(TILE_STREET_ID);
 			//car.get(i).set_random_move();
-			//car.get(i).set_target(hero);
+			car.get(0).set_target(hero);
 			car.get(i).addAutoRoute(routeCar[i]);
 		}
 		
@@ -329,24 +329,7 @@ public class Level implements Screen { //, InputProcessor {
 		start_route = false;
 		num_helpers = starfish.size();
 		/* tiles with id >= tileid will be illegal */
-		adventure_started = false;
-		
-		buttonSkin = new Skin(Gdx.files.internal("assets/ui/uiskin.json"));
-		imgbutton = new Texture(Gdx.files.internal("assets/ui/uiskin.png"));
-		imgbuttonregion = new TextureRegion(imgbutton);
-		Button imgButton = new Button(new Image(imgbuttonregion), buttonSkin);
-		//ImageButtonStyle style = new ImageButtonStyle(buttonSkin.get(ButtonStyle.class));
-		window = new Window("Dialog", buttonSkin);
-		window.getButtonTable().add(new TextButton("X", buttonSkin)).height(window.getPadTop());
-		window.setPosition(100, 100);
-		window.row().fill().expandX();
-		window.add(imgButton);
-		window.row();
-		window.pack();
-		window.setVisible(true);
-		stage.addActor(window);
-		//TextButton tbf = new TextButton("myButton", buttonSkin.getStyle(TextButtonStyle.class));
-		
+		adventure_started = false;		
 	}
 	
 	
@@ -409,8 +392,8 @@ public class Level implements Screen { //, InputProcessor {
 	
 	public void setup_adventure() {
 		for(int i = 0; i < car.size(); i++) {
-			car.get(i).set_random_move();
-			car.get(i).set_target(hero);	
+			car.get(i).set_can_move();
+			//car.get(i).set_target(hero);	
 		}
 		for(int i = 0; i < bandit.size(); i++) {
 			bandit.get(i).set_target(hero);
@@ -449,7 +432,7 @@ public class Level implements Screen { //, InputProcessor {
            //y = tileheight * height - y;
 		   //System.out.println("STAGE touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY());
            if (adventure_started && l.actor_picked == null && l.start_route == false) {
-      		   l.hero.gotoPoint(l, x, y);
+      		   l.hero.gotoPoint(l, x, y, 0.5f);
            }
            if (l.actor_dropped == true) {
         	   l.actor_picked = null;

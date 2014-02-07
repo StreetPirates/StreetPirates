@@ -28,7 +28,7 @@ public class Character extends Actor {
 	Random generator;
 	long clock, clock_lastmoved;
 	//Date date;
-	boolean random_move, in_action, moving, inCollision;
+	boolean random_move, can_move, in_action, moving, inCollision;
 	SpriteBatch spriteBatch; 
 	Texture currentFrame;
 	TextureRegion imageregion[][], currentFrameRegion;
@@ -50,7 +50,7 @@ public class Character extends Actor {
 	public static final int DOWN = 0;
 	public static final int UP = 1;
 	public static final int CURRDIRECTION = -1;
-	public static final long delta = 1000000;
+	public static final long delta = 100000;
 	public static final int MAX_TILE_TYPES = 3;
 	
 	//public Character(Texture  texture, int tilex, int tiley, float scalex, float scaley, Stage stage) {
@@ -95,6 +95,7 @@ public class Character extends Actor {
 		this.pickable = false;
 		this.is_picked = false;
 		this.random_move = false;
+		this.can_move = false;
 		this.moving = false;
 		this.in_action = false;
 		this.inCollision = false;
@@ -156,6 +157,10 @@ public class Character extends Actor {
 	
 	public void set_random_move() {
 		this.random_move = true;
+	}
+	
+	public void set_can_move() {
+		this.can_move = true;
 	}
 	
 	public void set_target(Character target) {
@@ -242,7 +247,7 @@ public class Character extends Actor {
 		//for (Actor a: this.getStage().getActors()) {
 		for (Character a: l.getCars()) {
 			//Character c = (Character)a;
-			if (a!= this && overlapRectangles (a, this, (float)0.3) && !this.inCollision) {
+			if (a!= this && overlapRectangles (a, this, (float)0.4) && !this.inCollision) {
 			   /*TODO: moving boolean flag is reset in last action, so there is chance a character stays in in_Action/moving limbo (i.e. true flags) forever.
 			    * so find a better way of removing a specific action. or resetting the flag at draw function or elsewhere.
 			    */
@@ -258,13 +263,20 @@ public class Character extends Actor {
 		        
 		        if (a.useAutoRoute) { 
 		        	a.routeDirection = ~a.routeDirection;
+		        	a.inAutoRoute = false;
 		        	System.out.println("other way collision!");
 		        }
 		        if (this.useAutoRoute) {
+		        	a.inAutoRoute = false;
 		        	this.routeDirection = ~this.routeDirection;
 		        	System.out.println("other way collision!");
 		        }
-			    //System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
+			    /*System.out.println("Collision! A.x = " + this.getX() + "A.y = " 
+			    		+ this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() 
+			    		+ " A.width = " + this.getWidth() + "A.height = " + this.getHeight() 
+			    		+ "B.width = " + a.getWidth() + "B.height = " + a.getHeight());*/
+			    
+			    System.out.println("Collision! " + this.currentDirection + " " + a.currentDirection);
 			    
 			    // if a car or bad guy, we should pop a message, reset hero to starting position and retry map
 			    // there's a problem here, only if actor has a target, e.g. if hero hits a starfish, it 's ok :)
@@ -296,7 +308,7 @@ public class Character extends Actor {
 					}
 			   }
 			   if (currentCollisions == 0) {
-				   //System.out.println("Reset collision!");
+				   System.out.println("Reset collision! " + currentDirection );
 				   this.inCollision = false;   
 			   }
 		   }
@@ -315,14 +327,13 @@ public class Character extends Actor {
 		}
 		
 		//List<Action> listactions = this.getActions().asList();
-		if (this.random_move /*&& this.getActions().size() == 0*/ ) {
+		if (this.can_move /*&& this.getActions().size() == 0*/ ) {
 		long newclock = System.nanoTime();//currentTimeMillis();
 		if (newclock - clock > delta && in_action == false || (newclock - clock_lastmoved > 5000 * delta)) {
 			in_action = false;
 			moving = false;
 			clock = newclock;
 			clock_lastmoved = newclock;
-			//System.out.println("will schedule a random move?" + clock + " " + newclock);
 			moveToTileOrTarget();
 		}
 		}
@@ -371,7 +382,7 @@ public class Character extends Actor {
 	public void endRouteSequence(SequenceAction sequence) {
 		sequence.addAction(run(new java.lang.Runnable() {
 		    public void run () {
-		        System.out.println("Action complete!");
+		        //System.out.println("Action complete!");
 		        moving = false;
 		        in_action = false;
 		        if (directionFrame.peekFirst() != null) {
@@ -413,7 +424,6 @@ public class Character extends Actor {
 				}
 				
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
-				//System.out.println("PATH x: " + next.x + " y: " + next.y);
 			}
 			//TODO: maybe we just need to go to tile, not exact position for route? so comment next line...
 			//sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
@@ -460,13 +470,13 @@ public class Character extends Actor {
 			
 			tilex = (int) (dest.x) / l.tilewidth;
 			tiley = (int) (dest.y) / l.tileheight;	
-			System.out.println("PATH x: " + mytilex + " y: " + mytiley + " x:" + tilex + " y:" + tiley);
+			//System.out.println("PATH x: " + mytilex + " y: " + mytiley + " x:" + tilex + " y:" + tiley);
 			path = getPath(mytilex, mytiley, tilex, tiley);
 		
 			while (path.empty() == false) {
 				Vector2 next = path.pop();
 				
-				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
+				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.2f));
 				if (numberFrameSeries > 1) {
 					addFrameChangeAction(sequence);
 				}
@@ -480,7 +490,6 @@ public class Character extends Actor {
 		
 		sequence.addAction(run(new java.lang.Runnable() {
 		    public void run () {
-		        System.out.println("ROUTE HAHAHAHA Action complete!");
 		        moving = false;
 		        in_action = false;
 		        if (directionFrame.peekFirst() != null) {
@@ -654,11 +663,12 @@ public class Character extends Actor {
 		return CURRDIRECTION;
 	}
 	
-	public void gotoPoint(Level l, float x, float y) {//, boolean hard) { //, int tileid) {
+	public void gotoPoint(Level l, float x, float y, float speed) {//, boolean hard) {
 		int tilex = (int) (x / l.tilewidth);
 		int tiley = (int) (y / l.tileheight);
 		int mytilex = (int) (this.getX() / l.tilewidth);
 		int mytiley = (int) (this.getY() / l.tileheight);
+		float duration = speed;
 		Stack<Vector2> path;
 		
 		//tweak coordinates for hero only... We want the chosen point to be rougly in the "middle" of of actor, not bottom-left coordinates
@@ -694,12 +704,11 @@ public class Character extends Actor {
 					addFrameChangeAction(sequence);
 				}
 				
-				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
+				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, duration));
 				//System.out.println("PATH x: " + next.x + " y: " + next.y);
 			}
 			//TODO: no matching directionFrame for this move
 			sequence.addAction(moveTo(x, y, 0.5f));
-			//System.out.println("LAST PATH x: " + x + " y: " + y);		
 		}
 		endRouteSequence(sequence);
 		
@@ -818,7 +827,7 @@ public class Character extends Actor {
 		if (willmove == true) {
 			//System.out.println("Random move initiated " + direction);
 			//sequence.addAction(moveTo(mytilex * l.tilewidth, mytiley * l.tileheight, generator.nextFloat() * 3f + 0.5f));
-			gotoPoint(l, mytilex * l.tilewidth, mytiley * l.tileheight);
+			gotoPoint(l, mytilex * l.tilewidth, mytiley * l.tileheight, 0.3f);
 		}
 	}
 	
@@ -831,7 +840,7 @@ public class Character extends Actor {
 		else if (target != null && guard_tile(target.getX(), target.getY())) {
 			//try to move to target, if they are on tile of type tileid
 			// e.g. car will find hero pirate, if he is on a street tile!
-			gotoPoint(l, target.getX(), target.getY());
+			gotoPoint(l, target.getX(), target.getY(), 0.04f);
 		}
 		else if (random_move == true){		
 			RandomMove();
