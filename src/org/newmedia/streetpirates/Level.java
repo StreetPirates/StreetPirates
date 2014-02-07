@@ -41,14 +41,14 @@ import java.util.Arrays;
 import org.newmedia.streetpirates.Character;
 
 public class Level implements Screen { //, InputProcessor {
-	private Texture texture_hero[];
+	private Texture texture_hero[], texture_hero_right[], texture_hero_left[], texture_hero_back[];
 	private Texture texture_compass[];
 	private Texture texture_starfish[];
 	private Texture texture_treasure[];
 	private Texture texture_parrot[];
-	private Texture texture_bluecar[], texture_bluecar_back, texture_bluecar_front, texture_bluecar_side;
-	private Texture texture_redcar[], texture_redcar_back, texture_redcar_front, texture_redcar_side;
-	private Texture texture_greencar[], texture_greencar_back, texture_greencar_front, texture_greencar_side;
+	private Texture texture_bluecar_front[], texture_bluecar_back[], texture_bluecar_right[], texture_bluecar_left[];
+	private Texture texture_redcar_front[], texture_redcar_back[], texture_redcar_right[], texture_redcar_left[];
+	private Texture texture_greencar_front[], texture_greencar_back[], texture_greencar_right[], texture_greencar_left[];
 	private Texture texture_bandits_grey[], texture_bandits_brown[], texture_bandits_purple[];
 	private Texture texture_pirateflag[];
 	public Texture texture_footstep[];
@@ -132,26 +132,58 @@ public class Level implements Screen { //, InputProcessor {
 		texture_hero[2] = new Texture(Gdx.files.internal("assets/pirate/front_walk3.png"));
 		texture_hero[3] = new Texture(Gdx.files.internal("assets/pirate/front_walk4.png"));
 		
+		texture_hero_right = new Texture[4];
+		texture_hero_right[0] = new Texture(Gdx.files.internal("assets/pirate/side_walk_1.png"));
+		texture_hero_right[1] = new Texture(Gdx.files.internal("assets/pirate/side_walk_2.png"));
+		texture_hero_right[2] = new Texture(Gdx.files.internal("assets/pirate/side_walk_3.png"));
+		texture_hero_right[3] = new Texture(Gdx.files.internal("assets/pirate/side_walk_4.png"));
+		
+		texture_hero_left = new Texture[4];
+		texture_hero_left[0] = new Texture(Gdx.files.internal("assets/pirate/left_walk_1.png"));
+		texture_hero_left[1] = new Texture(Gdx.files.internal("assets/pirate/left_walk_2.png"));
+		texture_hero_left[2] = new Texture(Gdx.files.internal("assets/pirate/left_walk_3.png"));
+		texture_hero_left[3] = new Texture(Gdx.files.internal("assets/pirate/left_walk_4.png"));
+		
+		texture_hero_back = new Texture[4];
+		texture_hero_back[0] = new Texture(Gdx.files.internal("assets/pirate/back_walk1.png"));
+		texture_hero_back[1] = new Texture(Gdx.files.internal("assets/pirate/back_walk2.png"));
+		texture_hero_back[2] = new Texture(Gdx.files.internal("assets/pirate/back_walk3.png"));
+		texture_hero_back[3] = new Texture(Gdx.files.internal("assets/pirate/back_walk4.png"));
+		
 		texture_treasure = new Texture[1];
 		texture_treasure[0] = new Texture(Gdx.files.internal("assets/map/treasure1.png"));
 		
 		texture_compass = new Texture[1];
 		texture_compass[0] = new Texture(Gdx.files.internal("assets/map/compass.png"));
 		
-		texture_bluecar = new Texture[1];
-		texture_bluecar[0] = new Texture(Gdx.files.internal("assets/cars/BlueCar_back.png"));
-		//texture_bluecar_front = new Texture(Gdx.files.internal("assets/cars/BlueCar_front.png"));
-		//texture_bluecar_side = new Texture(Gdx.files.internal("assets/cars/BlueCar_side.png"));
+		texture_bluecar_back = new Texture[1];
+		texture_bluecar_back[0] = new Texture(Gdx.files.internal("assets/cars/blue_car_back.png"));
+		texture_bluecar_front = new Texture[1];
+		texture_bluecar_front[0] = new Texture(Gdx.files.internal("assets/cars/blue_car_front.png"));
+		texture_bluecar_right = new Texture[1];
+		texture_bluecar_right[0] = new Texture(Gdx.files.internal("assets/cars/blue_car_side.png"));
+		texture_bluecar_left = new Texture[1];
+		texture_bluecar_left[0] = new Texture(Gdx.files.internal("assets/cars/blue_car_left.png"));
 		
-		texture_redcar = new Texture[1];
-		texture_redcar[0] = new Texture(Gdx.files.internal("assets/cars/RedCar_back.png"));
-		//texture_redcar_front = new Texture(Gdx.files.internal("assets/cars/RedCar_front.png"));
-		//texture_redcar_side = new Texture(Gdx.files.internal("assets/cars/RedCar_side.png"));
 		
-		texture_greencar = new Texture[1];
-		texture_greencar[0] = new Texture(Gdx.files.internal("assets/cars/GreenCar_back.png"));
-		//texture_greencar_front = new Texture(Gdx.files.internal("assets/cars/GreenCar_front.png"));
-		//texture_greencar_side = new Texture(Gdx.files.internal("assets/cars/GreenCar_side.png"));
+		texture_redcar_back = new Texture[1];
+		texture_redcar_back[0] = new Texture(Gdx.files.internal("assets/cars/red_car_back.png"));
+		texture_redcar_front = new Texture[1];
+		texture_redcar_front[0] = new Texture(Gdx.files.internal("assets/cars/red_car_front.png"));
+		texture_redcar_right = new Texture[1];
+		texture_redcar_right[0] = new Texture(Gdx.files.internal("assets/cars/red_car_side.png"));
+		texture_redcar_left = new Texture[1];
+		texture_redcar_left[0] = new Texture(Gdx.files.internal("assets/cars/red_car_left.png"));
+		
+		texture_greencar_back = new Texture[1];
+		texture_greencar_back[0] = new Texture(Gdx.files.internal("assets/cars/green_car_back.png"));
+		texture_greencar_front = new Texture[1];
+		texture_greencar_front[0] = new Texture(Gdx.files.internal("assets/cars/green_car_front.png"));
+		texture_greencar_right = new Texture[1];
+		texture_greencar_right[0] = new Texture(Gdx.files.internal("assets/cars/green_car_side.png"));
+		texture_greencar_left = new Texture[1];
+		texture_greencar_left[0] = new Texture(Gdx.files.internal("assets/cars/green_car_left.png"));
+		
 		//texture_starfish = new Texture(Gdx.files.internal("assets/map/starfish.png"));//map_tiles.png"));
 		
 		texture_starfish = new Texture[1];
@@ -229,9 +261,19 @@ public class Level implements Screen { //, InputProcessor {
 		bandit.add(new Character(texture_bandits_brown, 9, 7, (float)2.5, stage, this));
 				
 		car = new ArrayList<Character>();
-		car.add(new Character(texture_bluecar, 6, 6, (float)2.0, stage, this));
-		car.add(new Character(texture_greencar, 3, 6, (float)2.0, stage, this));
-		car.add(new Character(texture_redcar, 2, 3, (float)2.0, stage, this));
+		car.add(new Character(texture_bluecar_front, 6, 6, (float)2.0, stage, this));
+		//car.add(new Character(texture_redcar_front, 3, 6, (float)2.0, stage, this));
+		//car.add(new Character(texture_greencar_front, 2, 3, (float)2.0, stage, this));
+		
+		car.get(0).addFrameSeries(texture_bluecar_back);
+		car.get(0).addFrameSeries(texture_bluecar_right);
+		car.get(0).addFrameSeries(texture_bluecar_left);
+		/*car.get(1).addFrameSeries(texture_redcar_back);
+		car.get(1).addFrameSeries(texture_redcar_right);
+		car.get(1).addFrameSeries(texture_redcar_left);
+		car.get(2).addFrameSeries(texture_greencar_back);
+		car.get(2).addFrameSeries(texture_greencar_right);
+		car.get(2).addFrameSeries(texture_greencar_left);*/
 		
 		routeCar = new Vector2[3][2];
 		/*routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(11 * tilewidth, 4 * tileheight);
@@ -254,6 +296,10 @@ public class Level implements Screen { //, InputProcessor {
 		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
 		hero.set_illegaltile(TILE_ILLEGAL_ID);
 		hero.set_goal(treasure);
+		
+		hero.addFrameSeries(texture_hero_back);
+		hero.addFrameSeries(texture_hero_right);
+		hero.addFrameSeries(texture_hero_left);
 		//hero.followCharacter(starfish.get(0));
 		
 		for(int i = 0; i < starfish.size(); i++) {
@@ -262,6 +308,8 @@ public class Level implements Screen { //, InputProcessor {
 
 		for(int i = 0; i < bandit.size(); i++) {
 			bandit.get(i).set_target(hero);
+			bandit.get(i).addFrameSeries(texture_pirateflag);
+			bandit.get(i).setFrameSeriesIdx(1);
 		}
 		
 		for(int i = 0; i < car.size(); i++) {
@@ -360,6 +408,11 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(i).set_random_move();
 			car.get(i).set_target(hero);	
 		}
+		for(int i = 0; i < bandit.size(); i++) {
+			bandit.get(i).set_target(hero);
+			bandit.get(i).addFrameSeries(texture_pirateflag);
+			bandit.get(i).setFrameSeriesIdx(0);
+		}
 		for(int i = 0; i < footstep.size(); i++) {
 			footstep.get(i).setVisible(false);
 			footstep.get(i).setSize(0,0);
@@ -417,20 +470,28 @@ public class Level implements Screen { //, InputProcessor {
     		switch(character) {
     			case 'i':
     				//TODO: boundary check on edges of screen
-    				if (hero.getY() < (l.height - 1) * l.tileheight && !hero.illegal_tile(hero.getX(), hero.getY() + hero_move))
+    				if (hero.getY() < (l.height - 1) * l.tileheight && !hero.illegal_tile(hero.getX(), hero.getY() + hero_move)) {
     					hero.setPosition((float) (hero.getX()), (float)(hero.getY() + hero_move));
+    					hero.setFrameSeriesIdx(1);
+    				}
     				break;
     			case 'k':
-    				if (hero.getY() > hero_move && !hero.illegal_tile(hero.getX(), hero.getY() - hero_move))
+    				if (hero.getY() > hero_move && !hero.illegal_tile(hero.getX(), hero.getY() - hero_move)) {
     					hero.setPosition((float) (hero.getX()), (float)(hero.getY() - hero_move));
+    					hero.setFrameSeriesIdx(0);
+    				}
     				break;
     			case 'j':
-    				if (hero.getX() > hero_move && !hero.illegal_tile(hero.getX() - hero_move, hero.getY()))
+    				if (hero.getX() > hero_move && !hero.illegal_tile(hero.getX() - hero_move, hero.getY())) {
     					hero.setPosition((float) (hero.getX() - hero_move), (float)(hero.getY()));
+    					hero.setFrameSeriesIdx(3);
+    				}
     				break;
     			case 'l':
-    				if (hero.getX() < (l.width - 1) * l.tilewidth && !hero.illegal_tile(hero.getX() + hero_move, hero.getY()))
+    				if (hero.getX() < (l.width - 1) * l.tilewidth && !hero.illegal_tile(hero.getX() + hero_move, hero.getY())) {
     					hero.setPosition((float) (hero.getX() + hero_move), (float)(hero.getY()));
+    					hero.setFrameSeriesIdx(2);
+    				}
     				break;	
     		}
     	   }

@@ -31,31 +31,36 @@ public class Character extends Actor {
 	boolean random_move, in_action, moving, inCollision;
 	SpriteBatch spriteBatch; 
 	Texture currentFrame;
-	TextureRegion imageregion[], currentFrameRegion;
-	Animation animation;
+	TextureRegion imageregion[][], currentFrameRegion;
+	Animation animation[];
 	Character target, goal;
 	float stateTime;
+	int currentFrameSeriesIdx, numberFrameSeries;
 	int movingDirection;
 	int lastCollision, routeDirection;
 	boolean useAutoRoute;
 	Vector2 autoRoute[];
 	Vector2 autoRouteReverse[];
+	Stack<Integer> directionFrame;
 	
 	public boolean pickable;
 	public boolean is_picked;
-	public static final int LEFT = 0;
-	public static final int RIGHT = 1;
-	public static final int DOWN = 2;
-	public static final int UP = 3;
+	public static final int LEFT = 3;
+	public static final int RIGHT = 2;
+	public static final int DOWN = 0;
+	public static final int UP = 1;
 	public static final long delta = 1000000;
 	public static final int MAX_TILE_TYPES = 3;
 	
 	//public Character(Texture  texture, int tilex, int tiley, float scalex, float scaley, Stage stage) {
 	public Character(Texture texture[], float tilex, float tiley, float scaling, Stage stage, Level l) {
-		imageregion = new TextureRegion[texture.length];
+		imageregion = new TextureRegion[4][texture.length];
+		animation = new Animation[4];
 		for(int i = 0; i < texture.length; i++) {
-			imageregion[i] = new TextureRegion(texture[i]);
+			imageregion[0][i] = new TextureRegion(texture[i]);
 		}
+		this.numberFrameSeries = 1;
+		this.currentFrameSeriesIdx = 0;
 		
 		this.setX(tilex * l.tilewidth);
 		this.setY(tiley * l.tileheight);
@@ -66,7 +71,7 @@ public class Character extends Actor {
 		//this.setWidth(texture[0].getWidth());
 		this.setHeight(texture[0].getHeight() * this.getScaleY());
 		this.setWidth(texture[0].getWidth() * this.getScaleX());
-		this.animation = new Animation(0.1f, imageregion);
+		this.animation[0] = new Animation(0.1f, imageregion[0]);
 		spriteBatch = new SpriteBatch();
 		
 		this.setVisible(true);
@@ -97,10 +102,23 @@ public class Character extends Actor {
 		this.target = null;
 		this.goal = null;
 		this.useAutoRoute = false;
+		this.directionFrame = new Stack<Integer>();
+	}
+	
+	public void addFrameSeries(Texture texture[]) {
+		for(int i = 0; i < texture.length; i++) {
+			imageregion[numberFrameSeries][i] = new TextureRegion(texture[i]);
+		}
+		this.animation[numberFrameSeries] = new Animation(0.1f, imageregion[numberFrameSeries]);
+		numberFrameSeries++;
 	}
 	
 	public void set_moving(boolean set) {
 		moving = set;
+	}
+	
+	public void setFrameSeriesIdx(int idx) {
+		currentFrameSeriesIdx = idx;
 	}
 	
 	public void set_in_action(boolean set) {
@@ -171,7 +189,6 @@ public class Character extends Actor {
             		character.addFootsteps(l.route);
             		l.route.add(character);
             		//l.route.add(Vector2(character.getX(), character.getY());
-            		//.num_helpers++;
             	}
             }
             else if (character == l.compass) {
@@ -212,9 +229,9 @@ public class Character extends Actor {
 		
 		stateTime += Gdx.graphics.getDeltaTime();
 		if (moving == true)
-			currentFrameRegion = animation.getKeyFrame(stateTime, true);
+			currentFrameRegion = animation[currentFrameSeriesIdx].getKeyFrame(stateTime, true);
 		else 
-			currentFrameRegion = imageregion[0];
+			currentFrameRegion = imageregion[currentFrameSeriesIdx][0];
 		
 	    spriteBatch.begin();
         spriteBatch.draw(currentFrameRegion, getX(), getY(), getWidth(), getHeight());        
@@ -251,7 +268,7 @@ public class Character extends Actor {
 		        	this.routeDirection = ~this.routeDirection;
 		        	System.out.println("other way collision!");
 		        }
-			    System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
+			    //System.out.println("Collision! A.x = " + this.getX() + "A.y = " + this.getY() + "B.x = " + a.getX() + "B.y = " + a.getY() + " A.width = " + this.getWidth() + "A.height = " + this.getHeight() + "B.width = " + a.getWidth() + "B.height = " + a.getHeight());
 			    
 			    // if a car or bad guy, we should pop a message, reset hero to starting position and retry map
 			    // there's a problem here, only if actor has a target, e.g. if hero hits a starfish, it 's ok :)
@@ -277,7 +294,7 @@ public class Character extends Actor {
 					}
 			   }
 			   if (currentCollisions == 0) {
-				   System.out.println("Reset collision!");
+				   //System.out.println("Reset collision!");
 				   this.inCollision = false;   
 			   }
 		   }
@@ -352,7 +369,19 @@ public class Character extends Actor {
 			path = getPath(mytilex, mytiley, tilex, tiley);
 		
 			while (path.empty() == false) {
-				Vector2 next = path.pop();	
+				Vector2 next = path.pop();
+				
+				if (numberFrameSeries > 1) {
+				sequence.addAction(run(new java.lang.Runnable() {
+				    public void run () {
+				    
+				    		int dir = directionFrame.pop();
+				    		System.out.println("DIRECTIONFRAME SERIES: " + dir);
+				        	setFrameSeriesIdx(dir);    	
+				    }
+				}));
+				}
+				
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
 				//System.out.println("PATH x: " + next.x + " y: " + next.y);
 			}
@@ -410,7 +439,17 @@ public class Character extends Actor {
 			path = getPath(mytilex, mytiley, tilex, tiley);
 		
 			while (path.empty() == false) {
-				Vector2 next = path.pop();	
+				Vector2 next = path.pop();
+				
+				if (numberFrameSeries > 1) {
+				sequence.addAction(run(new java.lang.Runnable() {
+				    public void run () {
+				    		int dir = directionFrame.pop();
+				    		System.out.println("DIRECTIONFRAME SERIES: " + dir);
+				        	setFrameSeriesIdx(dir);
+				    }
+				}));
+				}
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
 				//System.out.println("PUTPATH x: " + next.x + " y: " + next.y);
 			}
@@ -455,24 +494,25 @@ public class Character extends Actor {
 		path = l.hero.getPath(mytilex, mytiley, tilex, tiley);
 		System.out.println("DRAW FOOTLIST x: " + tilex + " y: " + tiley);
 		while (path.empty() == false) {
-			Vector2 next = path.pop();	
+			Vector2 next = path.pop();
 			l.footstep.add(new Character(l.texture_footstep, next.x, next.y, (float)0.75, this.getStage(), l));
 		}
+		//cleanup directionFrame stack of hero
+		l.hero.directionFrame.clear();
 	}
 	
 	
 	//TODO: Menu + buttons + parrot + compass
-	//TODO: make route visible with toes while making them
+	//TODO: Intro storytelling
 	//TODO: route needs to be modified when picking up a starfish again
-	//TODO: Add bad guys
+	//TODO: Some characters should not collide with each other,
 	//TODO: Fix scaling and resize
 	//TODO: Accurate point clicking?! done
-	//TODO: Fix bounds, don't let actors leave screen! can cause a crash
 	//TODO: Review all clearActions() calls to actors. Use Actor.clearActions() to clear all actions in actor, e.g. if collision happens?!
 	//TODO: Animations, add side animations depending on direction of movement
 	//TODO: if hit by a car/bad guy, reset hero to beginning
 	//TODO: Add different randomness on moving actors or make preset routes
-	//TODO: Intro storytelling
+	
 	
 	/* A* pathfinding on the fully connected tiledmap grid. Uses tile costs from Level class */
 	public Stack<Vector2> getPath(int startx, int starty, int x, int y)
@@ -562,12 +602,31 @@ public class Character extends Actor {
 	    	path.push(parents[currentx][currenty]);
 	    	newx = (int)parents[currentx][currenty].x;
 	    	newy = (int)parents[currentx][currenty].y;
+	    	if (this.numberFrameSeries > 1) {
+	    		//System.out.println("DIRECIONFRAME PUSH!");
+	    		directionFrame.push(getDirection(newx, newy, currentx, currenty));
+	    	}
 	    	if (newx == startx && newy == starty)
 	    		break;
 	    }
 	    return path;
 	}
 	
+	public int getDirection(int oldx, int oldy, int newx, int newy) {
+		if (oldy == newy) {
+			if (oldx <= newx) 
+				return RIGHT;
+			else 
+				return LEFT;
+		}
+		if (oldx == newx) {
+			if (oldy <= newy)
+				return UP;
+			else  
+				return DOWN;
+		}
+		return UP;
+	}
 	
 	public void gotoPoint(Level l, float x, float y) {//, boolean hard) { //, int tileid) {
 		int tilex = (int) (x / l.tilewidth);
@@ -605,6 +664,16 @@ public class Character extends Actor {
 			while (path.empty() == false) {
 				Vector2 next = path.pop();
 				
+				if (numberFrameSeries > 1) {
+				sequence.addAction(run(new java.lang.Runnable() {
+				    public void run () {
+				    		int dir = directionFrame.pop();
+				    		System.out.println("DIRECTIONFRAME SERIES: " + dir);
+				        	setFrameSeriesIdx(dir);   	
+				    }
+				}));
+				}
+				
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
 				//System.out.println("PATH x: " + next.x + " y: " + next.y);
 			}
@@ -616,11 +685,13 @@ public class Character extends Actor {
 		    public void run () {
 		        //System.out.println("Action complete!");
 		        moving = false;
-		        in_action = false;
+		        in_action = false;        
 		    }
 		}));
+		
 		this.addAction(sequence);
 	}
+	
 	
 	
 	public void followCharacter(Character next) {
