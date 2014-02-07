@@ -198,8 +198,8 @@ public class Menu implements Screen { //implements Screen {
 		background.addActor(menuImage);
 		stage.addActor(background);
 		
-		pirate.add(new MenuCharacter(pirateA, 260, 260, 0.8));
-        pirate.add(new MenuCharacter(pirateB, 460, 260, 0.8));
+		pirate.add(new MenuCharacter(pirateA, 300, 240, 0.8));
+        pirate.add(new MenuCharacter(pirateB, 450, 240, 0.8));
 
 		for (MenuCharacter c: pirate) {
 			stage.addActor(c);

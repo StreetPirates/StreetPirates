@@ -190,7 +190,10 @@ public class Character extends Actor {
             		l.actor_picked = character;
             	}
             	else {
-            		//System.out.println("ACTOR DROPPED touchDown x: " + x + " y: " + y);
+            		int tilex = (int) l.actor_picked.getX()/l.tilewidth;
+            		int tiley = (int) l.actor_picked.getY()/l.tileheight;
+            		System.out.println("ACTOR DROPPED touchDown cx: " + l.actor_picked.getX() + "tilex: " + tilex + "cy: " + l.actor_picked.getY() + "tiley: " + tiley);
+            		System.out.println("ACTOR DROPPED touchDown cx: " + character.getX() + "cy: " + character.getY());
             		l.actor_dropped = true;
             		character.addFootsteps(l.route);
             		l.route.add(character);
@@ -200,7 +203,6 @@ public class Character extends Actor {
             else if (character == l.compass) {
             	l.start_route = true;
             	l.hero.followRoute(l.route);
-            	l.adventure_started = true;
             	l.setup_adventure();
             }
             return false;  // must return true for touchUp event to occur
@@ -244,6 +246,25 @@ public class Character extends Actor {
         spriteBatch.end();
 
 		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
+		
+		/* if target character has moved to an immune tile, cancel pending actions. 
+		 * We don't want a car to overrun a hero on a pedestrian walk because the random move
+		 * was planned before the hero moved there.
+		 * TODO: Ideally we should only stop actions that go the hero's location... how to do that?
+		 */
+		if (target != null && target.immune_tile(target.getX(), target.getY()) &&
+				//(java.lang.Math.abs(target.getX() - this.getX()) < l.tilewidth * 3) &&
+				//(java.lang.Math.abs(target.getY() - this.getY()) < l.tileheight * 3)
+				overlapRectangles (target, this, (float)1.7)
+				) {
+			System.out.println("AVOIDED PIRATE PEDESTRIAN! WHEYWEEEEE" + getX() + " " + getY());
+			this.flushActionsFrames();
+			if (this.useAutoRoute) { 
+	        	this.inAutoRoute = false;
+	        }
+			//return;
+		}
+		
 		//for (Actor a: this.getStage().getActors()) {
 		for (Character a: l.getCars()) {
 			//Character c = (Character)a;
@@ -313,18 +334,7 @@ public class Character extends Actor {
 			   }
 		   }
 		
-		/* if target character has moved to an immune tile, cancel pending actions. 
-		 * We don't want a car to overrun a hero on a pedestrian walk because the random move
-		 * was planned before the hero moved there.
-		 * TODO: Ideally we should only stop actions that go the hero's location... how to do that?
-		 */
-		if (target != null && target.immune_tile(target.getX(), target.getY()) &&
-				//(java.lang.Math.abs(target.getX() - this.getX()) < l.tilewidth * 3) &&
-				//(java.lang.Math.abs(target.getY() - this.getY()) < l.tileheight * 3)
-				overlapRectangles (target, this, (float)2.0)
-				) {
-			this.flushActionsFrames();
-		}
+	
 		
 		//List<Action> listactions = this.getActions().asList();
 		if (this.can_move /*&& this.getActions().size() == 0*/ ) {
@@ -464,7 +474,7 @@ public class Character extends Actor {
 		SequenceAction sequence = new SequenceAction();
 		this.moving = true;
 		this.in_action = true;
-		
+		System.out.println("width: " + this.getWidth() + "height: " + this.getHeight());
 		for(Vector2 dest: route) {
 			//tweak coordinates?... We want the route to pass through middle (sort of) of actor, not bottom-left coordinates
 			
@@ -476,7 +486,7 @@ public class Character extends Actor {
 			while (path.empty() == false) {
 				Vector2 next = path.pop();
 				
-				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.2f));
+				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.3f));
 				if (numberFrameSeries > 1) {
 					addFrameChangeAction(sequence);
 				}
@@ -526,11 +536,13 @@ public class Character extends Actor {
 		tilex = (int) (destx / l.tilewidth);
 		tiley = (int) (desty / l.tileheight);	
 		path = l.hero.getPath(mytilex, mytiley, tilex, tiley);
-		System.out.println("DRAW FOOTLIST x: " + tilex + " y: " + tiley);
+		System.out.println("DRAW FOOTLIST from x:" + mytilex + " and y: " + mytiley + "to x: " + tilex + " y: " + tiley);
 		while (path.empty() == false) {
 			Vector2 next = path.pop();
 			l.footstep.add(new Character(l.texture_footstep, next.x, next.y, (float)0.75, this.getStage(), l));
+			System.out.println("DRAW FOOTLIST from x:" + next.x + " and y: " + next.y);
 		}
+		//l.footstep.add(new Character(l.texture_footstep, tilex, tiley, (float)0.75, this.getStage(), l));
 		//cleanup directionFrame stack of hero
 		l.hero.directionFrame.clear();
 	}
@@ -563,6 +575,7 @@ public class Character extends Actor {
 
 	    Vector2 start = new Vector2(startx, starty);
 
+	    
 	    costpath[startx][starty] = 0;
 	    costpathgoal[startx][starty] = 0;
 
@@ -672,13 +685,14 @@ public class Character extends Actor {
 		Stack<Vector2> path;
 		
 		//tweak coordinates for hero only... We want the chosen point to be rougly in the "middle" of of actor, not bottom-left coordinates
+		System.out.println("PATH x: " + x + " y: " + y + "width: " + this.getWidth() + "height: " + this.getHeight());
 		if (this == l.hero) { 
 			if (x >= this.getWidth() / 2) {
 				x -= this.getWidth()/2;
-			}
+			} else x = 0;
 			if (y >= this.getHeight() / 4) {
 				y -= this.getHeight()/4;
-			}
+			} else y = 0;
 		}
 		
 		this.flushActionsFrames();
@@ -724,12 +738,40 @@ public class Character extends Actor {
 		
 	}
 	
+	public ArrayList<Vector2> getTileList(float x, float y) {
+		ArrayList<Vector2> tiles = new ArrayList<Vector2>();
+		
+		int tilex = (int) (x / l.tilewidth);
+		int tiley = (int) (y / l.tileheight);
+		tiles.add(new Vector2(tilex, tiley));
+		float width = this.getWidth();
+		float height = this.getHeight();
+		int tilexExtra = tilex;
+		int tileyExtra = tiley;
+		width -= l.tilewidth;
+		height -= l.tileheight;
+		
+		while (width > l.tilewidth/2 ) {
+			tilexExtra++;
+			tiles.add(new Vector2(tilexExtra, tiley));
+			width -= l.tilewidth;
+		}
+		
+		while (height > l.tileheight/2) {
+			tileyExtra++;
+			tiles.add(new Vector2(tilex, tileyExtra));
+			height -= l.tileheight;
+		}
+			
+		return tiles;
+	}
 	
 	public boolean valid_tile(float x, float y) {
 		int tileid = l.getTileId(x, y);
 		for (int i = 0; i < valid_tiles; i++) {
 			if (tileid == tileid_valid[i])
 				return true;
+		
 		}
 		return false;
 	}
@@ -754,9 +796,9 @@ public class Character extends Actor {
 	
 	public boolean illegal_tile(float x, float y) {
 		int tileid = l.getTileId(x, y);
+		
 		for (int i = 0; i < illegal_tiles; i++) {
-			if (tileid == tileid_illegal[i]) { // && this == l.hero) {
-				//System.out.println("ILLEGAL PATH x: " + x + " y: " + y);
+			if (tileid == tileid_illegal[i]) {
 				return true;
 			}
 		}

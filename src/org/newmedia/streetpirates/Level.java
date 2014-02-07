@@ -237,7 +237,7 @@ public class Level implements Screen { //, InputProcessor {
 		cost = new int[this.width][this.height];
 		car_cost = new int[this.width][this.height];
 		calculate_cost();	
-		
+
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, columns, rows);
 		renderer.setView(camera);
@@ -280,9 +280,9 @@ public class Level implements Screen { //, InputProcessor {
 		routeCar[1][0] = new Vector2(2 * tilewidth, 4 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
 		routeCar[2][0] = new Vector2(2 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 3 * tileheight);*/
 		
-		routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(2 * tilewidth, 4 * tileheight);
-		routeCar[1][0] = new Vector2(2 * tilewidth, 1 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
-		routeCar[2][0] = new Vector2(2 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 3 * tileheight);
+		routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(12 * tilewidth, 5 * tileheight);
+		routeCar[1][0] = new Vector2(1 * tilewidth, 3 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
+		routeCar[2][0] = new Vector2(2 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 4 * tileheight);
 		
 		
 		//starfish = new Character[num_starfishes];
@@ -317,9 +317,9 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(i).set_validtile(TILE_PEDESTRIANWALK_ID);
 			car.get(i).set_illegaltile(TILE_PAVEMENT_ID);
 			car.get(i).set_illegaltile(TILE_ILLEGAL_ID);
-			car.get(i).set_guardtile(TILE_STREET_ID);
+			car.get(0).set_guardtile(TILE_STREET_ID);
 			//car.get(i).set_random_move();
-			car.get(0).set_target(hero);
+			car.get(i).set_target(hero);
 			car.get(i).addAutoRoute(routeCar[i]);
 		}
 		
@@ -377,7 +377,7 @@ public class Level implements Screen { //, InputProcessor {
 					//System.out.println("type(" + i + "," + j + "): " + idtype + " newidtype " + newidtype);
 					if (newidtype < idtype) {
 						type[i][j] = newidtype;
-						//System.out.println("type(" + i + "," + j + "): changed to " + newidtype);
+						System.out.println("type(" + i + "," + j + "): changed to " + newidtype);
 					}
 				}
 			}
@@ -391,20 +391,22 @@ public class Level implements Screen { //, InputProcessor {
 	}
 	
 	public void setup_adventure() {
-		for(int i = 0; i < car.size(); i++) {
-			car.get(i).set_can_move();
-			//car.get(i).set_target(hero);	
-		}
-		for(int i = 0; i < bandit.size(); i++) {
-			bandit.get(i).set_target(hero);
-			bandit.get(i).addFrameSeries(texture_pirateflag);
-			bandit.get(i).setFrameSeriesIdx(0);
+		if (adventure_started == false) {
+			for(int i = 0; i < car.size(); i++) {
+				car.get(i).set_can_move();
+				//car.get(i).set_target(hero);	
+			}
+			for(int i = 0; i < bandit.size(); i++) {
+				bandit.get(i).set_target(hero);
+				bandit.get(i).addFrameSeries(texture_pirateflag);
+				bandit.get(i).setFrameSeriesIdx(0);
+			}
+			adventure_started = true;
 		}
 		for(int i = 0; i < footstep.size(); i++) {
 			footstep.get(i).setVisible(false);
 			footstep.get(i).setSize(0,0);
 			footstep.get(i).setPosition(0,0);
-			
 		}
 		footstep.clear();
 	}
@@ -487,12 +489,12 @@ public class Level implements Screen { //, InputProcessor {
     	}
     	
     	public boolean keyUp(InputEvent event, int keycode) {
-    		System.out.println("STAGE keyUp x: " + keycode);
     		switch(keycode) {
 				case 'i':
 				case 'k':
 				case 'j':
 				case 'l':
+					System.out.println("STAGE keyUp x: " + keycode);
 					hero.set_moving(false);
 					break;	
 				default:
@@ -563,6 +565,12 @@ public class Level implements Screen { //, InputProcessor {
 		if (tilex >= this.width || tiley >= this.height)
 			return 0;
 		return tiletypes[tilex][tiley];//layer.getCell(tilex, tiley).getTile().getId();
+	}
+	
+	public int getTileIdRaw(int tilex, int tiley) {
+		if (tilex >= this.width || tiley >= this.height)
+			return 0;
+		return tiletypes[tilex][tiley];
 	}
 	
 	public boolean same_tile(float x1, float y1, float x2, float y2) {
