@@ -295,13 +295,18 @@ public class Level implements Screen { //, InputProcessor {
 		
 		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();
-		starfish.add(new Character(texture_starfish, 10, 2, (float)1.0, stage, this));
+		starfish.add(new Character(texture_starfish, 11, 0, (float)1.0, stage, this));
+		starfish.add(new Character(texture_starfish, 10, 1, (float)1.0, stage, this));
 		starfish.add(new Character(texture_starfish, 11, 1, (float)1.0, stage, this));
-		starfish.add(new Character(texture_starfish, 12, 0, (float)1.0, stage, this));
+		starfish.add(new Character(texture_starfish, 12, 1, (float)1.0, stage, this));
+		starfish.add(new Character(texture_starfish, 11, 2, (float)1.0, stage, this));
 		//starfish.add(new Character(texture_starfish, 11, 5, (float)1.0, stage, this));
 		
 		for(int i = 0; i < starfish.size(); i++) {
-			starfish.get(i).set_pickable(true);	
+			starfish.get(i).set_pickable(true);
+			starfish.get(i).set_illegaltile(TILE_STREET_ID);
+			starfish.get(i).set_illegaltile(TILE_PEDESTRIANWALK_ID);
+			starfish.get(i).set_illegaltile(TILE_ILLEGAL_ID);
 		}
 
 		for(int i = 0; i < bandit.size(); i++) {
@@ -376,14 +381,14 @@ public class Level implements Screen { //, InputProcessor {
 					//System.out.println("type(" + i + "," + j + "): " + idtype + " newidtype " + newidtype);
 					if (newidtype < idtype) {
 						type[i][j] = newidtype;
-						//System.out.println("type(" + i + "," + j + "): changed to " + newidtype);
+						System.out.println("type(" + i + "," + j + "): changed to " + newidtype);
 					}
 				}
 			}
 		}
 		for (int i = 0 ; i < citylayer.getWidth(); i++)
 			for (int j = 0 ; j < citylayer.getHeight(); j++) {
-				//System.out.println("type(" + i + "," + j + "): " + type[i][j]);
+				System.out.println("type(" + i + "," + j + "): " + type[i][j]);
 			}
 		
 		return type;

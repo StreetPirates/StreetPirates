@@ -248,9 +248,8 @@ public class Menu implements Screen { //implements Screen {
 		}
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-			System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
+			//System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
 			if (menu.storyStarts == true) {
-				System.out.println("ACTOR FIRST touchDown x: " + x + " y: " + y);
 				menu.storyImageListener = new StoryListener(this.menu);
 				menu.menuImage.addListener(menu.storyImageListener);
 				menu.setButtonsVisible(false);
@@ -267,7 +266,6 @@ public class Menu implements Screen { //implements Screen {
 			}
 			else {
 				menu.storyIdx++;
-				System.out.println("ACTOR GO touchDown x: " + x + " y: " + y);
 				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[menu.storyIdx % 7])));            	
 			}
             return true;  // must return true for touchUp event to occur

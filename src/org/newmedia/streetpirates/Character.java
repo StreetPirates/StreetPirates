@@ -189,9 +189,13 @@ public class Character extends Actor {
             	    //System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
             		l.actor_picked = character;
             	}
-            	else {
-            		int tilex = (int) l.actor_picked.getX()/l.tilewidth;
-            		int tiley = (int) l.actor_picked.getY()/l.tileheight;
+            	else if (!l.actor_picked.illegal_tile(event.getStageX(), event.getStageY())) {
+            		//int tilex = (int) l.actor_picked.getX()/l.tilewidth;
+            		//int tiley = (int) l.actor_picked.getY()/l.tileheight;
+            		int tilex = (int) event.getStageX()/l.tilewidth;
+                	int tiley = (int) event.getStageY()/l.tileheight;
+            		l.actor_picked.setX(tilex * l.tilewidth);
+            		l.actor_picked.setY(tiley * l.tileheight);
             		l.actor_dropped = true;
             		character.addFootsteps(l.route);
             		l.route.add(character);
@@ -531,11 +535,11 @@ public class Character extends Actor {
 		tilex = (int) (destx / l.tilewidth);
 		tiley = (int) (desty / l.tileheight);	
 		path = l.hero.getPath(mytilex, mytiley, tilex, tiley);
-		System.out.println("DRAW FOOTLIST from x:" + mytilex + " and y: " + mytiley + "to x: " + tilex + " y: " + tiley);
+		//System.out.println("DRAW FOOTLIST from x:" + mytilex + " and y: " + mytiley + "to x: " + tilex + " y: " + tiley);
 		while (path.empty() == false) {
 			Vector2 next = path.pop();
 			l.footstep.add(new Character(l.texture_footstep, next.x, next.y, (float)0.75, this.getStage(), l));
-			System.out.println("DRAW FOOTLIST from x:" + next.x + " and y: " + next.y);
+			//System.out.println("DRAW FOOTLIST from x:" + next.x + " and y: " + next.y);
 		}
 		//l.footstep.add(new Character(l.texture_footstep, tilex, tiley, (float)0.75, this.getStage(), l));
 		//cleanup directionFrame stack of hero
