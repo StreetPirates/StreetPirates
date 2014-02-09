@@ -213,7 +213,12 @@ public class Menu implements Screen { //implements Screen {
 		startMapListener = new ButtonListener(this.game);
 		instructionsListener = new StoryListener(this);
 		storyIdx = 0;
-		storyStarts = true;
+		storyStarts = false;
+		
+		this.storyImageListener = new StoryListener(this);
+		this.menuImage.addListener(this.storyImageListener);
+		this.setButtonsVisible(false);
+		menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[this.storyIdx % 7])));
 	}
 	
 	public class ButtonListener extends InputListener {
@@ -243,24 +248,27 @@ public class Menu implements Screen { //implements Screen {
 		}
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-			//System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
+			System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
 			if (menu.storyStarts == true) {
+				System.out.println("ACTOR FIRST touchDown x: " + x + " y: " + y);
 				menu.storyImageListener = new StoryListener(this.menu);
 				menu.menuImage.addListener(menu.storyImageListener);
 				menu.setButtonsVisible(false);
 				menu.storyIdx = 0;
+				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[menu.storyIdx % 7])));
 				menu.storyStarts = false;
 			}
-			
-			if (menu.storyIdx >= 7) {
+			else if (menu.storyIdx >= 6) {
 				menu.menuImage.removeListener(menu.storyImageListener);
 				setButtonsVisible(true);
 				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(menuTexture)));
 				menu.storyStarts = true;
+				menu.storyIdx = 0;
 			}
 			else {
-				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[menu.storyIdx % 7])));
-            	menu.storyIdx++;
+				menu.storyIdx++;
+				System.out.println("ACTOR GO touchDown x: " + x + " y: " + y);
+				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[menu.storyIdx % 7])));            	
 			}
             return true;  // must return true for touchUp event to occur
         }
