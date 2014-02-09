@@ -195,6 +195,7 @@ public class Character extends Actor {
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
             //System.out.println("ACTOR touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY() + " actorx:" + getX() + " actory:" + getY());
+			if (l.adventure_started == false || l.cityInteraction == true) {
             if (character.pickable == true) {
             	if (l.actor_picked == null) {		
             	    //System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
@@ -223,6 +224,7 @@ public class Character extends Actor {
             	l.hero.followRoute(l.route);
             	l.setup_adventure();
             }
+			}
             return false;  // must return true for touchUp event to occur
         }
 		
