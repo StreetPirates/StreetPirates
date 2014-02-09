@@ -111,7 +111,7 @@ public class Level implements Screen { //, InputProcessor {
 	public int hero_move = 5;
 	public int num_helpers;
 	public boolean start_route;
-	public boolean adventure_started;
+	public boolean adventure_started, cityInteraction;
 	Texture imgbutton;
 	TextureRegion imgbuttonregion;
 	Window window;
@@ -328,6 +328,7 @@ public class Level implements Screen { //, InputProcessor {
 		num_helpers = starfish.size();
 		/* tiles with id >= tileid will be illegal */
 		adventure_started = false;		
+		cityInteraction = false;
 	}
 	
 	
@@ -431,7 +432,7 @@ public class Level implements Screen { //, InputProcessor {
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
            //y = tileheight * height - y;
 		   //System.out.println("STAGE touchDown x: " + x + " y: " + y + " stagex:" + event.getStageX() + " stagey:" + event.getStageY());
-           if (adventure_started && l.actor_picked == null && l.start_route == false) {
+           if (adventure_started && cityInteraction && l.actor_picked == null && l.start_route == false) {
       		   l.hero.gotoPoint(l, x, y, 0.5f);
            }
            if (l.actor_dropped == true) {
@@ -451,7 +452,7 @@ public class Level implements Screen { //, InputProcessor {
     
     	public boolean keyTyped(InputEvent event, char character) {
     		//System.out.println("STAGE keyTyped x: " + character);
-    		if (adventure_started) {
+    		if (adventure_started && cityInteraction) {
     		hero.set_moving(true);
     		hero.clearActions();
     		switch(character) {
