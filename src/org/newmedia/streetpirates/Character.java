@@ -42,6 +42,7 @@ public class Character extends Actor {
 	Vector2 autoRoute[];
 	Vector2 autoRouteReverse[];
 	LinkedList<Stack<Integer>> directionFrame;
+	ArrayList<Character> footstepPartial;
 	
 	public boolean pickable;
 	public boolean is_picked;
@@ -105,6 +106,7 @@ public class Character extends Actor {
 		this.inAutoRoute = false;
 		this.directionFrame = new LinkedList<Stack<Integer>>();
 		this.currentDirection = DOWN;
+		this.footstepPartial = new ArrayList<Character>();
 	}
 	
 	public void addFrameSeries(Texture texture[]) {
@@ -175,6 +177,15 @@ public class Character extends Actor {
 		return target;
 	}
 	
+	public void backtrackFootsteps() {
+		for (Character c: footstepPartial) {
+			c.setVisible(false);
+			c.setSize(0,0);
+			c.setPosition(0,0);
+		}
+		footstepPartial.clear();
+	}
+	
 	public class CharacterListener extends InputListener {
 		Character character;
 		
@@ -188,6 +199,12 @@ public class Character extends Actor {
             	if (l.actor_picked == null) {		
             	    //System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
             		l.actor_picked = character;
+            		if (l.route.contains(character)) {
+            			System.out.println("STARFISH REPICKED touchDown x: " + x + " y: " + y);
+            			l.route.remove(character);
+            			character.backtrackFootsteps();
+            			//character.addFootsteps(l.route);
+            		}
             	}
             	else if (!l.actor_picked.illegal_tile(event.getStageX(), event.getStageY())) {
             		//int tilex = (int) l.actor_picked.getX()/l.tilewidth;
@@ -265,6 +282,26 @@ public class Character extends Actor {
 			//return;
 		}
 		
+		for (Character a: l.getBandits()) {
+			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4)) {
+				this.setPosition(0,0);
+				this.flushActionsFrames();
+			}
+		}
+		
+		for (Character a: l.getCars()) {
+			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4)) {
+				this.setPosition(0,0);
+				this.flushActionsFrames();
+			}
+		}
+		
+		if (this == l.hero && overlapRectangles (l.hero.goal, this, (float)0.4)) {
+				// need victory message - You reached the treasure!
+		    	l.hero.setPosition(0,0);
+		    	l.hero.flushActionsFrames();
+		}
+		
 		//for (Actor a: this.getStage().getActors()) {
 		for (Character a: l.getCars()) {
 			//Character c = (Character)a;
@@ -303,21 +340,9 @@ public class Character extends Actor {
 			    		+ "B.width = " + a.getWidth() + "B.height = " + a.getHeight());*/
 			    
 			    //System.out.println("Collision! " + this.currentDirection + " " + a.currentDirection);
-			 
 		   }	
-			
 		}
 		
-		for (Character a: l.getBandits()) {
-			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4)) {
-				this.setPosition(0,0);
-			}
-		}
-		
-		if (this == l.hero && overlapRectangles (l.hero.goal, this, (float)0.4)) {
-				// need victory message - You reached the treasure!
-		    	l.hero.setPosition(0,0);
-		}
 		
 		if (this.inCollision) {
 			int currentCollisions = 0;
@@ -538,7 +563,9 @@ public class Character extends Actor {
 		//System.out.println("DRAW FOOTLIST from x:" + mytilex + " and y: " + mytiley + "to x: " + tilex + " y: " + tiley);
 		while (path.empty() == false) {
 			Vector2 next = path.pop();
-			l.footstep.add(new Character(l.texture_footstep, next.x, next.y, (float)0.75, this.getStage(), l));
+			Character newstep = new Character(l.texture_footstep, next.x, next.y, (float)0.75, this.getStage(), l);
+			this.footstepPartial.add(newstep);
+			l.footstep.add(newstep);
 			//System.out.println("DRAW FOOTLIST from x:" + next.x + " and y: " + next.y);
 		}
 		//l.footstep.add(new Character(l.texture_footstep, tilex, tiley, (float)0.75, this.getStage(), l));
@@ -884,8 +911,7 @@ public class Character extends Actor {
 			int tilex = (int)((target.getX() + target.getWidth()/2)/l.tilewidth);
 			int tiley = (int)target.getY()/l.tileheight;
 			//System.out.println("ATTACK " + target.getX() + " " + target.getY() + " tilex: " +tilex + "tiley: " + tiley);
-			gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.04f);
-			//gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.04f);
+			gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.03f);
 		}
 		else if (random_move == true){		
 			RandomMove();
