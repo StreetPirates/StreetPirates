@@ -324,6 +324,7 @@ public class Level implements Screen { //, InputProcessor {
 			//car.get(i).set_random_move();
 			car.get(i).set_target(hero);
 			car.get(i).addAutoRoute(routeCar[i]);
+			car.get(i).setVisible(false);
 		}
 		
 		route = new ArrayList<Character>();
@@ -398,6 +399,7 @@ public class Level implements Screen { //, InputProcessor {
 		if (adventure_started == false) {
 			for(int i = 0; i < car.size(); i++) {
 				car.get(i).set_can_move();
+				car.get(i).setVisible(true);
 				//car.get(i).set_target(hero);	
 			}
 			for(int i = 0; i < bandit.size(); i++) {
