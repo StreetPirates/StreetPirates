@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.DelayAction;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 
@@ -165,8 +166,8 @@ public class Character extends Actor {
 		this.random_move = true;
 	}
 	
-	public void set_can_move() {
-		this.can_move = true;
+	public void set_can_move(boolean move) {
+		this.can_move = move;
 	}
 	
 	public void set_target(Character target) {
@@ -189,6 +190,17 @@ public class Character extends Actor {
 		}
 		footstepPartial.clear();
 	}
+	
+	/*public class MessageListener extends InputListener {
+		Button message;
+		
+		public MessageListener(Button b) {
+			this.message = b;
+		}
+		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+			l.game.setScreen(game.mgetCurrentLevel());
+		}
+	}*/
 	
 	public class CharacterListener extends InputListener {
 		Character character;
@@ -335,7 +347,7 @@ public class Character extends Actor {
 		if (target != null && target.immune_tile(target.getX() + target.getWidth()/2, target.getY()) &&
 				overlapRectangles (target, this, (float)1.0, (float)1.0) && (this.emergencyMove == false)
 				) {
-			System.out.println("AVOIDED PIRATE PEDESTRIAN! WHEYWEEEEE" + getX() + " " + getY());
+			//System.out.println("AVOIDED PIRATE PEDESTRIAN! WHEYWEEEEE" + getX() + " " + getY());
 			this.flushActionsFrames();
 			if (this.useAutoRoute) { 
 	        	this.inAutoRoute = false;
@@ -401,6 +413,8 @@ public class Character extends Actor {
 				// need victory message - You reached the treasure!
 		    	l.hero.setPosition(0,0);
 		    	l.hero.flushActionsFrames();
+		    	l.resetLevel();
+		    	l.game.setScreen(l.game.getMenu());
 		}
 		
 		//for (Actor a: this.getStage().getActors()) {

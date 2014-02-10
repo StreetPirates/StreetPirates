@@ -23,4 +23,8 @@ public class PirateGame extends Game {
 	   public Level getCurrentLevel() {
 		   return level;
 	   }
+	   
+	   public Menu getMenu() {
+		   return menu;
+	   }
 }

@@ -62,7 +62,7 @@ public class Level implements Screen { //, InputProcessor {
 	private int columns;
 	private int rows;
 	private int num_starfish = 2, place_idx = 0;
-	private PirateGame game;
+	public PirateGame game;
 	public Stage stage;
 	private ArrayList<Character> car;
 	private ArrayList<Character> bandit;
@@ -111,7 +111,7 @@ public class Level implements Screen { //, InputProcessor {
 	public int hero_move = 5;
 	public int num_helpers;
 	public boolean start_route;
-	public boolean adventure_started, cityInteraction;
+	public boolean adventure_started, cityInteraction, gameOver;
 	Texture imgbutton;
 	TextureRegion imgbuttonregion;
 	Window window;
@@ -328,6 +328,7 @@ public class Level implements Screen { //, InputProcessor {
 		}
 		
 		route = new ArrayList<Character>();
+		gameOver = true;
 		actor_picked = null;
 		actor_dropped = false;
 		start_route = false;
@@ -337,6 +338,43 @@ public class Level implements Screen { //, InputProcessor {
 		cityInteraction = false;
 	}
 	
+	
+	public void resetLevel() {
+		actor_picked = null;
+		actor_dropped = false;
+		start_route = false;
+		/* tiles with id >= tileid will be illegal */
+		adventure_started = false;		
+		cityInteraction = false;
+		route.clear();
+		
+		//TODO: specify character positions in xml or other format for level parsing
+		
+		//compass.setPosition(0, 0);
+		//parrot.setPosition(0, 0);
+		
+		for(int i = 0; i < car.size(); i++) {
+			car.get(i).flushActionsFrames();
+			car.get(i).set_can_move(false);
+			car.get(i).setVisible(false);
+			car.get(i).setFrameSeriesIdx(0);
+		}
+		car.get(0).setPosition(6 * this.tilewidth, 6 * this.tileheight);
+		car.get(1).setPosition(3 * this.tilewidth, 6 * this.tileheight);
+		car.get(2).setPosition(2 * this.tilewidth, 3 * this.tileheight);
+		
+		hero.setPosition(0, 0);
+		
+		starfish.get(0).setPosition(11 * this.tilewidth, 0);
+		starfish.get(1).setPosition(10 * this.tilewidth, 1 * this.tileheight);
+		starfish.get(2).setPosition(11 * this.tilewidth, 1 * this.tileheight);
+		starfish.get(3).setPosition(12 * this.tilewidth, 1 * this.tileheight);
+		starfish.get(4).setPosition(11 * this.tilewidth, 2 * this.tileheight);
+		
+		for(int i = 0; i < bandit.size(); i++) {
+			bandit.get(i).setFrameSeriesIdx(1);
+		}
+	}
 	
 	public ArrayList<Character> getCars() {
 		return car;
@@ -398,7 +436,7 @@ public class Level implements Screen { //, InputProcessor {
 	public void setup_adventure() {
 		if (adventure_started == false) {
 			for(int i = 0; i < car.size(); i++) {
-				car.get(i).set_can_move();
+				car.get(i).set_can_move(true);
 				car.get(i).setVisible(true);
 				//car.get(i).set_target(hero);	
 			}
