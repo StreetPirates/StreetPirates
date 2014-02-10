@@ -23,5 +23,6 @@ jar uf $jarfile assets/map/treasure1.png
 jar uf $jarfile assets/map/compass.png
 jar uf $jarfile assets/map/starfish-alpha.png
 jar uf $jarfile assets/storytelling/*jpg
-jar uf streetpiratesv0.2.jar assets/ui/uiskin.json
-jar uf streetpiratesv0.2.jar assets/ui/default.fnt
+jar uf $jarfile assets/map/nekrotiles_BW.jpg
+jar uf $jarfile assets/ui/uiskin.json
+jar uf $jarfile assets/ui/default.fnt

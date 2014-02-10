@@ -399,6 +399,7 @@ public class Character extends Actor {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				this.setPosition(0,0);
 				this.flushActionsFrames();
+				l.resetLevel();
 			}
 		}
 		
@@ -406,6 +407,7 @@ public class Character extends Actor {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				this.setPosition(0,0);
 				this.flushActionsFrames();
+				l.resetLevel();
 			}
 		}
 		
@@ -573,7 +575,7 @@ public class Character extends Actor {
 					addFrameChangeAction(sequence);
 				}
 				
-				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
+				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.6f));
 			}
 			//TODO: maybe we just need to go to tile, not exact position for route? so comment next line...
 			sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
@@ -1039,13 +1041,16 @@ public class Character extends Actor {
 			inAutoRoute = true;
 		}
 		
-		else if (target != null && guard_tile(target.getX(), target.getY())) {
+		else if (target != null && guard_tile(target.getX()  + target.getWidth()/2 , target.getY())) {
 			//try to move to target, if they are on tile of type tileid
 			// e.g. car will find hero pirate, if he is on a street tile!
+			//int tilex = (int)(target.getX()/ l.tilewidth);
 			int tilex = (int)((target.getX() + target.getWidth()/2)/l.tilewidth);
 			int tiley = (int)target.getY()/l.tileheight;
-			System.out.println("ATTACK " + target.getX() + " " + target.getY() + " tilex: " +tilex + "tiley: " + tiley);
-			gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.03f);
+			if (!illegal_tile(tilex * l.tilewidth, tiley * l.tileheight)) {
+				//System.out.println("ATTACK " + target.getX() + " " + target.getY() + " tilex: " +tilex + "tiley: " + tiley);
+				gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.03f);
+			}	
 		}
 		else if (emergencyMove == false && random_move == true){		
 			RandomMove();

@@ -336,6 +336,8 @@ public class Level implements Screen { //, InputProcessor {
 		/* tiles with id >= tileid will be illegal */
 		adventure_started = false;		
 		cityInteraction = false;
+		
+		System.out.println("CREATE LEVEL");
 	}
 	
 	
@@ -420,14 +422,14 @@ public class Level implements Screen { //, InputProcessor {
 					//System.out.println("type(" + i + "," + j + "): " + idtype + " newidtype " + newidtype);
 					if (newidtype < idtype) {
 						type[i][j] = newidtype;
-						System.out.println("type(" + i + "," + j + "): changed to " + newidtype);
+						//System.out.println("type(" + i + "," + j + "): changed to " + newidtype);
 					}
 				}
 			}
 		}
 		for (int i = 0 ; i < citylayer.getWidth(); i++)
 			for (int j = 0 ; j < citylayer.getHeight(); j++) {
-				System.out.println("type(" + i + "," + j + "): " + type[i][j]);
+				//System.out.println("type(" + i + "," + j + "): " + type[i][j]);
 			}
 		
 		return type;
@@ -438,11 +440,11 @@ public class Level implements Screen { //, InputProcessor {
 			for(int i = 0; i < car.size(); i++) {
 				car.get(i).set_can_move(true);
 				car.get(i).setVisible(true);
+				car.get(i).inAutoRoute = false;
 				//car.get(i).set_target(hero);	
 			}
 			for(int i = 0; i < bandit.size(); i++) {
 				bandit.get(i).set_target(hero);
-				bandit.get(i).addFrameSeries(texture_pirateflag);
 				bandit.get(i).setFrameSeriesIdx(0);
 			}
 			adventure_started = true;
