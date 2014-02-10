@@ -399,6 +399,8 @@ public class Character extends Actor {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				this.setPosition(0,0);
 				this.flushActionsFrames();
+				l.hero.set_moving(false);
+		    	l.hero.set_in_action(false);
 				l.resetLevel();
 			}
 		}
@@ -407,6 +409,8 @@ public class Character extends Actor {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				this.setPosition(0,0);
 				this.flushActionsFrames();
+				l.hero.set_moving(false);
+		    	l.hero.set_in_action(false);
 				l.resetLevel();
 			}
 		}
@@ -415,6 +419,8 @@ public class Character extends Actor {
 				// need victory message - You reached the treasure!
 		    	l.hero.setPosition(0,0);
 		    	l.hero.flushActionsFrames();
+		    	l.hero.set_moving(false);
+		    	l.hero.set_in_action(false);
 		    	l.resetLevel();
 		    	l.game.setScreen(l.game.getMenu());
 		}
@@ -883,7 +889,6 @@ public class Character extends Actor {
 			a.clear();
 		//}
 		}
-		
 	}
 	
 	public ArrayList<Vector2> getTileList(float x, float y) {
