@@ -21,7 +21,6 @@ import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
@@ -36,7 +35,6 @@ public class Menu implements Screen { //implements Screen {
 	Texture pirateA[], pirateB[], storyTexture[];
 	Image menuImage;
 	private OrthographicCamera camera;
-	Skin skin;
 	
 	MenuCharacter heroA, heroB;
 	ArrayList<Button> btnlist;
@@ -143,7 +141,7 @@ public class Menu implements Screen { //implements Screen {
 	}
 	
 	public Button newBtn(Texture image, float x, float y) {
-		Button btn = new Button(new Image(image), skin);
+		Button btn = new Button(new TextureRegionDrawable(new TextureRegion(image)));
 		btn.setTouchable(Touchable.enabled);
 		btn.setPosition(x, y);
 		btn.setVisible(true);
@@ -161,7 +159,6 @@ public class Menu implements Screen { //implements Screen {
 		menuImage.setBounds(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		//menuImage.setWidth(Gdx.graphics.getWidth());
 		//menuImage.setHeight(Gdx.graphics.getHeight());
-		skin = new Skin(Gdx.files.internal("assets/ui/uiskin.json"));
 		
 		pirate = new ArrayList<MenuCharacter>();
 		pirateA = new Texture[2];

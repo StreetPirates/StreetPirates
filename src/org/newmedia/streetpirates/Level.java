@@ -267,7 +267,7 @@ public class Level implements Screen { //, InputProcessor {
 		bandit = new ArrayList<Character>();
 		//bandit.add(new Character(texture_bandits_purple, 1, 8, (float)2.5, stage, this));
 		bandit.add(new Character(texture_bandits_grey, 10, 3, (float)2.5, stage, this));
-		//bandit.add(new Character(texture_bandits_brown, 9, 7, (float)2.5, stage, this));
+		bandit.add(new Character(texture_bandits_brown, 4, 3, (float)2.5, stage, this));
 				
 		car = new ArrayList<Character>();
 		car.add(new Character(texture_bluecar_front, 6, 6, (float)2.0, stage, this));
@@ -336,10 +336,7 @@ public class Level implements Screen { //, InputProcessor {
 		/* tiles with id >= tileid will be illegal */
 		adventure_started = false;		
 		cityInteraction = false;
-		
-		System.out.println("CREATE LEVEL");
 	}
-	
 	
 	public void resetLevel() {
 		actor_picked = null;
