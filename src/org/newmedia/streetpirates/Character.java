@@ -38,11 +38,12 @@ public class Character extends Actor {
 	int currentFrameSeriesIdx, numberFrameSeries;
 	int movingDirection;
 	int lastCollision, routeDirection, currentDirection;
-	boolean useAutoRoute, inAutoRoute;
+	boolean useAutoRoute, inAutoRoute, emergencyMove;
 	Vector2 autoRoute[];
 	Vector2 autoRouteReverse[];
 	LinkedList<Stack<Integer>> directionFrame;
 	ArrayList<Character> footstepPartial;
+	ArrayList<Action> actionList;
 	
 	public boolean pickable;
 	public boolean is_picked;
@@ -104,6 +105,7 @@ public class Character extends Actor {
 		this.goal = null;
 		this.useAutoRoute = false;
 		this.inAutoRoute = false;
+		this.emergencyMove = false;
 		this.directionFrame = new LinkedList<Stack<Integer>>();
 		this.currentDirection = DOWN;
 		this.footstepPartial = new ArrayList<Character>();
@@ -243,7 +245,7 @@ public class Character extends Actor {
 	 * etc. 
 	 */
 	//TODO: separate collision percentag crietria for x, y. More specifically, focus on lower part of hero (where feet are)
-	public static boolean overlapRectangles (Actor r1, Actor r2, float fulldim) {
+	public static boolean overlapChunkyRectangles (Actor r1, Actor r2, float fulldim) {
         if (r1.getX() < r2.getX() + r2.getWidth() * fulldim && r1.getX() + r1.getWidth() * fulldim > r2.getX() &&
         		r1.getY() < r2.getY() + r2.getHeight() * fulldim && r1.getY() + r1.getHeight() * fulldim > r2.getY())
             return true;
@@ -251,6 +253,47 @@ public class Character extends Actor {
             return false;
         //return x < r.x + r.width && x + width > r.x && y < r.y + r.height && y + height > r.y;
     }
+	
+	public static boolean overlapRectangles (Actor r1, Actor r2, float dimx, float dimy) {
+        if (java.lang.Math.abs(r1.getX() + r1.getWidth()/2 - r2.getX() - r2.getWidth()/2) < java.lang.Math.max(r1.getWidth(), r2.getWidth())* dimx &&
+        		java.lang.Math.abs(r1.getY() - r2.getY()) < java.lang.Math.min(r1.getWidth(), r2.getHeight())* dimy )
+            return true;
+        else
+            return false;
+        //return x < r.x + r.width && x + width > r.x && y < r.y + r.height && y + height > r.y;
+    }
+	
+	public static Vector2 findTile(int tilex, int tiley, int direction) {
+		Vector2 next = new Vector2(tilex, tiley);
+		switch (direction) {
+			case DOWN:
+				next.y--;
+				break;
+			case UP:
+				next.y++;
+				break;
+			case RIGHT:
+				next.x++;
+			case LEFT:
+				next.x--;
+			default:
+				break;
+		}
+		return next;
+	}
+	
+	public void saveActions() {
+		for (Action a: this.getActions()) {
+			actionList.add(a);
+		}
+	}
+	
+	public void restoreActions() {
+		for (Action a: this.getActions()) {
+			actionList.remove(a);
+			this.addAction(a);
+		}
+	}
 	
 	@Override
 	public void draw(Batch batch, float parentAlpha) {
@@ -274,9 +317,9 @@ public class Character extends Actor {
 		 * TODO: Ideally we should only stop actions that go the hero's location... how to do that?
 		 */
 		if (target != null && target.immune_tile(target.getX() + target.getWidth()/2, target.getY()) &&
-				overlapRectangles (target, this, (float)1.7)
+				overlapRectangles (target, this, (float)1.0, (float)1.0) && (this.emergencyMove == false)
 				) {
-			//System.out.println("AVOIDED PIRATE PEDESTRIAN! WHEYWEEEEE" + getX() + " " + getY());
+			System.out.println("AVOIDED PIRATE PEDESTRIAN! WHEYWEEEEE" + getX() + " " + getY());
 			this.flushActionsFrames();
 			if (this.useAutoRoute) { 
 	        	this.inAutoRoute = false;
@@ -284,21 +327,61 @@ public class Character extends Actor {
 			//return;
 		}
 		
+		/* if character is on target's immune tile (e.g. car on pedwalk), and target is apporaching the pedwalk 
+		 * we have a big problem... either target has to pause, or the current character has to move away immediately
+		 * from the illegal tile. Probably both.
+		 */
+		if (target != null && target.immune_tile(this.getX(), this.getY()) &&
+				overlapRectangles (target, this, (float)1.0, (float)1.0) && (this.emergencyMove == false)
+				) {
+			//System.out.println("ON PEDESTRIAN WALK WHILE! " + getX() + " " + getY());
+			this.flushActionsFrames();
+			int tilex = (int)this.getX() / l.tilewidth;
+			int tiley = (int)this.getY() / l.tileheight;
+			int direction = 0;
+			boolean validFound = false;
+			this.emergencyMove = true;
+			while (validFound == false) {
+				Vector2 newtile = findTile(tilex, tiley, direction);
+				if (!illegal_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight) &&
+						!target.immune_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight)) {
+					gotoPoint(l, newtile.x * l.tilewidth, newtile.y * l.tileheight, 0.03f);
+					System.out.println("ON PEDESTRIAN WALK WHILE! from " + tilex + " " + tiley + " GOTO " + newtile.x + " " + newtile.y);
+					validFound = true;
+					SequenceAction sequence = new SequenceAction();
+					sequence.addAction(run(new java.lang.Runnable() {
+					    public void run () {
+					    	System.out.println("DONE ON PEDESTRIAN WALK WHILE! ");
+					        emergencyMove = false; //action works when this is commented out. Why?
+					    }
+					}));
+					this.addAction(after(sequence));
+				}
+				direction++;
+			}
+			
+			if (this.useAutoRoute) { 
+	        	this.inAutoRoute = false;
+	        }
+			return;
+		}
+		
+		
 		for (Character a: l.getBandits()) {
-			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4)) {
+			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				this.setPosition(0,0);
 				this.flushActionsFrames();
 			}
 		}
 		
 		for (Character a: l.getCars()) {
-			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4)) {
+			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				this.setPosition(0,0);
 				this.flushActionsFrames();
 			}
 		}
 		
-		if (this == l.hero && overlapRectangles (l.hero.goal, this, (float)0.4)) {
+		if (this == l.hero && overlapRectangles (l.hero.goal, this, (float)0.4, (float)0.2)) {
 				// need victory message - You reached the treasure!
 		    	l.hero.setPosition(0,0);
 		    	l.hero.flushActionsFrames();
@@ -307,7 +390,7 @@ public class Character extends Actor {
 		//for (Actor a: this.getStage().getActors()) {
 		for (Character a: l.getCars()) {
 			//Character c = (Character)a;
-			if (a!= this && overlapRectangles (a, this, (float)0.4) && !this.inCollision) {
+			if (a!= this && overlapRectangles (a, this, (float)0.4, (float)0.2) && !this.inCollision) {
 			   /*TODO: moving boolean flag is reset in last action, so there is chance a character stays in in_Action/moving limbo (i.e. true flags) forever.
 			    * so find a better way of removing a specific action. or resetting the flag at draw function or elsewhere.
 			    */
@@ -332,6 +415,7 @@ public class Character extends Actor {
 		        	a.routeDirection = ~a.routeDirection;
 		        	a.inAutoRoute = false;
 		        }
+		        
 		        if (this.useAutoRoute) {
 		        	a.inAutoRoute = false;
 		        	this.routeDirection = ~this.routeDirection;
@@ -350,7 +434,7 @@ public class Character extends Actor {
 			int currentCollisions = 0;
 			   for (Character a: l.getCars()) {
 					//Character c = (Character)a;
-					if (a!= this && overlapRectangles (a, this, (float)0.5)) {
+					if (a!= this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 						currentCollisions++;
 						break;
 					}
@@ -360,8 +444,6 @@ public class Character extends Actor {
 				   this.inCollision = false;   
 			   }
 		   }
-		
-	
 		
 		//List<Action> listactions = this.getActions().asList();
 		if (this.can_move /*&& this.getActions().size() == 0*/ ) {
@@ -422,6 +504,7 @@ public class Character extends Actor {
 		        //System.out.println("Action complete!");
 		        moving = false;
 		        in_action = false;
+		        //emergencyMove = false;
 		        if (directionFrame.peekFirst() != null) {
 		        	directionFrame.remove();
 		        }
@@ -433,7 +516,7 @@ public class Character extends Actor {
 		int mytilex = (int) (this.getX() / l.tilewidth);
 		int mytiley = (int) (this.getY() / l.tileheight);
 		int tilex, tiley;
-		float destx = this.getX(), desty = this.getY();
+		float destx, desty;
 		
 		Stack<Vector2> path;
 		
@@ -444,8 +527,8 @@ public class Character extends Actor {
 		
 		for(Character dest: route) {
 			//tweak coordinates... We want the route to pass through middle (sort of) of actor, not bottom-left coordinates
-			destx = dest.getX() + dest.getWidth()/4;
-			desty = dest.getY() + dest.getHeight()/4;
+			destx = dest.getX(); //+ dest.getWidth()/4;
+			desty = dest.getY(); // + dest.getHeight()/4;
 			tilex = (int) (destx / l.tilewidth);
 			tiley = (int) (desty / l.tileheight);
 			// the route can be ambiguous. 
@@ -463,13 +546,13 @@ public class Character extends Actor {
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.5f));
 			}
 			//TODO: maybe we just need to go to tile, not exact position for route? so comment next line...
-			//sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
+			sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
 			//System.out.println("LAST PATH x: " + x + " y: " + y);
 			mytilex = tilex;
 			mytiley = tiley;
 		}
 		//TODO: no matching directionFrame for this move
-		sequence.addAction(moveTo(destx, desty, 0.5f));
+		//sequence.addAction(moveTo(destx, desty, 0.5f));
 		
 		endRouteSequence(sequence);
 		this.addAction(sequence);
@@ -497,7 +580,8 @@ public class Character extends Actor {
 		int tilex;
 		int tiley;
 		
-		this.clearActions();
+		//this.clearActions();
+		this.flushActionsFrames();
 		SequenceAction sequence = new SequenceAction();
 		this.moving = true;
 		this.in_action = true;
@@ -760,10 +844,12 @@ public class Character extends Actor {
 	}
 	
 	public void flushActionsFrames() {
+		//if (this.emergencyMove == false ) {
 		this.clearActions();
 		Stack<Integer> a;
 		while ((a = this.directionFrame.pollFirst()) != null) {
 			a.clear();
+		//}
 		}
 		
 	}
@@ -902,20 +988,20 @@ public class Character extends Actor {
 	}
 	
 	public void moveToTileOrTarget() {
-		if (useAutoRoute == true && inAutoRoute == false) {
+		if (emergencyMove == false && useAutoRoute == true && inAutoRoute == false) {
 			loopRoutePoints(routeDirection == 0 ? autoRoute : autoRouteReverse);
 			inAutoRoute = true;
 		}
 		
-		else if (target != null && guard_tile(target.getX() + target.getWidth()/2, target.getY())) {
+		else if (target != null && guard_tile(target.getX(), target.getY())) {
 			//try to move to target, if they are on tile of type tileid
 			// e.g. car will find hero pirate, if he is on a street tile!
 			int tilex = (int)((target.getX() + target.getWidth()/2)/l.tilewidth);
 			int tiley = (int)target.getY()/l.tileheight;
-			//System.out.println("ATTACK " + target.getX() + " " + target.getY() + " tilex: " +tilex + "tiley: " + tiley);
+			System.out.println("ATTACK " + target.getX() + " " + target.getY() + " tilex: " +tilex + "tiley: " + tiley);
 			gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.03f);
 		}
-		else if (random_move == true){		
+		else if (emergencyMove == false && random_move == true){		
 			RandomMove();
 		}
 	}
