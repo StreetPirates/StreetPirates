@@ -291,7 +291,7 @@ public class Level implements Screen { //, InputProcessor {
 		
 		routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(12 * tilewidth, 5 * tileheight);
 		routeCar[1][0] = new Vector2(1 * tilewidth, 3 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
-		routeCar[2][0] = new Vector2(2 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 4 * tileheight);
+		routeCar[2][0] = new Vector2(1 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 4 * tileheight);
 		
 		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();

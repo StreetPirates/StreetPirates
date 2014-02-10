@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.*;
+import com.badlogic.gdx.scenes.scene2d.actions.DelayAction;
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
@@ -109,6 +110,7 @@ public class Character extends Actor {
 		this.directionFrame = new LinkedList<Stack<Integer>>();
 		this.currentDirection = DOWN;
 		this.footstepPartial = new ArrayList<Character>();
+		this.actionList = new ArrayList<Action>();
 	}
 	
 	public void addFrameSeries(Texture texture[]) {
@@ -284,12 +286,26 @@ public class Character extends Actor {
 	
 	public void saveActions() {
 		for (Action a: this.getActions()) {
+			System.out.println("SAVE MOVE ");
 			actionList.add(a);
+			
 		}
+		
+		for (int i = 0; i < this.actionList.size(); i++) {
+			this.removeAction(this.actionList.get(i));
+		}
+		
+		for (int i = 0; i < this.actionList.size(); i++) {
+			this.addAction(delay(1f));
+			this.addAction(this.actionList.get(i));
+		}
+		
+		//this.flushActionsFrames();
 	}
 	
 	public void restoreActions() {
 		for (Action a: this.getActions()) {
+			System.out.println("RESTORE MOVE ");
 			actionList.remove(a);
 			this.addAction(a);
 		}
@@ -346,16 +362,16 @@ public class Character extends Actor {
 				if (!illegal_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight) &&
 						!target.immune_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight)) {
 					gotoPoint(l, newtile.x * l.tilewidth, newtile.y * l.tileheight, 0.03f);
-					System.out.println("ON PEDESTRIAN WALK WHILE! from " + tilex + " " + tiley + " GOTO " + newtile.x + " " + newtile.y);
+					//System.out.println("ON PEDESTRIAN WALK WHILE! from " + tilex + " " + tiley + " GOTO " + newtile.x + " " + newtile.y);
 					validFound = true;
 					SequenceAction sequence = new SequenceAction();
 					sequence.addAction(run(new java.lang.Runnable() {
 					    public void run () {
-					    	System.out.println("DONE ON PEDESTRIAN WALK WHILE! ");
+					    	//System.out.println("DONE ON PEDESTRIAN WALK WHILE! ");
 					        emergencyMove = false; //action works when this is commented out. Why?
 					    }
 					}));
-					this.addAction(after(sequence));
+					this.addAction(after(sequence)); //adding the last part above (resetting emergencyMove) as an afterAction make sthe emergency move work
 				}
 				direction++;
 			}
@@ -526,9 +542,9 @@ public class Character extends Actor {
 		this.in_action = true;
 		
 		for(Character dest: route) {
-			//tweak coordinates... We want the route to pass through middle (sort of) of actor, not bottom-left coordinates
-			destx = dest.getX(); //+ dest.getWidth()/4;
-			desty = dest.getY(); // + dest.getHeight()/4;
+			
+			destx = dest.getX();
+			desty = dest.getY();
 			tilex = (int) (destx / l.tilewidth);
 			tiley = (int) (desty / l.tileheight);
 			// the route can be ambiguous. 
@@ -866,13 +882,14 @@ public class Character extends Actor {
 		width -= l.tilewidth;
 		height -= l.tileheight;
 		
-		while (width > l.tilewidth) {
+		while (width > l.tilewidth/8) {
 			tilexExtra++;
+			//System.out.println("EXPAND tile for x: "+ tilex + " y: " + tiley + "with x: " + tilexExtra + " y: " + tileyExtra);
 			tiles.add(new Vector2(tilexExtra, tiley));
 			width -= l.tilewidth;
 		}
 		
-		while (height > l.tileheight) {
+		while (height > l.tileheight/8) {
 			tileyExtra++;
 			tiles.add(new Vector2(tilex, tileyExtra));
 			height -= l.tileheight;
@@ -884,9 +901,9 @@ public class Character extends Actor {
 	public boolean valid_tile(float x, float y) {
 		int tileid = l.getTileId(x, y);
 		for (int i = 0; i < valid_tiles; i++) {
-			if (tileid == tileid_valid[i])
+			if (tileid == tileid_valid[i])		
 				return true;
-		
+
 		}
 		return false;
 	}
@@ -910,6 +927,21 @@ public class Character extends Actor {
 	}
 	
 	public boolean illegal_tile(float x, float y) {
+		
+		if (l.getCars().contains(this)) {
+			ArrayList<Vector2> tiles = getTileList(x, y);
+			for (Vector2 d: tiles) {
+				int tileid = l.getTileId(d.x * l.tilewidth, d.y * l.tileheight);		
+				for (int i = 0; i < valid_tiles; i++) {
+					if (tileid == tileid_illegal[i]) {
+						//System.out.println("illegal expanded tile x: "+ d.x + " y: " + d.y);
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+		
 		int tileid = l.getTileId(x, y);
 		for (int i = 0; i < illegal_tiles; i++) {
 			if (tileid == tileid_illegal[i]) {
