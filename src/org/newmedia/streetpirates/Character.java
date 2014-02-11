@@ -3,6 +3,7 @@ package org.newmedia.streetpirates;
 import java.util.*;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.graphics.Texture;
@@ -191,16 +192,43 @@ public class Character extends Actor {
 		footstepPartial.clear();
 	}
 	
-	/*public class MessageListener extends InputListener {
-		Button message;
+	public class MessageListener extends InputListener {
+		Character c;
+		Screen screen;
+		float top, bottom, right, left;
 		
-		public MessageListener(Button b) {
-			this.message = b;
+		/* create a listener that will close this message/actor,  when actor is clicked inside the box
+		 * defined by bottom, top, leftm right parameters. These are relative to start of actor, and not screen coordinates*/
+		public MessageListener(Character c, Screen screen, float bottom, float top, float left, float right) {
+			this.c = c;
+			this.screen = screen;
+			this.bottom = bottom;
+			this.top = top;
+			this.left = left;
+			this.right = right;
 		}
+		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-			l.game.setScreen(game.mgetCurrentLevel());
+			float actorx = event.getStageX() - c.getX();
+			float actory = event.getStageY() - c.getY();
+			System.out.println("? touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+					" actorx:" + actorx + " actory:" + actory +
+					" bottom:" + bottom + " left:" + left
+					);
+			
+			if ((actorx >= left && actorx <= right) &&
+			   (actory >= bottom && actory <= top)) {
+				System.out.println("ACTORYES touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+						" actorx:" + actorx + " actory:" + actory +
+						" bottom:" + bottom + " left:" + left
+						);
+				l.game.setScreen(screen);
+				c.setVisible(false);
+				c.removeListener(this);
+			}
+			return true;
 		}
-	}*/
+	}
 	
 	public class CharacterListener extends InputListener {
 		Character character;
@@ -323,6 +351,16 @@ public class Character extends Actor {
 		}
 	}
 	
+	public void resetHeroLevel() {
+		if (this != l.hero)
+			return;
+		this.setPosition(0,0);
+		this.flushActionsFrames();
+		this.set_moving(false);
+    	this.set_in_action(false);
+		l.resetLevel();
+	}
+	
 	@Override
 	public void draw(Batch batch, float parentAlpha) {
 		super.draw(batch,  parentAlpha);
@@ -397,32 +435,26 @@ public class Character extends Actor {
 		
 		for (Character a: l.getBandits()) {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
-				this.setPosition(0,0);
-				this.flushActionsFrames();
-				l.hero.set_moving(false);
-		    	l.hero.set_in_action(false);
-				l.resetLevel();
+				l.loseSequence.setVisible(true);
+			    l.loseSequence.addListener(new MessageListener(l.loseSequence, l.game.getCurrentLevel(), 550, 600, 730, 780));
+			    this.resetHeroLevel();
 			}
 		}
 		
 		for (Character a: l.getCars()) {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
-				this.setPosition(0,0);
-				this.flushActionsFrames();
-				l.hero.set_moving(false);
-		    	l.hero.set_in_action(false);
-				l.resetLevel();
+				l.loseSequence.setVisible(true);
+			    l.loseSequence.addListener(new MessageListener(l.loseSequence, l.game.getCurrentLevel(), 550, 600, 730, 780));
+			    this.resetHeroLevel();
 			}
 		}
 		
 		if (this == l.hero && overlapRectangles (l.hero.goal, this, (float)0.4, (float)0.2)) {
 				// need victory message - You reached the treasure!
-		    	l.hero.setPosition(0,0);
-		    	l.hero.flushActionsFrames();
-		    	l.hero.set_moving(false);
-		    	l.hero.set_in_action(false);
-		    	l.resetLevel();
-		    	l.game.setScreen(l.game.getMenu());
+			    l.winSequence.setVisible(true);
+			    l.winSequence.set_moving(true);
+			    l.winSequence.addListener(new MessageListener(l.winSequence, l.game.getMenu(), 550, 600, 730, 780));
+			    this.resetHeroLevel();
 		}
 		
 		//for (Actor a: this.getStage().getActors()) {

@@ -42,6 +42,7 @@ import org.newmedia.streetpirates.Character;
 
 public class Level implements Screen { //, InputProcessor {
 	private Texture texture_hero[], texture_hero_right[], texture_hero_left[], texture_hero_back[];
+	private Texture texture_win[], texture_lose[];
 	private Texture texture_compass[];
 	private Texture texture_starfish[];
 	private Texture texture_treasure[];
@@ -79,6 +80,7 @@ public class Level implements Screen { //, InputProcessor {
 	public ArrayList<Character> route;
 	public ArrayList<Character> footstep;
 	public ArrayList<Character> characters; /*all characters in one list?*/
+	public Character winSequence, loseSequence;
 	public int tiletypes[][];
 	public int cost[][];
 	public int car_cost[][];
@@ -208,6 +210,13 @@ public class Level implements Screen { //, InputProcessor {
 		texture_parrot = new Texture[1];
 		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));//map_tiles.png"));
 		
+		texture_win = new Texture[14];
+		for (int i = 1; i <= 14; i ++)
+			texture_win[i - 1] = new Texture(Gdx.files.internal("assets/city/xoros" + i + ".jpg"));
+		
+		texture_lose = new Texture[1];
+		texture_lose[0] = new Texture(Gdx.files.internal("assets/city/listes_htta_maurh_diafaneia.png"));
+		
 		layer = (TiledMapTileLayer)tiledMap.getLayers().get(0); // assuming the layer at index on contains tiles
 		citylayer = (TiledMapTileLayer)tiledCity.getLayers().get(1); // assuming the layer at index on contains tiles
 		columns = layer.getWidth();
@@ -327,6 +336,12 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(i).setVisible(false);
 		}
 		
+		winSequence = new Character(texture_win, 0, 0, (float)13.0, stage, this);
+		winSequence.setVisible(false);
+		
+		loseSequence = new Character(texture_lose, 0, 0, (float)13.0, stage, this);
+		loseSequence.setVisible(false);
+		
 		route = new ArrayList<Character>();
 		gameOver = true;
 		actor_picked = null;
@@ -348,9 +363,6 @@ public class Level implements Screen { //, InputProcessor {
 		route.clear();
 		
 		//TODO: specify character positions in xml or other format for level parsing
-		
-		//compass.setPosition(0, 0);
-		//parrot.setPosition(0, 0);
 		
 		for(int i = 0; i < car.size(); i++) {
 			car.get(i).flushActionsFrames();

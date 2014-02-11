@@ -175,13 +175,8 @@ public class Menu implements Screen { //implements Screen {
 		instructions = new Texture(Gdx.files.internal("assets/menu/Odhgies_Omada.png"));
 		
 		storyTexture = new Texture[7]; 
-		storyTexture[0] = new Texture(Gdx.files.internal("assets/storytelling/storytelling0.jpg"));
-		storyTexture[1] = new Texture(Gdx.files.internal("assets/storytelling/storytelling1.jpg"));
-		storyTexture[2] = new Texture(Gdx.files.internal("assets/storytelling/storytelling2.jpg"));
-		storyTexture[3] = new Texture(Gdx.files.internal("assets/storytelling/storytelling3.jpg"));
-		storyTexture[4] = new Texture(Gdx.files.internal("assets/storytelling/storytelling4.jpg"));
-		storyTexture[5] = new Texture(Gdx.files.internal("assets/storytelling/storytelling5.jpg"));
-		storyTexture[6] = new Texture(Gdx.files.internal("assets/storytelling/storytelling6.jpg"));
+		for (int i = 0; i < 7; i++)
+			storyTexture[i] = new Texture(Gdx.files.internal("assets/storytelling/storytelling" + i + "_downsize.jpg"));
 		
 		stage = new Stage();
 		camera = new OrthographicCamera();
