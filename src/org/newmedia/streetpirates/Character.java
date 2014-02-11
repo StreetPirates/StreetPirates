@@ -238,6 +238,7 @@ public class Character extends Actor {
 						" bottom:" + bottom + " left:" + left
 						);*/
 				l.hero.resetHeroLevel();
+				l.adventure_started = false;
 				c.setVisible(false);
 				c.removeListener(this);
 				if (this.finalMessage == MESSAGE_GOTO_MENU)
@@ -383,7 +384,7 @@ public class Character extends Actor {
 		this.flushActionsFrames();
 		this.set_moving(false);
     	this.set_in_action(false);
-		l.resetLevel();
+		l.resetLevel(false);
 	}
 	
 	@Override

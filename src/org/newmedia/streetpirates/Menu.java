@@ -32,8 +32,8 @@ public class Menu implements Screen { //implements Screen {
 	Group background;
 	Texture menuTexture;
 	Texture startMap, makeMap, settings, instructions;
-	Texture pirateA[], pirateB[], storyTexture[], instructionTexture[];
-	Image menuImage, instructionImage;
+	Texture pirateA[], pirateB[], storyTexture[], instructionTexture[], parrotTexture[];
+	Image menuImage, instructionImage, parrot;
 	private OrthographicCamera camera;
 	
 	MenuCharacter heroA, heroB;
@@ -43,6 +43,7 @@ public class Menu implements Screen { //implements Screen {
 	//StoryListener instructionsListener, storyImageListener;
 	StoryListener storyImageListener;
 	MessageListener instructionImageListener, instructionsListener;
+	InputListener parrotListener;
 	ArrayList<MenuCharacter> pirate;
 	public int storyIdx, instructionIdx;
 	public boolean storyStarts, instructionStarts;
@@ -175,6 +176,11 @@ public class Menu implements Screen { //implements Screen {
 		settings = new Texture(Gdx.files.internal("assets/menu/Prosarmogh.png"));
 		instructions = new Texture(Gdx.files.internal("assets/menu/Odhgies_Omada.png"));
 		
+		parrotTexture = new Texture[1];
+		parrotTexture[0] = new Texture(Gdx.files.internal("assets/map/parrot.png"));
+		
+		parrot = new Image(parrotTexture[0]);
+		parrot.setVisible(false);
 		
 		storyTexture = new Texture[7]; 
 		for (int i = 0; i < 7; i++)
@@ -182,7 +188,8 @@ public class Menu implements Screen { //implements Screen {
 		
 		instructionTexture = new Texture[5]; 
 		for (int i = 1; i <= 5; i++)
-			instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/texts" + i + ".png")); //parrot-test" + i + "-large.png"));
+			instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/texts" + i + ".png"));
+			//instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/parrot-test" + i + "-large.png"));
 		
 		stage = new Stage();
 		camera = new OrthographicCamera();
@@ -207,9 +214,9 @@ public class Menu implements Screen { //implements Screen {
 		}
 		
 		btnlist = new ArrayList<Button>();
-		startMapBtn = newBtn(startMap, 40, 5);
-		makeMapBtn = newBtn(makeMap, 340, 5);
-		settingsBtn = newBtn(settings, 640, 5);
+		startMapBtn = newBtn(startMap, 25, 5);
+		makeMapBtn = newBtn(makeMap, 325, 5);
+		settingsBtn = newBtn(settings, 625, 5);
 		instructionsBtn = newBtn(instructions, 700, 450);
 		startMapListener = new ButtonListener(this.game);
 		//instructionsListener = new StoryListener(this);
@@ -224,6 +231,30 @@ public class Menu implements Screen { //implements Screen {
 		this.menuImage.addListener(this.storyImageListener);
 		this.setButtonsVisible(false);
 		menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[this.storyIdx % 7])));
+		
+		parrotListener = new InputListener() {
+			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+				
+				if (instructionIdx >= 4) {
+					instructionImage.removeListener(instructionImageListener);
+					instructionImage.setVisible(false);
+					instructionStarts = true;
+					instructionIdx = 0;
+					heroA.setVisible(true);
+					heroB.setVisible(true);
+					parrot.removeListener(parrotListener);
+					background.removeActor(parrot);
+					background.removeActor(instructionImage);
+					
+				}
+				else {
+					instructionIdx++;
+					instructionImage.setDrawable(new TextureRegionDrawable(new TextureRegion(instructionTexture[instructionIdx % 5])));
+				}
+				return false;
+			}
+		};
+		
 	}
 	
 	public class ButtonListener extends InputListener {
@@ -299,20 +330,25 @@ public class Menu implements Screen { //implements Screen {
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 			if (menu.instructionStarts == true) {
 				menu.instructionImage = new Image(instructionTexture[0]);
-				menu.instructionImage.setBounds(Gdx.graphics.getWidth()/2 - 2 * instructionTexture[0].getWidth()/2,
-						Gdx.graphics.getHeight()/2 - 2 * instructionTexture[0].getHeight()/2,
+				menu.instructionImage.setBounds(Gdx.graphics.getWidth()/2 - (float)0.5 * instructionTexture[0].getWidth(),
+						Gdx.graphics.getHeight()/2 - instructionTexture[0].getHeight(),
 						2 * instructionTexture[0].getWidth(),
 						2 * instructionTexture[0].getHeight()
 						//Gdx.graphics.getHeight()/2,
 						//Gdx.graphics.getWidth()/2
 						);
+				parrot.addListener(parrotListener);
+				parrot.setBounds(350, 400, instructionTexture[0].getWidth(), instructionTexture[0].getHeight());
+				
 				menu.instructionImage.setVisible(true);
+				menu.parrot.setVisible(true);
 				menu.instructionImageListener = new MessageListener(this.menu);
 				menu.instructionImage.addListener(menu.instructionImageListener);
 				menu.instructionStarts = false;
 				menu.instructionIdx = 0;
 				menu.instructionImage.setDrawable(new TextureRegionDrawable(new TextureRegion(instructionTexture[menu.instructionIdx % 5])));
 				menu.background.addActor(menu.instructionImage);
+				menu.background.addActor(menu.parrot);
 				menu.heroA.setVisible(false);
 				menu.heroB.setVisible(false);
 				
@@ -324,7 +360,10 @@ public class Menu implements Screen { //implements Screen {
 				menu.instructionIdx = 0;
 				menu.heroA.setVisible(true);
 				menu.heroB.setVisible(true);
+				parrot.removeListener(parrotListener);
+				background.removeActor(menu.parrot);
 				background.removeActor(menu.instructionImage);
+				
 			}
 			else {
 				menu.instructionIdx++;

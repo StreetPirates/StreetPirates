@@ -383,12 +383,13 @@ public class Level implements Screen { //, InputProcessor {
 		cityInteraction = false;
 	}
 	
-	public void resetLevel() {
+	public void resetLevel(boolean gotoMap) {
 		actor_picked = null;
 		actor_dropped = false;
 		start_route = false;
 		/* tiles with id >= tileid will be illegal */
-		adventure_started = false;		
+		if (gotoMap)
+			adventure_started = false;		
 		cityInteraction = false;
 		route.clear();
 		
