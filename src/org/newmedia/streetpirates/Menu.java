@@ -284,7 +284,7 @@ public class Menu implements Screen { //implements Screen {
 		}
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-			System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
+			//System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
 			float stagex = event.getStageX();
 			float stagey = event.getStageY();
 			if (menu.storyStarts == true) {
@@ -338,7 +338,7 @@ public class Menu implements Screen { //implements Screen {
 						//Gdx.graphics.getWidth()/2
 						);
 				parrot.addListener(parrotListener);
-				parrot.setBounds(350, 400, instructionTexture[0].getWidth(), instructionTexture[0].getHeight());
+				parrot.setBounds(440, 400, instructionTexture[0].getWidth(), instructionTexture[0].getHeight());
 				
 				menu.instructionImage.setVisible(true);
 				menu.parrot.setVisible(true);

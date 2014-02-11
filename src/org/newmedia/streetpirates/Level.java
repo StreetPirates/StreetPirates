@@ -618,9 +618,13 @@ public class Level implements Screen { //, InputProcessor {
 		parrotMessage.setVisible(true);
 		parrotMessage.setFrameSeriesIdx(0);
 		parrotMessage.addListener(parrotMessageListener);
+		
 		backButton.setVisible(true);
 		backButton.addListener(backButtonListener);
 		Gdx.input.setInputProcessor(stage);
+		
+		winSequence.setVisible(false);
+		loseSequence.setVisible(false);
     }
 
 	@Override
