@@ -182,7 +182,7 @@ public class Menu implements Screen { //implements Screen {
 		
 		instructionTexture = new Texture[5]; 
 		for (int i = 1; i <= 5; i++)
-			instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/parrot-test" + i + "-large.png"));
+			instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/texts" + i + ".png")); //parrot-test" + i + "-large.png"));
 		
 		stage = new Stage();
 		camera = new OrthographicCamera();
@@ -299,10 +299,10 @@ public class Menu implements Screen { //implements Screen {
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 			if (menu.instructionStarts == true) {
 				menu.instructionImage = new Image(instructionTexture[0]);
-				menu.instructionImage.setBounds(Gdx.graphics.getWidth()/2 - instructionTexture[0].getWidth()/2,
-						Gdx.graphics.getHeight()/2 - instructionTexture[0].getHeight()/2,
-						instructionTexture[0].getWidth(),
-						instructionTexture[0].getHeight()
+				menu.instructionImage.setBounds(Gdx.graphics.getWidth()/2 - 2 * instructionTexture[0].getWidth()/2,
+						Gdx.graphics.getHeight()/2 - 2 * instructionTexture[0].getHeight()/2,
+						2 * instructionTexture[0].getWidth(),
+						2 * instructionTexture[0].getHeight()
 						//Gdx.graphics.getHeight()/2,
 						//Gdx.graphics.getWidth()/2
 						);

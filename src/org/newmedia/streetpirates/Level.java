@@ -53,6 +53,7 @@ public class Level implements Screen { //, InputProcessor {
 	private Texture texture_greencar_front[], texture_greencar_back[], texture_greencar_right[], texture_greencar_left[];
 	private Texture texture_bandits_grey[], texture_bandits_brown[], texture_bandits_purple[];
 	private Texture texture_pirateflag[];
+	private Texture texture_backButton[];
 	public Texture texture_footstep[];
 	private OrthographicCamera camera;
 	private TiledMap tiledMap;
@@ -87,6 +88,7 @@ public class Level implements Screen { //, InputProcessor {
 	public int cost[][];
 	public int car_cost[][];
 	public MessageListener parrotMessageListener, backButtonListener;
+	public InputListener parrotListener; 
 	
 	/* city tileset ids hardcoded */
 	public final int TILE_TYPES = 5;
@@ -195,11 +197,11 @@ public class Level implements Screen { //, InputProcessor {
 		texture_starfish[0] = new Texture(Gdx.files.internal("assets/map/starfish-alpha.png"));//map_tiles.png")); 
 		
 		texture_parrot = new Texture[1];
-		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));//map_tiles.png"));
+		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot.png"));//map_tiles.png"));
 		
 		texture_parrot_message = new Texture[5][1];
 		for (int i = 1; i <= 5; i++) {
-			texture_parrot_message[i - 1][0] = new Texture(Gdx.files.internal("assets/map/parrot-test" + i + ".png"));	
+			texture_parrot_message[i - 1][0] = new Texture(Gdx.files.internal("assets/map/texts" + i + ".png"));	
 		}
 		
 		texture_bandits_purple = new Texture[1];
@@ -217,15 +219,15 @@ public class Level implements Screen { //, InputProcessor {
 		texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/FOOTPRINTS.png")); //footsteps-3smalltile.png"));
 		//texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/kyklos.png"));
 		
-		texture_parrot = new Texture[1];
-		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));
-		
 		texture_win = new Texture[14];
 		for (int i = 1; i <= 14; i ++)
 			texture_win[i - 1] = new Texture(Gdx.files.internal("assets/city/xoros" + i + ".jpg"));
 		
 		texture_lose = new Texture[1];
 		texture_lose[0] = new Texture(Gdx.files.internal("assets/city/listes_htta_maurh_diafaneia.png"));
+		
+		texture_backButton = new Texture[1];
+		texture_backButton[0] = new Texture(Gdx.files.internal("assets/map/EXIT.png"));
 		
 		layer = (TiledMapTileLayer)tiledMap.getLayers().get(0); // assuming the layer at index on contains tiles
 		citylayer = (TiledMapTileLayer)tiledCity.getLayers().get(1); // assuming the layer at index on contains tiles
@@ -268,14 +270,10 @@ public class Level implements Screen { //, InputProcessor {
 		characters = new ArrayList<Character>();
 
 		treasure = new Character(texture_treasure, 11, 6, (float)2.0, stage, this);
-		
-		
 		compass = new Character(texture_compass, (float)13.5, 7, (float)2.5, stage, this);
-		parrot = new Character(texture_parrot, (float)13.5, 0, (float)2.0, stage, this);
-		
-		parrot = new Character(texture_parrot, (float)13.5, 0, (float)2.0, stage, this);
-		parrotMessage = new Character(texture_parrot_message[0], (float)13.5, 4, (float)2.5, stage, this);
-		backButton = new Character(texture_footstep, (float)15.5, (float)9.0, (float)0.5, stage, this);
+		parrotMessage = new Character(texture_parrot_message[0], (float)13, 0, (float)3.0, stage, this);
+		parrot = new Character(texture_parrot, (float)13, (float)0.8, (float)3.0, stage, this);
+		backButton = new Character(texture_backButton, (float)15.5, (float)9.5, (float)0.5, stage, this);
 		
 		//for (int i = 1; i < texture_parrot_message.length; i++)
 		parrotMessage.addFrameSeries(texture_parrot_message[1]);
@@ -285,6 +283,15 @@ public class Level implements Screen { //, InputProcessor {
 		
 		parrotMessageListener = parrotMessage.addMessageListener(0, parrotMessage.getHeight(), 0, parrotMessage.getWidth(), Character.MESSAGE_STAY);
 		backButtonListener = backButton.addMessageListener(0, backButton.getHeight(), 0, backButton.getWidth(), Character.MESSAGE_GOTO_MENU);
+		
+		parrotListener = new InputListener() {
+				public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+					parrotMessage.currentFrameSeriesIdx = (parrotMessage.currentFrameSeriesIdx + 1) % parrotMessage.numberFrameSeries;;
+					return false;
+				}
+			};
+			
+		parrot.addListener(parrotListener);
 		
 		footstep = new ArrayList<Character>();
 		

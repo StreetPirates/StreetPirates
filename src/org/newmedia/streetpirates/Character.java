@@ -218,25 +218,25 @@ public class Character extends Actor {
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 			float actorx = event.getStageX() - c.getX();
 			float actory = event.getStageY() - c.getY();
-			System.out.println("ACTORYES touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+			/*System.out.println("ACTORYES touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
 			" actorx:" + actorx + " actory:" + actory +
 			" bottom:" + bottom + " left:" + left + 
 			" top:" + top + " right:" + right
-			);
+			);*/
 			
 			if (this.finalMessage == MESSAGE_STAY) {
-				System.out.println("? touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+				/*System.out.println("? touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
 						" actorx:" + actorx + " actory:" + actory +
-						" bottom:" + bottom + " left:" + left);
+						" bottom:" + bottom + " left:" + left);*/
 				c.currentFrameSeriesIdx = (c.currentFrameSeriesIdx + 1) % c.numberFrameSeries;
 			}
 			
 			else if ((actorx >= left && actorx <= right) &&
 			   (actory >= bottom && actory <= top)) {
-				System.out.println("GOGOGO touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+				/*System.out.println("GOGOGO touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
 						" actorx:" + actorx + " actory:" + actory +
 						" bottom:" + bottom + " left:" + left
-						);
+						);*/
 				l.hero.resetHeroLevel();
 				c.setVisible(false);
 				c.removeListener(this);
