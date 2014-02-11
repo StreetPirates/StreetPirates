@@ -17,6 +17,8 @@ import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 
 import org.newmedia.streetpirates.Character;
@@ -60,8 +62,8 @@ public class Character extends Actor {
 	
 	//public Character(Texture  texture, int tilex, int tiley, float scalex, float scaley, Stage stage) {
 	public Character(Texture texture[], float tilex, float tiley, float scaling, Stage stage, Level l) {
-		imageregion = new TextureRegion[4][texture.length];
-		animation = new Animation[4];
+		imageregion = new TextureRegion[5][texture.length];
+		animation = new Animation[5];
 		for(int i = 0; i < texture.length; i++) {
 			imageregion[0][i] = new TextureRegion(texture[i]);
 		}
@@ -196,26 +198,38 @@ public class Character extends Actor {
 		Character c;
 		Screen screen;
 		float top, bottom, right, left;
+		boolean finalMessage;
+		int idx;
 		
 		/* create a listener that will close this message/actor,  when actor is clicked inside the box
 		 * defined by bottom, top, leftm right parameters. These are relative to start of actor, and not screen coordinates*/
-		public MessageListener(Character c, Screen screen, float bottom, float top, float left, float right) {
+		public MessageListener(Character c, Screen screen, float bottom, float top, float left, float right, boolean finalMessage) {
 			this.c = c;
 			this.screen = screen;
 			this.bottom = bottom;
 			this.top = top;
 			this.left = left;
 			this.right = right;
+			this.finalMessage = finalMessage;
+			this.idx = 0;
 		}
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 			float actorx = event.getStageX() - c.getX();
 			float actory = event.getStageY() - c.getY();
-			System.out.println("? touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
-					" actorx:" + actorx + " actory:" + actory +
-					" bottom:" + bottom + " left:" + left
-					);
 			
+			
+			if (this.finalMessage == false) {
+				//c.currentFrameRegion = c.imageregion[0][this.idx];
+				//idx = (idx + 1) % imageregion[0].length;
+				System.out.println("? touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+						" actorx:" + actorx + " actory:" + actory +
+						" bottom:" + bottom + " left:" + left + " idx: " + idx
+						);
+				c.currentFrameSeriesIdx = (c.currentFrameSeriesIdx + 1) % c.numberFrameSeries;
+			}
+			
+			else { 
 			if ((actorx >= left && actorx <= right) &&
 			   (actory >= bottom && actory <= top)) {
 				System.out.println("ACTORYES touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
@@ -225,6 +239,7 @@ public class Character extends Actor {
 				l.game.setScreen(screen);
 				c.setVisible(false);
 				c.removeListener(this);
+			}
 			}
 			return true;
 		}
@@ -280,6 +295,10 @@ public class Character extends Actor {
 	
 	public void addClickListener() {
 		this.addListener(new CharacterListener(this));
+	}
+	
+	public void addMessageListener(float bottom, float top, float left, float right, boolean finalMessage) {
+		this.addListener(new MessageListener(this, l, bottom, top, left, right, finalMessage));
 	}
 	
 	/* fulldim of 1.0 means the overlap will trigger when the full bounding boxes start to collide
@@ -436,7 +455,7 @@ public class Character extends Actor {
 		for (Character a: l.getBandits()) {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				l.loseSequence.setVisible(true);
-			    l.loseSequence.addListener(new MessageListener(l.loseSequence, l.game.getCurrentLevel(), 550, 600, 730, 780));
+			    l.loseSequence.addListener(new MessageListener(l.loseSequence, l.game.getCurrentLevel(), 550, 600, 730, 780, true));
 			    this.resetHeroLevel();
 			}
 		}
@@ -444,7 +463,7 @@ public class Character extends Actor {
 		for (Character a: l.getCars()) {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				l.loseSequence.setVisible(true);
-			    l.loseSequence.addListener(new MessageListener(l.loseSequence, l.game.getCurrentLevel(), 550, 600, 730, 780));
+			    l.loseSequence.addListener(new MessageListener(l.loseSequence, l.game.getCurrentLevel(), 550, 600, 730, 780, true));
 			    this.resetHeroLevel();
 			}
 		}
@@ -453,7 +472,7 @@ public class Character extends Actor {
 				// need victory message - You reached the treasure!
 			    l.winSequence.setVisible(true);
 			    l.winSequence.set_moving(true);
-			    l.winSequence.addListener(new MessageListener(l.winSequence, l.game.getMenu(), 550, 600, 730, 780));
+			    l.winSequence.addListener(new MessageListener(l.winSequence, l.game.getMenu(), 550, 600, 730, 780, true));
 			    this.resetHeroLevel();
 		}
 		

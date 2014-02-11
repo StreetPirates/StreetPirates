@@ -39,6 +39,7 @@ import java.util.Arrays;
 
 
 import org.newmedia.streetpirates.Character;
+import org.newmedia.streetpirates.Character.MessageListener;
 
 public class Level implements Screen { //, InputProcessor {
 	private Texture texture_hero[], texture_hero_right[], texture_hero_left[], texture_hero_back[];
@@ -46,7 +47,7 @@ public class Level implements Screen { //, InputProcessor {
 	private Texture texture_compass[];
 	private Texture texture_starfish[];
 	private Texture texture_treasure[];
-	private Texture texture_parrot[];
+	private Texture texture_parrot[], texture_parrot_message[][];
 	private Texture texture_bluecar_front[], texture_bluecar_back[], texture_bluecar_right[], texture_bluecar_left[];
 	private Texture texture_redcar_front[], texture_redcar_back[], texture_redcar_right[], texture_redcar_left[];
 	private Texture texture_greencar_front[], texture_greencar_back[], texture_greencar_right[], texture_greencar_left[];
@@ -70,7 +71,7 @@ public class Level implements Screen { //, InputProcessor {
 	private ArrayList<Character> starfish;
 	private Character pirateflag;
 	private Character treasure;
-	private Character parrot;
+	private Character parrot, parrotMessage;
 	private Skin buttonSkin;
 	
 	public Character compass;
@@ -194,6 +195,11 @@ public class Level implements Screen { //, InputProcessor {
 		texture_parrot = new Texture[1];
 		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));//map_tiles.png"));
 		
+		texture_parrot_message = new Texture[5][1];
+		for (int i = 1; i <= 5; i++) {
+			texture_parrot_message[i - 1][0] = new Texture(Gdx.files.internal("assets/map/parrot-test" + i + ".png"));	
+		}
+		
 		texture_bandits_purple = new Texture[1];
 		texture_bandits_purple[0] = new Texture(Gdx.files.internal("assets/city/bandits-purple.png"));//map_tiles.png"));
 		texture_bandits_brown = new Texture[1];
@@ -208,7 +214,7 @@ public class Level implements Screen { //, InputProcessor {
 		texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/footstepsblue.png"));
 		
 		texture_parrot = new Texture[1];
-		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));//map_tiles.png"));
+		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));
 		
 		texture_win = new Texture[14];
 		for (int i = 1; i <= 14; i ++)
@@ -245,7 +251,7 @@ public class Level implements Screen { //, InputProcessor {
 		tiletypes = create_types_tilemap(tiledCity); 
 		cost = new int[this.width][this.height];
 		car_cost = new int[this.width][this.height];
-		calculate_cost();	
+		calculate_cost();
 
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, columns, rows);
@@ -269,7 +275,16 @@ public class Level implements Screen { //, InputProcessor {
 		
 		compass = new Character(texture_compass, (float)13.5, 7, (float)2.5, stage, this);
 		parrot = new Character(texture_parrot, (float)13.5, 0, (float)2.0, stage, this);
-		//pirateflag = new Character(texture_pirateflag, (float)13.5, 3, (float)2.0, stage, this);
+		
+		parrot = new Character(texture_parrot, (float)13.5, 0, (float)2.0, stage, this);
+		parrotMessage = new Character(texture_parrot_message[0], (float)13.5, 4, (float)2.0, stage, this);
+		//for (int i = 1; i < texture_parrot_message.length; i++)
+		parrotMessage.addFrameSeries(texture_parrot_message[1]);
+		parrotMessage.addFrameSeries(texture_parrot_message[2]);
+		parrotMessage.addFrameSeries(texture_parrot_message[3]);
+		parrotMessage.addFrameSeries(texture_parrot_message[4]);
+		
+		parrotMessage.addMessageListener(0, 0, parrotMessage.getWidth(), parrotMessage.getHeight(), false);
 		
 		footstep = new ArrayList<Character>();
 		
