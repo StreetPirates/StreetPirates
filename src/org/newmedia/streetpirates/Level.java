@@ -71,7 +71,7 @@ public class Level implements Screen { //, InputProcessor {
 	private ArrayList<Character> starfish;
 	private Character pirateflag;
 	private Character treasure;
-	private Character parrot, parrotMessage;
+	public Character parrot, parrotMessage;
 	private Skin buttonSkin;
 	
 	public Character compass;
@@ -85,6 +85,7 @@ public class Level implements Screen { //, InputProcessor {
 	public int tiletypes[][];
 	public int cost[][];
 	public int car_cost[][];
+	public MessageListener parrotMessageListener;
 	
 	/* city tileset ids hardcoded */
 	public final int TILE_TYPES = 5;
@@ -284,7 +285,7 @@ public class Level implements Screen { //, InputProcessor {
 		parrotMessage.addFrameSeries(texture_parrot_message[3]);
 		parrotMessage.addFrameSeries(texture_parrot_message[4]);
 		
-		parrotMessage.addMessageListener(0, 0, parrotMessage.getWidth(), parrotMessage.getHeight(), false);
+		parrotMessageListener = parrotMessage.addMessageListener(0, 0, parrotMessage.getWidth(), parrotMessage.getHeight(), false);
 		
 		footstep = new ArrayList<Character>();
 		
@@ -400,6 +401,7 @@ public class Level implements Screen { //, InputProcessor {
 		for(int i = 0; i < bandit.size(); i++) {
 			bandit.get(i).setFrameSeriesIdx(1);
 		}
+		
 	}
 	
 	public ArrayList<Character> getCars() {
@@ -472,6 +474,8 @@ public class Level implements Screen { //, InputProcessor {
 				bandit.get(i).setFrameSeriesIdx(0);
 			}
 			adventure_started = true;
+			parrotMessage.setVisible(false);
+			parrotMessage.removeListener(parrotMessageListener);
 		}
 		for(int i = 0; i < footstep.size(); i++) {
 			footstep.get(i).setVisible(false);

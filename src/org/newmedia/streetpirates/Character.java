@@ -199,7 +199,6 @@ public class Character extends Actor {
 		Screen screen;
 		float top, bottom, right, left;
 		boolean finalMessage;
-		int idx;
 		
 		/* create a listener that will close this message/actor,  when actor is clicked inside the box
 		 * defined by bottom, top, leftm right parameters. These are relative to start of actor, and not screen coordinates*/
@@ -211,7 +210,6 @@ public class Character extends Actor {
 			this.left = left;
 			this.right = right;
 			this.finalMessage = finalMessage;
-			this.idx = 0;
 		}
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
@@ -220,12 +218,9 @@ public class Character extends Actor {
 			
 			
 			if (this.finalMessage == false) {
-				//c.currentFrameRegion = c.imageregion[0][this.idx];
-				//idx = (idx + 1) % imageregion[0].length;
 				System.out.println("? touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
 						" actorx:" + actorx + " actory:" + actory +
-						" bottom:" + bottom + " left:" + left + " idx: " + idx
-						);
+						" bottom:" + bottom + " left:" + left);
 				c.currentFrameSeriesIdx = (c.currentFrameSeriesIdx + 1) % c.numberFrameSeries;
 			}
 			
@@ -239,6 +234,11 @@ public class Character extends Actor {
 				l.game.setScreen(screen);
 				c.setVisible(false);
 				c.removeListener(this);
+				if (screen == (Screen)l) {
+					c.l.parrotMessage.setVisible(true);
+					c.l.parrotMessage.setFrameSeriesIdx(0);
+					c.l.parrotMessage.addListener(c.l.parrotMessageListener);
+				}
 			}
 			}
 			return true;
@@ -297,8 +297,10 @@ public class Character extends Actor {
 		this.addListener(new CharacterListener(this));
 	}
 	
-	public void addMessageListener(float bottom, float top, float left, float right, boolean finalMessage) {
-		this.addListener(new MessageListener(this, l, bottom, top, left, right, finalMessage));
+	public MessageListener addMessageListener(float bottom, float top, float left, float right, boolean finalMessage) {
+		MessageListener msg = new MessageListener(this, l, bottom, top, left, right, finalMessage);
+		this.addListener(msg);
+		return msg;
 	}
 	
 	/* fulldim of 1.0 means the overlap will trigger when the full bounding boxes start to collide

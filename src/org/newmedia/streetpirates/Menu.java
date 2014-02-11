@@ -174,6 +174,7 @@ public class Menu implements Screen { //implements Screen {
 		settings = new Texture(Gdx.files.internal("assets/menu/Prosarmogh.png"));
 		instructions = new Texture(Gdx.files.internal("assets/menu/Odhgies_Omada.png"));
 		
+		
 		storyTexture = new Texture[7]; 
 		for (int i = 0; i < 7; i++)
 			storyTexture[i] = new Texture(Gdx.files.internal("assets/storytelling/storytelling" + i + "_downsize.jpg"));
