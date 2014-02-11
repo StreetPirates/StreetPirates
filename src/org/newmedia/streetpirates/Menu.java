@@ -207,9 +207,9 @@ public class Menu implements Screen { //implements Screen {
 		}
 		
 		btnlist = new ArrayList<Button>();
-		startMapBtn = newBtn(startMap, 40, 20);
-		makeMapBtn = newBtn(makeMap, 340, 20);
-		settingsBtn = newBtn(settings, 640, 20);
+		startMapBtn = newBtn(startMap, 40, 5);
+		makeMapBtn = newBtn(makeMap, 340, 5);
+		settingsBtn = newBtn(settings, 640, 5);
 		instructionsBtn = newBtn(instructions, 700, 450);
 		startMapListener = new ButtonListener(this.game);
 		//instructionsListener = new StoryListener(this);
@@ -253,7 +253,9 @@ public class Menu implements Screen { //implements Screen {
 		}
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-			//System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
+			System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
+			float stagex = event.getStageX();
+			float stagey = event.getStageY();
 			if (menu.storyStarts == true) {
 				menu.storyImageListener = new StoryListener(this.menu);
 				menu.menuImage.addListener(menu.storyImageListener);
@@ -262,18 +264,22 @@ public class Menu implements Screen { //implements Screen {
 				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[menu.storyIdx % 7])));
 				menu.storyStarts = false;
 			}
-			else if (menu.storyIdx >= 6) {
+			else if (menu.storyIdx >= 6 || (stagex >= 845 && stagey >= 568)) {
 				menu.menuImage.removeListener(menu.storyImageListener);
 				setButtonsVisible(true);
 				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(menuTexture)));
 				menu.storyStarts = true;
 				menu.storyIdx = 0;
 			}
-			else {
+			else if (stagex >= 790 && stagex <= 860 && stagey >= 65 && stagey <= 130) {
 				menu.storyIdx++;
 				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[menu.storyIdx % 7])));            	
 			}
-            return true;  // must return true for touchUp event to occur
+			else if (stagex >= 105 && stagex <= 170 && stagey >= 65 && stagey <= 130) {
+				if (menu.storyIdx > 0) menu.storyIdx--;
+				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[menu.storyIdx % 7])));            	
+			}
+            return true;
         }
 		
         public void touchUp (InputEvent event, float x, float y, int pointer, int button) {

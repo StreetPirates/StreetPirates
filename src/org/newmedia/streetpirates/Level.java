@@ -77,6 +77,7 @@ public class Level implements Screen { //, InputProcessor {
 	public Character compass;
 	public Character hero;
 	public Character actor_picked;
+	public Character backButton;
 	public boolean actor_dropped;
 	public ArrayList<Character> route;
 	public ArrayList<Character> footstep;
@@ -85,7 +86,7 @@ public class Level implements Screen { //, InputProcessor {
 	public int tiletypes[][];
 	public int cost[][];
 	public int car_cost[][];
-	public MessageListener parrotMessageListener;
+	public MessageListener parrotMessageListener, backButtonListener;
 	
 	/* city tileset ids hardcoded */
 	public final int TILE_TYPES = 5;
@@ -213,7 +214,7 @@ public class Level implements Screen { //, InputProcessor {
 		
 		texture_footstep = new Texture[1];
 		//texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/footstepsblue.png"));
-		texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/footsteps-3smalltile.png"));
+		texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/FOOTPRINTS.png")); //footsteps-3smalltile.png"));
 		//texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/kyklos.png"));
 		
 		texture_parrot = new Texture[1];
@@ -268,26 +269,22 @@ public class Level implements Screen { //, InputProcessor {
 
 		treasure = new Character(texture_treasure, 11, 6, (float)2.0, stage, this);
 		
-		hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
-		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
-		hero.set_illegaltile(TILE_ILLEGAL_ID);
-		hero.set_goal(treasure);
-		hero.addFrameSeries(texture_hero_back);
-		hero.addFrameSeries(texture_hero_right);
-		hero.addFrameSeries(texture_hero_left);
 		
 		compass = new Character(texture_compass, (float)13.5, 7, (float)2.5, stage, this);
 		parrot = new Character(texture_parrot, (float)13.5, 0, (float)2.0, stage, this);
 		
 		parrot = new Character(texture_parrot, (float)13.5, 0, (float)2.0, stage, this);
-		parrotMessage = new Character(texture_parrot_message[0], (float)13.5, 4, (float)2.0, stage, this);
+		parrotMessage = new Character(texture_parrot_message[0], (float)13.5, 4, (float)2.5, stage, this);
+		backButton = new Character(texture_footstep, (float)15.5, (float)9.0, (float)0.5, stage, this);
+		
 		//for (int i = 1; i < texture_parrot_message.length; i++)
 		parrotMessage.addFrameSeries(texture_parrot_message[1]);
 		parrotMessage.addFrameSeries(texture_parrot_message[2]);
 		parrotMessage.addFrameSeries(texture_parrot_message[3]);
 		parrotMessage.addFrameSeries(texture_parrot_message[4]);
 		
-		parrotMessageListener = parrotMessage.addMessageListener(0, 0, parrotMessage.getWidth(), parrotMessage.getHeight(), false);
+		parrotMessageListener = parrotMessage.addMessageListener(0, parrotMessage.getHeight(), 0, parrotMessage.getWidth(), Character.MESSAGE_STAY);
+		backButtonListener = backButton.addMessageListener(0, backButton.getHeight(), 0, backButton.getWidth(), Character.MESSAGE_GOTO_MENU);
 		
 		footstep = new ArrayList<Character>();
 		
@@ -328,6 +325,14 @@ public class Level implements Screen { //, InputProcessor {
 		starfish.add(new Character(texture_starfish, 12, 1, (float)1.0, stage, this));
 		starfish.add(new Character(texture_starfish, 11, 2, (float)1.0, stage, this));
 		//starfish.add(new Character(texture_starfish, 11, 5, (float)1.0, stage, this));
+		
+		hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
+		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
+		hero.set_illegaltile(TILE_ILLEGAL_ID);
+		hero.set_goal(treasure);
+		hero.addFrameSeries(texture_hero_back);
+		hero.addFrameSeries(texture_hero_right);
+		hero.addFrameSeries(texture_hero_left);
 		
 		for(int i = 0; i < starfish.size(); i++) {
 			starfish.get(i).set_pickable(true);
@@ -393,6 +398,7 @@ public class Level implements Screen { //, InputProcessor {
 		car.get(2).setPosition(2 * this.tilewidth, 3 * this.tileheight);
 		
 		hero.setPosition(0, 0);
+		cleanFootTrail();
 		
 		starfish.get(0).setPosition(11 * this.tilewidth, 0);
 		starfish.get(1).setPosition(10 * this.tilewidth, 1 * this.tileheight);
@@ -463,6 +469,15 @@ public class Level implements Screen { //, InputProcessor {
 		return type;
 	}
 	
+	public void cleanFootTrail() {
+		for(int i = 0; i < footstep.size(); i++) {
+			footstep.get(i).setVisible(false);
+			footstep.get(i).setSize(0,0);
+			footstep.get(i).setPosition(0,0);
+		}
+		footstep.clear();
+	}
+	
 	public void setup_adventure() {
 		if (adventure_started == false) {
 			for(int i = 0; i < car.size(); i++) {
@@ -479,12 +494,7 @@ public class Level implements Screen { //, InputProcessor {
 			parrotMessage.setVisible(false);
 			parrotMessage.removeListener(parrotMessageListener);
 		}
-		for(int i = 0; i < footstep.size(); i++) {
-			footstep.get(i).setVisible(false);
-			footstep.get(i).setSize(0,0);
-			footstep.get(i).setPosition(0,0);
-		}
-		footstep.clear();
+		cleanFootTrail();
 	}
 	
 	@Override
@@ -600,6 +610,8 @@ public class Level implements Screen { //, InputProcessor {
 		parrotMessage.setVisible(true);
 		parrotMessage.setFrameSeriesIdx(0);
 		parrotMessage.addListener(parrotMessageListener);
+		backButton.setVisible(true);
+		backButton.addListener(backButtonListener);
 		Gdx.input.setInputProcessor(stage);
     }
 

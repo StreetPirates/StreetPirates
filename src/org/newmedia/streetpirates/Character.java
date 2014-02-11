@@ -60,6 +60,10 @@ public class Character extends Actor {
 	public static final long delta = 100000;
 	public static final int MAX_TILE_TYPES = 3;
 	
+	public static final int MESSAGE_STAY = 1;
+	public static final int MESSAGE_RESTART_LEVEL = 2;
+	public static final int MESSAGE_GOTO_MENU = 3;
+	
 	//public Character(Texture  texture, int tilex, int tiley, float scalex, float scaley, Stage stage) {
 	public Character(Texture texture[], float tilex, float tiley, float scaling, Stage stage, Level l) {
 		imageregion = new TextureRegion[5][texture.length];
@@ -198,13 +202,12 @@ public class Character extends Actor {
 		Character c;
 		Screen screen;
 		float top, bottom, right, left;
-		boolean finalMessage;
+		int finalMessage;
 		
 		/* create a listener that will close this message/actor,  when actor is clicked inside the box
 		 * defined by bottom, top, leftm right parameters. These are relative to start of actor, and not screen coordinates*/
-		public MessageListener(Character c, Screen screen, float bottom, float top, float left, float right, boolean finalMessage) {
+		public MessageListener(Character c, float bottom, float top, float left, float right, int finalMessage) {
 			this.c = c;
-			this.screen = screen;
 			this.bottom = bottom;
 			this.top = top;
 			this.left = left;
@@ -215,26 +218,32 @@ public class Character extends Actor {
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 			float actorx = event.getStageX() - c.getX();
 			float actory = event.getStageY() - c.getY();
+			System.out.println("ACTORYES touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+			" actorx:" + actorx + " actory:" + actory +
+			" bottom:" + bottom + " left:" + left + 
+			" top:" + top + " right:" + right
+			);
 			
-			
-			if (this.finalMessage == false) {
-				/*System.out.println("? touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+			if (this.finalMessage == MESSAGE_STAY) {
+				System.out.println("? touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
 						" actorx:" + actorx + " actory:" + actory +
-						" bottom:" + bottom + " left:" + left);*/
+						" bottom:" + bottom + " left:" + left);
 				c.currentFrameSeriesIdx = (c.currentFrameSeriesIdx + 1) % c.numberFrameSeries;
 			}
 			
-			else { 
-			if ((actorx >= left && actorx <= right) &&
+			else if ((actorx >= left && actorx <= right) &&
 			   (actory >= bottom && actory <= top)) {
-				/*System.out.println("ACTORYES touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+				System.out.println("GOGOGO touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
 						" actorx:" + actorx + " actory:" + actory +
 						" bottom:" + bottom + " left:" + left
-						);*/
-				l.game.setScreen(screen);
+						);
+				l.hero.resetHeroLevel();
 				c.setVisible(false);
 				c.removeListener(this);
-			}
+				if (this.finalMessage == MESSAGE_GOTO_MENU)
+					l.game.setScreen(l.game.getMenu());
+				else if (this.finalMessage == MESSAGE_RESTART_LEVEL)
+					l.game.setScreen(l.game.getCurrentLevel());
 			}
 			return true;
 		}
@@ -292,8 +301,8 @@ public class Character extends Actor {
 		this.addListener(new CharacterListener(this));
 	}
 	
-	public MessageListener addMessageListener(float bottom, float top, float left, float right, boolean finalMessage) {
-		MessageListener msg = new MessageListener(this, l, bottom, top, left, right, finalMessage);
+	public MessageListener addMessageListener(float bottom, float top, float left, float right, int finalMessage) {
+		MessageListener msg = new MessageListener(this, bottom, top, left, right, finalMessage);
 		this.addListener(msg);
 		return msg;
 	}
@@ -452,7 +461,7 @@ public class Character extends Actor {
 		for (Character a: l.getBandits()) {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				l.loseSequence.setVisible(true);
-			    l.loseSequence.addListener(new MessageListener(l.loseSequence, l.game.getCurrentLevel(), 550, 600, 730, 780, true));
+			    l.loseSequence.addListener(new MessageListener(l.loseSequence, 550, 600, 730, 780, MESSAGE_RESTART_LEVEL));
 			    this.resetHeroLevel();
 			}
 		}
@@ -460,7 +469,7 @@ public class Character extends Actor {
 		for (Character a: l.getCars()) {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				l.loseSequence.setVisible(true);
-			    l.loseSequence.addListener(new MessageListener(l.loseSequence, l.game.getCurrentLevel(), 550, 600, 730, 780, true));
+			    l.loseSequence.addListener(new MessageListener(l.loseSequence, 550, 600, 730, 780, MESSAGE_RESTART_LEVEL));
 			    this.resetHeroLevel();
 			}
 		}
@@ -469,7 +478,7 @@ public class Character extends Actor {
 				// need victory message - You reached the treasure!
 			    l.winSequence.setVisible(true);
 			    l.winSequence.set_moving(true);
-			    l.winSequence.addListener(new MessageListener(l.winSequence, l.game.getMenu(), 550, 600, 730, 780, true));
+			    l.winSequence.addListener(new MessageListener(l.winSequence, 550, 600, 730, 780, MESSAGE_GOTO_MENU));
 			    this.resetHeroLevel();
 		}
 		
@@ -735,7 +744,7 @@ public class Character extends Actor {
 		//System.out.println("DRAW FOOTLIST from x:" + mytilex + " and y: " + mytiley + "to x: " + tilex + " y: " + tiley);
 		while (path.empty() == false) {
 			Vector2 next = path.pop();
-			Character newstep = new Character(l.texture_footstep, next.x, next.y, (float)0.7, this.getStage(), l);
+			Character newstep = new Character(l.texture_footstep, next.x, next.y, (float)1.0, this.getStage(), l);
 			
 
 			/*Stack<Integer> dirstack = l.hero.directionFrame.peekFirst();
