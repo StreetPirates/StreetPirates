@@ -15,9 +15,10 @@ jar uf $jarfile assets/cars/green*png
 jar uf $jarfile assets/cars/blue*png 
 jar uf $jarfile assets/menu/*png 
 jar uf $jarfile assets/menu/*jpg
-jar uf $jarfile assets/map/footstepsblue.png
+jar uf $jarfile assets/map/footsteps-3smalltile.png
 jar uf $jarfile assets/map/trafficLight.png
 jar uf $jarfile assets/map/parrot_front.png
+jar uf $jarfile assets/map/parrot-test*.png
 jar uf $jarfile assets/map/Map*png
 jar uf $jarfile assets/map/map*png
 jar uf $jarfile assets/map/pirateflag.png
@@ -25,4 +26,4 @@ jar uf $jarfile assets/map/treasure1.png
 jar uf $jarfile assets/map/compass.png
 jar uf $jarfile assets/map/starfish-alpha.png
 jar uf $jarfile assets/storytelling/*downsize*jpg
-jar uf $jarfile assets/map/nekrotiles2.jpg
+jar uf $jarfile assets/map/nekrotiles2.png

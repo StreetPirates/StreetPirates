@@ -212,7 +212,9 @@ public class Level implements Screen { //, InputProcessor {
 		texture_pirateflag[0] = new Texture(Gdx.files.internal("assets/map/nekrotiles2.png")); 
 		
 		texture_footstep = new Texture[1];
-		texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/footstepsblue.png"));
+		//texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/footstepsblue.png"));
+		texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/footsteps-3smalltile.png"));
+		//texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/kyklos.png"));
 		
 		texture_parrot = new Texture[1];
 		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));

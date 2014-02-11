@@ -218,19 +218,19 @@ public class Character extends Actor {
 			
 			
 			if (this.finalMessage == false) {
-				System.out.println("? touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+				/*System.out.println("? touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
 						" actorx:" + actorx + " actory:" + actory +
-						" bottom:" + bottom + " left:" + left);
+						" bottom:" + bottom + " left:" + left);*/
 				c.currentFrameSeriesIdx = (c.currentFrameSeriesIdx + 1) % c.numberFrameSeries;
 			}
 			
 			else { 
 			if ((actorx >= left && actorx <= right) &&
 			   (actory >= bottom && actory <= top)) {
-				System.out.println("ACTORYES touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+				/*System.out.println("ACTORYES touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
 						" actorx:" + actorx + " actory:" + actory +
 						" bottom:" + bottom + " left:" + left
-						);
+						);*/
 				l.game.setScreen(screen);
 				c.setVisible(false);
 				c.removeListener(this);
@@ -255,7 +255,7 @@ public class Character extends Actor {
             	    //System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
             		l.actor_picked = character;
             		if (l.route.contains(character)) {
-            			System.out.println("STARFISH REPICKED touchDown x: " + x + " y: " + y);
+            			//System.out.println("STARFISH REPICKED touchDown x: " + x + " y: " + y);
             			l.route.remove(character);
             			character.backtrackFootsteps();
             			//character.addFootsteps(l.route);
@@ -735,7 +735,32 @@ public class Character extends Actor {
 		//System.out.println("DRAW FOOTLIST from x:" + mytilex + " and y: " + mytiley + "to x: " + tilex + " y: " + tiley);
 		while (path.empty() == false) {
 			Vector2 next = path.pop();
-			Character newstep = new Character(l.texture_footstep, next.x, next.y, (float)0.75, this.getStage(), l);
+			Character newstep = new Character(l.texture_footstep, next.x, next.y, (float)0.7, this.getStage(), l);
+			
+
+			/*Stack<Integer> dirstack = l.hero.directionFrame.peekFirst();
+    		if (dirstack != null && dirstack.empty()) {
+    			l.hero.directionFrame.remove();
+    			dirstack = l.hero.directionFrame.peekFirst();
+    		}
+			if (dirstack != null) {
+			int dir = dirstack.pop();
+			if (dir != CURRDIRECTION) {
+				System.out.println("DIRECTIONFRAME FOOTSTEPS SERIES: " + dir);
+				switch (dir) {
+					case DOWN:
+						newstep.setRotation((float)180.0);
+						break;
+					case RIGHT:
+						newstep.setRotation((float)90.0);
+						break;
+					case LEFT:
+						newstep.setRotation((float)270);
+						break;
+					}
+				}
+			}*/			
+			
 			this.footstepPartial.add(newstep);
 			l.footstep.add(newstep);
 			//System.out.println("DRAW FOOTLIST from x:" + next.x + " and y: " + next.y);
