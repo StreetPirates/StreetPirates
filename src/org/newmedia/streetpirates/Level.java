@@ -595,6 +595,9 @@ public class Level implements Screen { //, InputProcessor {
 		}
 		compass.addClickListener();
 		stage.addListener(new LevelListener(this));
+		parrotMessage.setVisible(true);
+		parrotMessage.setFrameSeriesIdx(0);
+		parrotMessage.addListener(parrotMessageListener);
 		Gdx.input.setInputProcessor(stage);
     }
 

@@ -234,11 +234,6 @@ public class Character extends Actor {
 				l.game.setScreen(screen);
 				c.setVisible(false);
 				c.removeListener(this);
-				if (screen == (Screen)l) {
-					c.l.parrotMessage.setVisible(true);
-					c.l.parrotMessage.setFrameSeriesIdx(0);
-					c.l.parrotMessage.addListener(c.l.parrotMessageListener);
-				}
 			}
 			}
 			return true;
