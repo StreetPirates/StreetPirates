@@ -216,9 +216,10 @@ public class Level implements Screen { //, InputProcessor {
 		texture_pirateflag[0] = new Texture(Gdx.files.internal("assets/map/nekrotiles2.png")); 
 		
 		texture_footstep = new Texture[1];
+		//the blue footprints texture works well: we can place a starfish in the already established route
 		//texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/footstepsblue.png"));
+		//FIXME:  this texture seems to cause a problem: we can't place a starfish in the already established route
 		texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/FOOTPRINTS.png")); //footsteps-3smalltile.png"));
-		//texture_footstep[0] = new Texture(Gdx.files.internal("assets/map/kyklos.png"));
 		
 		texture_win = new Texture[14];
 		for (int i = 1; i <= 14; i ++)
