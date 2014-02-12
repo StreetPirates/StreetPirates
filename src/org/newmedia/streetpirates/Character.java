@@ -612,7 +612,8 @@ public class Character extends Actor {
 		int mytilex = (int) (this.getX() / l.tilewidth);
 		int mytiley = (int) (this.getY() / l.tileheight);
 		int tilex, tiley;
-		float destx, desty;
+		float destx = this.getX(), desty = this.getY();
+		boolean moved = false;
 		
 		Stack<Vector2> path;
 		
@@ -642,13 +643,15 @@ public class Character extends Actor {
 				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.6f));
 			}
 			//TODO: maybe we just need to go to tile, not exact position for route? so comment next line...
-			sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
+			//sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
 			//System.out.println("LAST PATH x: " + x + " y: " + y);
 			mytilex = tilex;
 			mytiley = tiley;
+			moved = true;
 		}
 		//TODO: no matching directionFrame for this move
-		//sequence.addAction(moveTo(destx, desty, 0.5f));
+		if (moved == true)
+			sequence.addAction(moveTo(destx, desty, 0.5f));
 		
 		endRouteSequence(sequence);
 		this.addAction(sequence);
