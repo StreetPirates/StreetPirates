@@ -130,7 +130,8 @@ public class Level implements Screen { //, InputProcessor {
 		//tiledMap = new TmxMapLoader().load("assets/map/map.tmx");
 		//tiledMap = new TmxMapLoader().load("assets/streetpirates-level1.tmx");
 		tiledMap = new TmxMapLoader().load("assets/streetpirates-level1-withcompass.tmx");
-		tiledCity = new TmxMapLoader().load("assets/streetpirates-city1-withcompass.tmx");
+		//tiledCity = new TmxMapLoader().load("assets/streetpirates-city1-withcompass.tmx");
+		tiledCity = new TmxMapLoader().load("assets/streetpirates-city1-withcompass-backup.tmx");
 		prop = tiledMap.getProperties();
 		
 		texture_hero = new Texture[4];
