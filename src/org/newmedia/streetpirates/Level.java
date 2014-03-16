@@ -198,7 +198,7 @@ public class Level implements Screen { //, InputProcessor {
 		texture_starfish[0] = new Texture(Gdx.files.internal("assets/map/starfish-alpha.png"));//map_tiles.png")); 
 		
 		texture_parrot = new Texture[1];
-		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot.png"));//map_tiles.png"));
+		texture_parrot[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));//map_tiles.png"));
 		
 		texture_parrot_message = new Texture[5][1];
 		for (int i = 1; i <= 5; i++) {

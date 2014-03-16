@@ -177,7 +177,7 @@ public class Menu implements Screen { //implements Screen {
 		instructions = new Texture(Gdx.files.internal("assets/menu/Odhgies_Omada.png"));
 		
 		parrotTexture = new Texture[1];
-		parrotTexture[0] = new Texture(Gdx.files.internal("assets/map/parrot.png"));
+		parrotTexture[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));
 		
 		parrot = new Image(parrotTexture[0]);
 		parrot.setVisible(false);
@@ -392,7 +392,7 @@ public class Menu implements Screen { //implements Screen {
 	
 	@Override
 	public void render(float delta) {		
-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+	    Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		stage.act(Gdx.graphics.getDeltaTime());
 		
 		stage.draw();
