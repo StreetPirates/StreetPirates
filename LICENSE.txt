@@ -1,0 +1,7 @@
+StreetPirates (c) by Maria Saridaki, Electra Galani, Vasilis Liaskovitis
+
+StreetPirates is licensed under a
+Creative Commons Attribution-NonCommercial-NoDerivs 4.0 Unported License.
+
+You should have received a copy of the license along with this
+work.  If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
