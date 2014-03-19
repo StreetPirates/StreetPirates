@@ -1,7 +1,12 @@
-StreetPirates (c) by Maria Saridaki, Electra Galani, Vasilis Liaskovitis
+StreetPirates (c) 2014 by Maria Saridaki, Electra Galani, Vasilis Liaskovitis
 
-StreetPirates is licensed under a
+StreetPirates art content (found under directory assets/) is licensed under a
 Creative Commons Attribution-NonCommercial-NoDerivs 4.0 Unported License.
+You should have received a copy of the license along with this work
+(CC-LICENSE file in root directory).  If not, see
+ <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
 
-You should have received a copy of the license along with this
-work.  If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>.
+StreetPirates code (found under directory src/) is licensed under the Apache
+License 2.0. You should have received a copy of the license along with this work
+(LICENSE file in root directory). If not, see
+ <http://www.apache.org/licenses/LICENSE-2.0>
