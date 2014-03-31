@@ -31,7 +31,7 @@ public class StreetPiratesMain {
 	    public static void main(String[] args) {
 	    	//Input inputProcessor = new Input();
 	    	//Gdx.input.setInputProcessor(inputProcessor);
-	    	new JglfwApplication(new PirateGame(), "Street Pirates", 960, 600, true );    
+	    	new JglfwApplication(new PirateGame(), "Street Pirates", 960, 600 );    
 	    }
 
 }

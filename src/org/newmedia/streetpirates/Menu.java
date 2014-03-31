@@ -22,7 +22,7 @@ import org.newmedia.streetpirates.Level.LevelListener;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.GL10;
+//import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -408,7 +408,7 @@ public class Menu implements Screen { //implements Screen {
 	
 	@Override
 	public void render(float delta) {		
-	    Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+	    //Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		stage.act(Gdx.graphics.getDeltaTime());
 		
 		stage.draw();

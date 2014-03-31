@@ -19,7 +19,7 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Gdx.*;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.graphics.GL10;
+//import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -525,7 +525,7 @@ public class Level implements Screen { //, InputProcessor {
 	
 	@Override
 	public void render(float delta) {		
-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+		//Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		int layers_id[] = {0};
 		int city_layers_id[] = {0, 1};
 		if (adventure_started == false)
