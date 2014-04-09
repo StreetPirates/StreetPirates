@@ -25,6 +25,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteCache;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.maps.Map;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.*;
@@ -46,6 +47,15 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.*;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
+import org.w3c.dom.Element;
+import java.io.File;
+
+import java.util.HashMap;
 //import com.badlogic.gdx.maps.tiled.TiledMap;
 //import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 //import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
@@ -87,7 +97,7 @@ public class Level implements Screen { //, InputProcessor {
 	private ArrayList<Character> bandit;
 	private ArrayList<Character> starfish;
 	private Character pirateflag;
-	private Character treasure;
+	private ArrayList<Character> treasure;
 	public Character parrot, parrotMessage;
 	private Skin buttonSkin;
 	
@@ -105,6 +115,17 @@ public class Level implements Screen { //, InputProcessor {
 	public int car_cost[][];
 	public MessageListener parrotMessageListener, backButtonListener;
 	public InputListener parrotListener; 
+	
+	/* entity are actors/object in the foreground
+	 * Car
+	 * Bandit
+	 * Chest 
+	 * */
+	public final int ENTITY_TYPES = 4;
+	//public final String pirateAssetPrefix = "hi";
+	public final String banditpurpleAssetPrefix = "assets/city/bandits-purple.png";
+	public final String carblueAssetPrefix = "assets/cars/blue_car_back.png";
+	public final String treasureChestAssetPrefix = "assets/map/treasure1.png";
 	
 	/* city tileset ids hardcoded */
 	public final int TILE_TYPES = 5;
@@ -287,7 +308,7 @@ public class Level implements Screen { //, InputProcessor {
 		
 		characters = new ArrayList<Character>();
 
-		treasure = new Character(texture_treasure, 11, 6, (float)2.0, stage, this);
+		treasure = new ArrayList<Character>();
 		compass = new Character(texture_compass, (float)13.5, 7, (float)2.5, stage, this);
 		parrotMessage = new Character(texture_parrot_message[0], (float)13, 0, (float)3.0, stage, this);
 		parrot = new Character(texture_parrot, (float)13, (float)0.8, (float)3.0, stage, this);
@@ -315,24 +336,8 @@ public class Level implements Screen { //, InputProcessor {
 		
 		bandit = new ArrayList<Character>();
 		//bandit.add(new Character(texture_bandits_purple, 1, 8, (float)2.5, stage, this));
-		bandit.add(new Character(texture_bandits_grey, 10, 3, (float)2.5, stage, this));
-		bandit.add(new Character(texture_bandits_brown, 4, 3, (float)2.5, stage, this));
 				
 		car = new ArrayList<Character>();
-		car.add(new Character(texture_bluecar_front, 6, 6, (float)2.0, stage, this));
-		car.add(new Character(texture_redcar_front, 3, 6, (float)2.0, stage, this));
-		car.add(new Character(texture_greencar_front, 2, 3, (float)2.0, stage, this));
-		
-		car.get(0).addFrameSeries(texture_bluecar_back);
-		car.get(0).addFrameSeries(texture_bluecar_right);
-		car.get(0).addFrameSeries(texture_bluecar_left);
-		car.get(1).addFrameSeries(texture_redcar_back);
-		car.get(1).addFrameSeries(texture_redcar_right);
-		car.get(1).addFrameSeries(texture_redcar_left);
-		car.get(2).addFrameSeries(texture_greencar_back);
-		car.get(2).addFrameSeries(texture_greencar_right);
-		car.get(2).addFrameSeries(texture_greencar_left);
-		
 		routeCar = new Vector2[3][2];
 		/*routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(11 * tilewidth, 4 * tileheight);
 		routeCar[1][0] = new Vector2(2 * tilewidth, 4 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
@@ -342,22 +347,118 @@ public class Level implements Screen { //, InputProcessor {
 		routeCar[1][0] = new Vector2(1 * tilewidth, 3 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
 		routeCar[2][0] = new Vector2(1 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 4 * tileheight);
 		
-		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();
-		starfish.add(new Character(texture_starfish, 11, 0, (float)1.0, stage, this));
-		starfish.add(new Character(texture_starfish, 10, 1, (float)1.0, stage, this));
-		starfish.add(new Character(texture_starfish, 11, 1, (float)1.0, stage, this));
-		starfish.add(new Character(texture_starfish, 12, 1, (float)1.0, stage, this));
-		starfish.add(new Character(texture_starfish, 11, 2, (float)1.0, stage, this));
-		//starfish.add(new Character(texture_starfish, 11, 5, (float)1.0, stage, this));
 		
 		hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
 		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
 		hero.set_illegaltile(TILE_ILLEGAL_ID);
-		hero.set_goal(treasure);
+		
 		hero.addFrameSeries(texture_hero_back);
 		hero.addFrameSeries(texture_hero_right);
 		hero.addFrameSeries(texture_hero_left);
+		
+		HashMap<String, Texture[] > assetTextureMap = new HashMap<String, Texture[]>();
+		HashMap<String, ArrayList<Character> > assetListMap = new HashMap<String, ArrayList<Character>>();
+		
+		
+		//assetFileMap.put("pirate") = ;
+		assetTextureMap.put("bandit-purple", texture_bandits_purple);
+		assetTextureMap.put("bandit-brown", texture_bandits_brown);
+		assetTextureMap.put("bandit-grey", texture_bandits_grey);
+		assetTextureMap.put("bandit", texture_bandits_brown);
+		assetTextureMap.put("treasure", texture_treasure);
+		assetTextureMap.put("starfish", texture_starfish);
+		assetTextureMap.put("car-green", texture_greencar_front);
+		assetTextureMap.put("car-green-back", texture_greencar_back);
+		assetTextureMap.put("car-green-right", texture_greencar_right);
+		assetTextureMap.put("car-green-left", texture_greencar_left);
+		assetTextureMap.put("car-red", texture_redcar_front);
+		assetTextureMap.put("car-red-back", texture_redcar_back);
+		assetTextureMap.put("car-red-right", texture_redcar_right);
+		assetTextureMap.put("car-red-left", texture_redcar_left);
+		assetTextureMap.put("car-blue", texture_bluecar_front);
+		assetTextureMap.put("car-blue-back", texture_bluecar_back);
+		assetTextureMap.put("car-blue-right", texture_bluecar_right);
+		assetTextureMap.put("car-blue-left", texture_bluecar_left);
+		
+		assetListMap.put("treasure", treasure);
+		assetListMap.put("bandit", bandit);
+		assetListMap.put("bandit-purple", bandit);
+		assetListMap.put("bandit-brown", bandit);
+		assetListMap.put("bandit-grey", bandit);
+		assetListMap.put("starfish", starfish);
+		assetListMap.put("car", car);
+		assetListMap.put("car-green", car);
+		assetListMap.put("car-red", car);
+		assetListMap.put("car-blue", car);
+	
+		File fXmlFile = new File("assets/streetpirates-level1-placement.xml");
+		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		
+
+	    try {
+		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+		Document doc = dBuilder.parse(fXmlFile);
+	 
+		//optional, but recommended
+		//read this - http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
+		doc.getDocumentElement().normalize();
+	 
+		System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+	 
+		NodeList nList = doc.getElementsByTagName("object");
+	 
+		System.out.println("----------------------------");
+		
+		 
+		for (int temp = 0; temp < nList.getLength(); temp++) {
+	 
+			Node nNode = nList.item(temp);
+	 
+			System.out.println("\nCurrent Element :" + nNode.getNodeName());
+	 
+			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+				String texEl, backEl, rightEl, leftEl, typeEl;
+				Character character;
+				
+				Element eElement = (Element) nNode;
+	 
+				System.out.println("X-coordinate : " + eElement.getAttribute("x"));
+				System.out.println("Y-coordinate : " + eElement.getAttribute("y"));
+				System.out.println("type : " + eElement.getAttribute("type"));
+				
+				//System.out.println(" : " + eElement.getAttribute("x"));
+				ArrayList<Character> list = assetListMap.get(eElement.getAttribute("type"));
+				Texture tex[] = assetTextureMap.get(eElement.getAttribute("type"));
+				
+				int tiley = Integer.parseInt(eElement.getAttribute("y"));
+				int tilex = Integer.parseInt(eElement.getAttribute("x"));
+				
+				float scaling = Float.parseFloat(eElement.getAttribute("scaling"));
+				character = new Character(tex, tilex, tiley, scaling, stage, this); 
+				
+				
+				if (!eElement.getAttribute("back").equals("")) {
+					Texture back[] = assetTextureMap.get(eElement.getAttribute("back"));
+					character.addFrameSeries(back);
+				}
+				if (!eElement.getAttribute("right").equals("")) {
+					Texture right[] = assetTextureMap.get(eElement.getAttribute("right"));
+					character.addFrameSeries(right);
+				}
+				if (!eElement.getAttribute("left").equals("")) {
+					Texture left[] = assetTextureMap.get(eElement.getAttribute("left"));
+					character.addFrameSeries(left);
+				}
+				list.add(character);
+				
+			}
+		}
+		
+	    } catch (Exception e) {
+	    	e.printStackTrace();
+	    }		
+		
 		
 		for(int i = 0; i < starfish.size(); i++) {
 			starfish.get(i).set_pickable(true);
@@ -368,8 +469,8 @@ public class Level implements Screen { //, InputProcessor {
 
 		for(int i = 0; i < bandit.size(); i++) {
 			bandit.get(i).set_target(hero);
-			bandit.get(i).addFrameSeries(texture_pirateflag);
-			bandit.get(i).setFrameSeriesIdx(1);
+			//bandit.get(i).addFrameSeries(texture_pirateflag);
+			//bandit.get(i).setFrameSeriesIdx(1);
 		}
 		
 		for(int i = 0; i < car.size(); i++) {
@@ -399,6 +500,8 @@ public class Level implements Screen { //, InputProcessor {
 		/* tiles with id >= tileid will be illegal */
 		adventure_started = false;		
 		cityInteraction = false;
+	    
+	    hero.set_goal(treasure.get(0));
 	}
 	
 	public void resetLevel(boolean gotoMap) {
