@@ -556,19 +556,15 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(i).set_can_move(false);
 			car.get(i).setVisible(false);
 			car.get(i).setFrameSeriesIdx(0);
+			car.get(i).setStartPosition();
 		}
-		car.get(0).setPosition(6 * this.tilewidth, 6 * this.tileheight);
-		car.get(1).setPosition(3 * this.tilewidth, 6 * this.tileheight);
-		car.get(2).setPosition(2 * this.tilewidth, 3 * this.tileheight);
 		
-		hero.setPosition(0, 0);
+		hero.setStartPosition();
 		cleanFootTrail();
 		
-		starfish.get(0).setPosition(11 * this.tilewidth, 0);
-		starfish.get(1).setPosition(10 * this.tilewidth, 1 * this.tileheight);
-		starfish.get(2).setPosition(11 * this.tilewidth, 1 * this.tileheight);
-		starfish.get(3).setPosition(12 * this.tilewidth, 1 * this.tileheight);
-		starfish.get(4).setPosition(11 * this.tilewidth, 2 * this.tileheight);
+		for(int i = 0; i < starfish.size(); i++) {
+			starfish.get(i).setStartPosition();	
+		}
 		
 		for(int i = 0; i < bandit.size(); i++) {
 			if (bandit.get(i).getNumberFrameSeries() > 1)

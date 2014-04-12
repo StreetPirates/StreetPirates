@@ -56,6 +56,7 @@ public class Character extends Actor {
 	Animation animation[];
 	Character target, goal;
 	float stateTime;
+	float startTileX, startTileY;
 	int currentFrameSeriesIdx, numberFrameSeries;
 	int movingDirection;
 	int lastCollision, routeDirection, currentDirection;
@@ -90,6 +91,8 @@ public class Character extends Actor {
 		this.numberFrameSeries = 1;
 		this.currentFrameSeriesIdx = 0;
 		
+		startTileX = tilex;
+		startTileY = tiley;
 		this.setX(tilex * l.tilewidth);
 		this.setY(tiley * l.tileheight);
 		float texture_ratio = (float)texture[0].getHeight()/ (float)texture[0].getWidth();
@@ -147,6 +150,11 @@ public class Character extends Actor {
 	
 	public int getNumberFrameSeries() {
 		return numberFrameSeries;
+	}
+	
+	public void setStartPosition() {
+		this.setX(startTileX * l.tilewidth);
+		this.setY(startTileY * l.tileheight);
 	}
 	
 	public void set_moving(boolean set) {
