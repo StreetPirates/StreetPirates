@@ -356,6 +356,7 @@ public class Level implements Screen { //, InputProcessor {
 		assetTextureMap.put("bandit-brown", texture_bandits_brown);
 		assetTextureMap.put("bandit-grey", texture_bandits_grey);
 		assetTextureMap.put("bandit", texture_bandits_brown);
+		assetTextureMap.put("pirateflag", texture_pirateflag);
 		assetTextureMap.put("treasure", texture_treasure);
 		assetTextureMap.put("starfish", texture_starfish);
 		assetTextureMap.put("car-green", texture_greencar_front);
@@ -433,6 +434,11 @@ public class Level implements Screen { //, InputProcessor {
 				character = new Character(tex, tilex, tiley, scaling, stage, this); 
 				
 				
+				if (!eElement.getAttribute("extra").equals("")) {
+					System.out.println("EXTRA  " + eElement.getAttribute("extra"));
+					Texture extra[] = assetTextureMap.get(eElement.getAttribute("extra"));
+					character.addFrameSeries(extra);
+				}
 				if (!eElement.getAttribute("back").equals("")) {
 					Texture back[] = assetTextureMap.get(eElement.getAttribute("back"));
 					character.addFrameSeries(back);
@@ -492,7 +498,8 @@ public class Level implements Screen { //, InputProcessor {
 		for(int i = 0; i < bandit.size(); i++) {
 			bandit.get(i).set_target(hero);
 			//bandit.get(i).addFrameSeries(texture_pirateflag);
-			//bandit.get(i).setFrameSeriesIdx(1);
+			if (bandit.get(i).getNumberFrameSeries() > 1)
+				bandit.get(i).setFrameSeriesIdx(1);
 		}
 		
 		for(int i = 0; i < car.size(); i++) {
@@ -564,7 +571,8 @@ public class Level implements Screen { //, InputProcessor {
 		starfish.get(4).setPosition(11 * this.tilewidth, 2 * this.tileheight);
 		
 		for(int i = 0; i < bandit.size(); i++) {
-			bandit.get(i).setFrameSeriesIdx(1);
+			if (bandit.get(i).getNumberFrameSeries() > 1)
+				bandit.get(i).setFrameSeriesIdx(1);
 		}
 		
 	}

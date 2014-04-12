@@ -145,6 +145,10 @@ public class Character extends Actor {
 		numberFrameSeries++;
 	}
 	
+	public int getNumberFrameSeries() {
+		return numberFrameSeries;
+	}
+	
 	public void set_moving(boolean set) {
 		moving = set;
 	}
