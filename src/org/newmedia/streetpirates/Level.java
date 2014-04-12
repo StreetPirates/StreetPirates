@@ -339,23 +339,13 @@ public class Level implements Screen { //, InputProcessor {
 				
 		car = new ArrayList<Character>();
 		routeCar = new Vector2[3][2];
-		/*routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(11 * tilewidth, 4 * tileheight);
-		routeCar[1][0] = new Vector2(2 * tilewidth, 4 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
-		routeCar[2][0] = new Vector2(2 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 3 * tileheight);*/
-		
-		routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(12 * tilewidth, 5 * tileheight);
-		routeCar[1][0] = new Vector2(1 * tilewidth, 3 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
-		routeCar[2][0] = new Vector2(1 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 4 * tileheight);
 		
 		starfish = new ArrayList<Character>();
 		
-		hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
-		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
-		hero.set_illegaltile(TILE_ILLEGAL_ID);
+		//hero = new ArrayList<Character>();
 		
-		hero.addFrameSeries(texture_hero_back);
-		hero.addFrameSeries(texture_hero_right);
-		hero.addFrameSeries(texture_hero_left);
+		//hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
+		
 		
 		HashMap<String, Texture[] > assetTextureMap = new HashMap<String, Texture[]>();
 		HashMap<String, ArrayList<Character> > assetListMap = new HashMap<String, ArrayList<Character>>();
@@ -380,6 +370,10 @@ public class Level implements Screen { //, InputProcessor {
 		assetTextureMap.put("car-blue-back", texture_bluecar_back);
 		assetTextureMap.put("car-blue-right", texture_bluecar_right);
 		assetTextureMap.put("car-blue-left", texture_bluecar_left);
+		assetTextureMap.put("hero", texture_hero);
+		assetTextureMap.put("hero-back", texture_hero_back);
+		assetTextureMap.put("hero-left", texture_hero_left);
+		assetTextureMap.put("hero-right", texture_hero_right);
 		
 		assetListMap.put("treasure", treasure);
 		assetListMap.put("bandit", bandit);
@@ -391,6 +385,7 @@ public class Level implements Screen { //, InputProcessor {
 		assetListMap.put("car-green", car);
 		assetListMap.put("car-red", car);
 		assetListMap.put("car-blue", car);
+		//assetListMap.put("hero", hero);
 	
 		File fXmlFile = new File("assets/streetpirates-level1-placement.xml");
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -407,14 +402,14 @@ public class Level implements Screen { //, InputProcessor {
 		System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
 	 
 		NodeList nList = doc.getElementsByTagName("object");
-	 
+		
 		System.out.println("----------------------------");
 		
 		 
 		for (int temp = 0; temp < nList.getLength(); temp++) {
 	 
 			Node nNode = nList.item(temp);
-	 
+			
 			System.out.println("\nCurrent Element :" + nNode.getNodeName());
 	 
 			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -422,7 +417,7 @@ public class Level implements Screen { //, InputProcessor {
 				Character character;
 				
 				Element eElement = (Element) nNode;
-	 
+				
 				System.out.println("X-coordinate : " + eElement.getAttribute("x"));
 				System.out.println("Y-coordinate : " + eElement.getAttribute("y"));
 				System.out.println("type : " + eElement.getAttribute("type"));
@@ -450,8 +445,35 @@ public class Level implements Screen { //, InputProcessor {
 					Texture left[] = assetTextureMap.get(eElement.getAttribute("left"));
 					character.addFrameSeries(left);
 				}
-				list.add(character);
 				
+				int nroutepoints = 0;
+				NodeList nNodeChildren = nNode.getChildNodes();
+				Vector2 route[] = new Vector2[2];
+				
+				for (int child = 0; child < nNodeChildren.getLength(); child++) {
+					Node nChild = nNodeChildren.item(child);
+					
+					if (nChild.getNodeName().equals("routepoint") && nroutepoints < 2) {
+						Element eChild = (Element) nChild;		
+						route[nroutepoints] = new Vector2(Integer.parseInt(eChild.getAttribute("x")) * this.tilewidth,
+								Integer.parseInt(eChild.getAttribute("y")) * this.tileheight);
+						
+						System.out.println(eChild.getAttribute("x"));
+						System.out.println(eChild.getAttribute("y"));
+						nroutepoints++;	
+					}	
+				}
+				//delete route;
+				if (nroutepoints > 0) 
+					character.addAutoRoute(route);
+				
+				if (list !=null)
+					list.add(character);
+				
+				if (eElement.getAttribute("type").equals("hero")) {
+					hero = character;
+					;
+				}
 			}
 		}
 		
@@ -481,7 +503,7 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(0).set_guardtile(TILE_STREET_ID);
 			//car.get(i).set_random_move();
 			car.get(i).set_target(hero);
-			car.get(i).addAutoRoute(routeCar[i]);
+			//car.get(i).addAutoRoute(routeCar[i]);
 			car.get(i).setVisible(false);
 		}
 		
@@ -501,6 +523,12 @@ public class Level implements Screen { //, InputProcessor {
 		adventure_started = false;		
 		cityInteraction = false;
 	    
+		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
+		hero.set_illegaltile(TILE_ILLEGAL_ID);
+		
+		hero.addFrameSeries(texture_hero_back);
+		hero.addFrameSeries(texture_hero_right);
+		hero.addFrameSeries(texture_hero_left);
 	    hero.set_goal(treasure.get(0));
 	}
 	
