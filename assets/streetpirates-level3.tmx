@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="16" height="10" tilewidth="60" tileheight="60">
+ <tileset firstgid="1" name="map_tiles (2)" tilewidth="60" tileheight="60">
+  <image source="map/map_tiles (2).png" width="180" height="360"/>
+  <terraintypes>
+   <terrain name="pavement" tile="0"/>
+   <terrain name="street" tile="3"/>
+   <terrain name="grass" tile="6"/>
+   <terrain name="pedwalk" tile="9"/>
+  </terraintypes>
+ </tileset>
+ <tileset firstgid="19" name="Map_Background" tilewidth="60" tileheight="60">
+  <image source="map/Map_Background.png" width="960" height="600"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="16" height="10" visible="0">
+  <data encoding="csv">
+7,7,7,7,7,7,7,7,7,7,7,7,7,19,20,21,
+7,7,7,1,1,1,1,1,1,1,4,1,1,35,36,37,
+7,7,7,7,1,1,1,1,1,1,4,1,1,51,52,53,
+7,7,7,1,1,4,4,4,4,4,4,1,1,67,68,69,
+7,7,7,7,1,4,4,4,4,4,4,1,1,83,84,85,
+7,7,7,1,1,4,1,1,1,1,4,1,7,99,100,101,
+7,7,7,1,1,4,1,7,7,1,4,1,7,115,116,117,
+7,7,7,7,1,4,1,1,1,1,4,1,1,131,132,133,
+7,7,7,7,1,4,4,4,4,4,4,1,1,147,148,149,
+7,7,7,7,1,4,4,1,1,1,1,1,7,163,164,165
+</data>
+ </layer>
+ <layer name="Tile Layer 2" width="16" height="10">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,10,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,10,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,10,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+</map>

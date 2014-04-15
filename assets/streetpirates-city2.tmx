@@ -18,7 +18,7 @@
  <tileset firstgid="269" name="city_tiles_oct28" tilewidth="60" tileheight="60">
   <image source="city/city_tiles_oct28.png" width="600" height="600"/>
  </tileset>
- <layer name="Tile Layer 1" width="16" height="10" visible="0">
+ <layer name="Tile Layer 1" width="16" height="10">
   <data encoding="csv">
 53,54,55,103,107,108,61,62,63,95,96,97,53,0,0,0,
 61,62,63,269,269,269,269,269,269,269,279,269,269,0,0,0,
