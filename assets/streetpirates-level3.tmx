@@ -12,7 +12,7 @@
  <tileset firstgid="19" name="Map_Background" tilewidth="60" tileheight="60">
   <image source="map/Map_Background.png" width="960" height="600"/>
  </tileset>
- <layer name="Tile Layer 1" width="16" height="10" visible="0">
+ <layer name="Tile Layer 1" width="16" height="10">
   <data encoding="csv">
 7,7,7,7,7,7,7,7,7,7,7,7,7,19,20,21,
 7,7,7,1,1,1,1,1,1,1,4,1,1,35,36,37,

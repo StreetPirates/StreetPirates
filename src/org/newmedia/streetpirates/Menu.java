@@ -49,20 +49,23 @@ public class Menu implements Screen { //implements Screen {
 	Texture menuTexture;
 	Texture startMap, makeMap, settings, instructions;
 	Texture pirateA[], pirateB[], storyTexture[], instructionTexture[], parrotTexture[];
+	ArrayList<Texture> levelTexture;//, level2Texture, level3Texture;
 	Image menuImage, instructionImage, parrot;
 	private OrthographicCamera camera;
 	
 	MenuCharacter heroA, heroB;
-	ArrayList<Button> btnlist;
+	ArrayList<Button> btnlist, maplist;
+	ArrayList<MapSelectListener> maplistlistener;
 	Button startMapBtn, makeMapBtn, settingsBtn, instructionsBtn;
 	ButtonListener startMapListener;
+	ButtonMapSelectListener selectMapListener;
 	//StoryListener instructionsListener, storyImageListener;
 	StoryListener storyImageListener;
 	MessageListener instructionImageListener, instructionsListener;
 	InputListener parrotListener;
 	ArrayList<MenuCharacter> pirate;
 	public int storyIdx, instructionIdx;
-	public boolean storyStarts, instructionStarts;
+	public boolean storyStarts, instructionStarts, mapSelector;
 	
 	
 	/**
@@ -140,7 +143,7 @@ public class Menu implements Screen { //implements Screen {
 		
         public boolean mouseMoved(InputEvent event, float x, float y) {
         	boolean other_chosen = false;
-        	//System.out.println("ACTOR MOUSE touchDown x: " + x + " y: " + y);
+        	System.out.println("ACTOR MOUSE touchDown x: " + x + " y: " + y);
         	for (MenuCharacter other: menu.pirate) {
 				if (other != c && other.stickychosen == true) {
 					other_chosen = true;
@@ -158,14 +161,14 @@ public class Menu implements Screen { //implements Screen {
         }
 	}
 	
-	public Button newBtn(Texture image, float x, float y) {
+	public Button newBtn(Texture image, float x, float y, ArrayList<Button> list ) {
 		Button btn = new Button(new TextureRegionDrawable(new TextureRegion(image)));
 		btn.setTouchable(Touchable.enabled);
 		btn.setPosition(x, y);
 		btn.setVisible(true);
 		btn.setWidth(image.getWidth());
 		btn.setHeight(image.getHeight());
-		btnlist.add(btn);
+		list.add(btn);
 		background.addActor(btn);
 		return btn;
 	}
@@ -191,6 +194,12 @@ public class Menu implements Screen { //implements Screen {
 		makeMap = new Texture(Gdx.files.internal("assets/menu/FtiakseXarth.png"));
 		settings = new Texture(Gdx.files.internal("assets/menu/Prosarmogh.png"));
 		instructions = new Texture(Gdx.files.internal("assets/menu/Odhgies_Omada.png"));
+		
+		levelTexture = new ArrayList<Texture>();
+		for (int i = 0; i < this.game.getNumLevels(); i++) {
+			System.out.println("TEXTURE FOR MAPBUTTON : " + i);
+			levelTexture.add(new Texture(Gdx.files.internal("assets/streetpirates-level" + (i + 1) + "-scale.png")));	
+		}
 		
 		parrotTexture = new Texture[1];
 		parrotTexture[0] = new Texture(Gdx.files.internal("assets/map/parrot_front.png"));
@@ -230,11 +239,25 @@ public class Menu implements Screen { //implements Screen {
 		}
 		
 		btnlist = new ArrayList<Button>();
-		startMapBtn = newBtn(startMap, 25, 5);
-		makeMapBtn = newBtn(makeMap, 325, 5);
-		settingsBtn = newBtn(settings, 625, 5);
-		instructionsBtn = newBtn(instructions, 700, 450);
+		maplist = new ArrayList<Button>();
+		maplistlistener = new ArrayList<MapSelectListener>();
+		startMapBtn = newBtn(startMap, 25, 5, btnlist);
+		makeMapBtn = newBtn(makeMap, 325, 5, btnlist);
+		settingsBtn = newBtn(settings, 625, 5, btnlist);
+		instructionsBtn = newBtn(instructions, 700, 450, btnlist);
+		
+		float countWidth = 50, countHeight = 50;
+		for (int i = 0; i < this.game.getNumLevels(); i++) {
+			System.out.println("MAP LEVEL " + i);
+			newBtn(levelTexture.get(i), countWidth, countHeight, maplist);
+			countWidth += levelTexture.get(i).getWidth();
+			countHeight += levelTexture.get(i).getHeight();
+			//maplist.get(i).setVisible(false);
+			
+		}
+		
 		startMapListener = new ButtonListener(this.game);
+		selectMapListener = new ButtonMapSelectListener(this.game);
 		//instructionsListener = new StoryListener(this);
 		instructionsListener = new MessageListener(this);
 		storyIdx = 0;
@@ -245,7 +268,8 @@ public class Menu implements Screen { //implements Screen {
 		this.storyImageListener = new StoryListener(this);
 		this.instructionImageListener = new MessageListener(this);
 		this.menuImage.addListener(this.storyImageListener);
-		this.setButtonsVisible(false);
+		this.setButtonsVisible(false, btnlist);
+		this.setButtonsVisible(false, maplist);
 		menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[this.storyIdx % 7])));
 		
 		parrotListener = new InputListener() {
@@ -282,7 +306,7 @@ public class Menu implements Screen { //implements Screen {
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 			//System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
-            game.setScreen(game.getCurrentLevel());
+            //game.setScreen(game.getCurrentLevel());
             return true;  // must return true for touchUp event to occur
         }
 		
@@ -291,6 +315,61 @@ public class Menu implements Screen { //implements Screen {
         }
         
 	}
+
+	public class MapSelectListener extends InputListener {
+		PirateGame game;
+		int levelIdx;
+		
+		public MapSelectListener(PirateGame game, int level) {
+			System.out.println("MAPSELECTLISTENER : " + level);
+			this.game = game;
+			this.levelIdx = level;
+		}
+		
+		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+			System.out.println("SELECTMAP " + levelIdx);
+            game.setCurrentLevel(levelIdx);
+            game.setScreen(game.getCurrentLevel());
+            //this.removeListener(maplistlistener.get(i));
+            return true;  // must return true for touchUp event to occur
+        }
+		
+        public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+        	//System.out.println("ACTOR touchDown x: " + x + " y: " + y);
+        }
+        
+	}
+
+	public class ButtonMapSelectListener extends InputListener {
+		PirateGame game;
+		
+		public ButtonMapSelectListener(PirateGame game) {
+			this.game = game;
+		}
+		
+		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+			System.out.println("MAPBUTTON touchDown x: " + x + " y: " + y);
+            
+			for (int i = 0; i < this.game.getNumLevels(); i++) {
+				//maplist.get(i).setVisible(true);
+				System.out.println("MAPBUTTON : " + i);
+				MapSelectListener selector = new MapSelectListener(this.game, i); 
+				maplistlistener.add(selector);
+				//if ( i == 1)
+				maplist.get(i).addListener(selector);
+				
+			}
+			setButtonsVisible(true, maplist);
+			setButtonsVisible(false, btnlist);
+            return true;  // must return true for touchUp event to occur
+        }
+		
+        public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+        	//System.out.println("ACTOR touchDown x: " + x + " y: " + y);
+        }
+        
+	}
+	
 	
 	public class StoryListener extends InputListener {
 		Menu menu;
@@ -306,14 +385,14 @@ public class Menu implements Screen { //implements Screen {
 			if (menu.storyStarts == true) {
 				menu.storyImageListener = new StoryListener(this.menu);
 				menu.menuImage.addListener(menu.storyImageListener);
-				menu.setButtonsVisible(false);
+				menu.setButtonsVisible(false, btnlist);
 				menu.storyIdx = 0;
 				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(storyTexture[menu.storyIdx % 7])));
 				menu.storyStarts = false;
 			}
 			else if (menu.storyIdx >= 6 || (stagex >= 845 && stagey >= 568)) {
 				menu.menuImage.removeListener(menu.storyImageListener);
-				setButtonsVisible(true);
+				setButtonsVisible(true, btnlist);
 				menuImage.setDrawable(new TextureRegionDrawable(new TextureRegion(menuTexture)));
 				menu.storyStarts = true;
 				menu.storyIdx = 0;
@@ -397,8 +476,8 @@ public class Menu implements Screen { //implements Screen {
 	}
 	
 	
-	public void setButtonsVisible(boolean visible) {
-		for (Button btn: btnlist) {
+	public void setButtonsVisible(boolean visible, ArrayList<Button> list) {
+		for (Button btn: list) {
 			btn.setVisible(visible);
 		}
 		for (MenuCharacter c: pirate) {
@@ -422,8 +501,9 @@ public class Menu implements Screen { //implements Screen {
 			;
 		}
 		
-		startMapBtn.addListener(startMapListener);
-		//instructionsBtn.addListener(instructionsListener);
+		//startMapBtn.addListener(startMapListener);
+		startMapBtn.addListener(selectMapListener);
+		
 		instructionsBtn.addListener(instructionImageListener);
 		
 		for (MenuCharacter c: pirate) {
