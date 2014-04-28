@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<characters>
+
+    <object x="3" y="5" type="hero" scaling="1.5" />
+    <object x="6" y="7" type="bandit" scaling="2.5" 
+        extra="pirateflag" >
+    </object>
+	<object x="11" y="2" type="bandit-purple" scaling="2.5"
+	    extra="pirateflag" >
+    </object>
+	<object x="11" y="6" type="treasure" scaling="2.0" />
+	<object x="5" y="3" type="car-blue" scaling="2.0" 
+	    back="car-blue-back" right="car-blue-right" left="car-blue-left" >
+	    <routepoint x="5" y="3" />
+	    <routepoint x="8" y="8" />
+	</object> 
+	<object x="7" y="3" type="car-red" scaling="2.0" 
+	    back="car-red-back" right="car-red-right" left="car-red-left" >
+	    <routepoint x="7" y="3" />
+	    <routepoint x="10" y="8" />
+	</object> 
+	<object x="1" y="0" type="starfish" scaling="1.0" />
+	<object x="1" y="1" type="starfish" scaling="1.0" />
+	<object x="1" y="2" type="starfish" scaling="1.0" />
+	<object x="0" y="1" type="starfish" scaling="1.0" />
+	<object x="2" y="1" type="starfish" scaling="1.0" />
+    
+</characters>
+
+
