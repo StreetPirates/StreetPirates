@@ -6,14 +6,16 @@
     <object x="6" y="8" type="bandit" scaling="2.5" 
         extra="pirateflag" >
     </object>
-	<object x="11" y="4" type="bandit-purple" scaling="2.5"
+	<object x="11" y="5" type="bandit-purple" scaling="2.5"
 	    extra="pirateflag" >
     </object>
     <object x="7" y="0" type="bandit-brown" scaling="2.5"
 	    extra="pirateflag" >
     </object>
     
-	<object x="11" y="6" type="treasure" scaling="2.0" />
+	<object x="11" y="7" type="treasure" scaling="2.0" />
+	
+	<object x="9" y="0" type="treasure" scaling="2.0" />
 	
 	<object x="5" y="5" type="car-blue" scaling="2.0" 
 	    back="car-blue-back" right="car-blue-right" left="car-blue-left" >
