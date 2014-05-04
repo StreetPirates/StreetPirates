@@ -261,7 +261,7 @@ public class Character extends Actor {
 			
 			else if ((actorx >= left && actorx <= right) &&
 			   (actory >= bottom && actory <= top)) {
-				/*System.out.println("GOGOGO touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
+				/*System.out.println("touchDown stagex:" + event.getStageX() + " stagey:" + event.getStageY() +
 						" actorx:" + actorx + " actory:" + actory +
 						" bottom:" + bottom + " left:" + left
 						);*/
@@ -271,8 +271,11 @@ public class Character extends Actor {
 				c.removeListener(this);
 				if (this.finalMessage == MESSAGE_GOTO_MENU)
 					l.game.setScreen(l.game.getMenu());
-				else if (this.finalMessage == MESSAGE_RESTART_LEVEL)
+				else if (this.finalMessage == MESSAGE_RESTART_LEVEL) {
+					l.resetLevel(true);
+					l.showActors();
 					l.game.setScreen(l.game.getCurrentLevel());
+				}
 			}
 			return true;
 		}
@@ -313,8 +316,12 @@ public class Character extends Actor {
             }
             else if (character == l.compass) {
             	l.start_route = true;
-            	l.hero.followRoute(l.route);
             	l.setup_adventure();
+            	if (l.route.size() >= 1) {
+            		System.out.println("hero route size: " + l.route.size() + "first point in route: ("
+            			+ l.route.get(0).getX() + ", " + l.route.get(0).getY() );
+            		l.hero.followRoute(l.route);
+            	}
             }
 			}
             return false;  // must return true for touchUp event to occur
@@ -328,6 +335,14 @@ public class Character extends Actor {
 	
 	public void addClickListener() {
 		this.addListener(new CharacterListener(this));
+	}
+	
+	public void addexistingClickListener(CharacterListener listener) {
+		this.addListener(listener);
+	}
+	
+	public CharacterListener newClickListener() {
+		return new CharacterListener(this);
 	}
 	
 	public MessageListener addMessageListener(float bottom, float top, float left, float right, int finalMessage) {
@@ -408,11 +423,12 @@ public class Character extends Actor {
 	public void resetHeroLevel() {
 		if (this != l.hero)
 			return;
-		this.setPosition(0,0);
+		System.out.println("reset hero level");
 		this.flushActionsFrames();
 		this.set_moving(false);
     	this.set_in_action(false);
 		l.resetLevel(false);
+		this.clearActions();
 	}
 	
 	@Override
@@ -490,7 +506,7 @@ public class Character extends Actor {
 		for (Character a: l.getBandits()) {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				l.loseSequence.setVisible(true);
-			    l.loseSequence.addListener(new MessageListener(l.loseSequence, 550, 600, 730, 780, MESSAGE_RESTART_LEVEL));
+			    l.loseSequence.addListener(new MessageListener(l.loseSequence, 550, 600, 730, 780, MESSAGE_GOTO_MENU));//RESTART_LEVEL));
 			    this.resetHeroLevel();
 			}
 		}
@@ -498,7 +514,7 @@ public class Character extends Actor {
 		for (Character a: l.getCars()) {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
 				l.loseSequence.setVisible(true);
-			    l.loseSequence.addListener(new MessageListener(l.loseSequence, 550, 600, 730, 780, MESSAGE_RESTART_LEVEL));
+			    l.loseSequence.addListener(new MessageListener(l.loseSequence, 550, 600, 730, 780, MESSAGE_GOTO_MENU));//RESTART_LEVEL));
 			    this.resetHeroLevel();
 			}
 		}
@@ -521,10 +537,10 @@ public class Character extends Actor {
 			    
 			    // if a car or bad guy, we should pop a message, reset hero to starting position and retry map
 			    // there's a problem here, only if actor has a target, e.g. if hero hits a starfish, it 's ok :)
-			    if (this == a.get_target()) {
-			    	this.setPosition(0,0);
+			    /*if (this == a.get_target()) {
+			    	this.setPosition(startTileX * l.tilewidth, startTileY * l.tileheight);
 			    	break;
-			    }
+			    }*/
 				
 				a.flushActionsFrames();
 				this.flushActionsFrames();

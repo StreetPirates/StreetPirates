@@ -19,7 +19,7 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Gdx.*;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.graphics.GL10;
+//import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -65,6 +65,7 @@ import java.util.Arrays;
 
 
 import org.newmedia.streetpirates.Character;
+import org.newmedia.streetpirates.Character.CharacterListener;
 import org.newmedia.streetpirates.Character.MessageListener;
 
 public class Level implements Screen { //, InputProcessor {
@@ -117,6 +118,7 @@ public class Level implements Screen { //, InputProcessor {
 	public int car_cost[][];
 	public MessageListener parrotMessageListener, backButtonListener;
 	public InputListener parrotListener; 
+	public CharacterListener compassListener;
 	
 	/* entity are actors/object in the foreground
 	 * Car
@@ -337,6 +339,7 @@ public class Level implements Screen { //, InputProcessor {
 		
 		parrotMessageListener = parrotMessage.addMessageListener(0, parrotMessage.getHeight(), 0, parrotMessage.getWidth(), Character.MESSAGE_STAY);
 		backButtonListener = backButton.addMessageListener(0, backButton.getHeight(), 0, backButton.getWidth(), Character.MESSAGE_GOTO_MENU);
+		compassListener = compass.newClickListener();
 		
 		parrotListener = new InputListener() {
 				public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
@@ -356,6 +359,14 @@ public class Level implements Screen { //, InputProcessor {
 		routeCar = new Vector2[3][2];
 		
 		starfish = new ArrayList<Character>();
+		
+		winSequence = new Character(texture_win, 0, 0, (float)13.0, stage, this);
+		winSequence.setVisible(false);
+		
+		loseSequence = new Character(texture_lose, 0, 0, (float)13.0, stage, this);
+		loseSequence.setVisible(false);
+		
+		route = new ArrayList<Character>();
 		
 		//hero = new ArrayList<Character>();
 		//hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
@@ -400,155 +411,32 @@ public class Level implements Screen { //, InputProcessor {
 		assetListMap.put("car-red", car);
 		assetListMap.put("car-blue", car);
 		//assetListMap.put("hero", hero);
+		
+	}
 	
-		/*File fXmlFile = new File("assets/streetpirates-level" + (i + 1) + "-placement.xml");
-		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-		
-	    try {
-		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		Document doc = dBuilder.parse(fXmlFile);
-	 
-		//optional, but recommended
-		//read this - http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
-		doc.getDocumentElement().normalize();
-	 
-		System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
-	 
-		NodeList nList = doc.getElementsByTagName("object");
-		
-		System.out.println("----------------------------");
-		
-		 
-		for (int temp = 0; temp < nList.getLength(); temp++) {
-	 
-			Node nNode = nList.item(temp);
-			
-			System.out.println("\nCurrent Element :" + nNode.getNodeName());
-	 
-			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-				String texEl, backEl, rightEl, leftEl, typeEl;
-				Character character;
-				
-				Element eElement = (Element) nNode;
-				
-				System.out.println("X-coordinate : " + eElement.getAttribute("x"));
-				System.out.println("Y-coordinate : " + eElement.getAttribute("y"));
-				System.out.println("type : " + eElement.getAttribute("type"));
-				
-				//System.out.println(" : " + eElement.getAttribute("x"));
-				ArrayList<Character> list = assetListMap.get(eElement.getAttribute("type"));
-				Texture tex[] = assetTextureMap.get(eElement.getAttribute("type"));
-				
-				int tiley = Integer.parseInt(eElement.getAttribute("y"));
-				int tilex = Integer.parseInt(eElement.getAttribute("x"));
-				
-				float scaling = Float.parseFloat(eElement.getAttribute("scaling"));
-				character = new Character(tex, tilex, tiley, scaling, stage, this); 
-				
-				
-				if (!eElement.getAttribute("extra").equals("")) {
-					System.out.println("EXTRA  " + eElement.getAttribute("extra"));
-					Texture extra[] = assetTextureMap.get(eElement.getAttribute("extra"));
-					character.addFrameSeries(extra);
-				}
-				if (!eElement.getAttribute("back").equals("")) {
-					Texture back[] = assetTextureMap.get(eElement.getAttribute("back"));
-					character.addFrameSeries(back);
-				}
-				if (!eElement.getAttribute("right").equals("")) {
-					Texture right[] = assetTextureMap.get(eElement.getAttribute("right"));
-					character.addFrameSeries(right);
-				}
-				if (!eElement.getAttribute("left").equals("")) {
-					Texture left[] = assetTextureMap.get(eElement.getAttribute("left"));
-					character.addFrameSeries(left);
-				}
-				
-				int nroutepoints = 0;
-				NodeList nNodeChildren = nNode.getChildNodes();
-				Vector2 route[] = new Vector2[2];
-				
-				for (int child = 0; child < nNodeChildren.getLength(); child++) {
-					Node nChild = nNodeChildren.item(child);
-					
-					if (nChild.getNodeName().equals("routepoint") && nroutepoints < 2) {
-						Element eChild = (Element) nChild;		
-						route[nroutepoints] = new Vector2(Integer.parseInt(eChild.getAttribute("x")) * this.tilewidth,
-								Integer.parseInt(eChild.getAttribute("y")) * this.tileheight);
-						
-						System.out.println(eChild.getAttribute("x"));
-						System.out.println(eChild.getAttribute("y"));
-						nroutepoints++;	
-					}	
-				}
-				//delete route;
-				if (nroutepoints > 0) 
-					character.addAutoRoute(route);
-				
-				if (list !=null)
-					list.add(character);
-				
-				if (eElement.getAttribute("type").equals("hero")) {
-					hero = character;
-					;
-				}
-			}
-		}
-		
-	    } catch (Exception e) {
-	    	e.printStackTrace();
-	    }		
-		
-		
+	public void clearActors() {
+	    starfish.clear();
+	    car.clear();
+	    bandit.clear();
+	    treasure.clear();
+	    route.clear();
+	    //hero = null;
+	}
+	
+	public void showActors() {
+		hero.setVisible(true);
+	
 		for(int i = 0; i < starfish.size(); i++) {
-			starfish.get(i).set_pickable(true);
-			starfish.get(i).set_illegaltile(TILE_STREET_ID);
-			starfish.get(i).set_illegaltile(TILE_PEDESTRIANWALK_ID);
-			starfish.get(i).set_illegaltile(TILE_ILLEGAL_ID);
+			starfish.get(i).setVisible(true);
 		}
-
+	
 		for(int i = 0; i < bandit.size(); i++) {
-			bandit.get(i).set_target(hero);
-			//bandit.get(i).addFrameSeries(texture_pirateflag);
-			if (bandit.get(i).getNumberFrameSeries() > 1)
-				bandit.get(i).setFrameSeriesIdx(1);
+			bandit.get(i).setVisible(true);
 		}
 		
-		for(int i = 0; i < car.size(); i++) {
-			car.get(i).set_validtile(TILE_STREET_ID);
-			car.get(i).set_validtile(TILE_PEDESTRIANWALK_ID);
-			car.get(i).set_illegaltile(TILE_PAVEMENT_ID);
-			car.get(i).set_illegaltile(TILE_ILLEGAL_ID);
-			car.get(0).set_guardtile(TILE_STREET_ID);
-			//car.get(i).set_random_move();
-			car.get(i).set_target(hero);
-			//car.get(i).addAutoRoute(routeCar[i]);
-			car.get(i).setVisible(false);
+		for(int i = 0; i < treasure.size(); i++) {
+			treasure.get(i).setVisible(true);
 		}
-		
-		winSequence = new Character(texture_win, 0, 0, (float)13.0, stage, this);
-		winSequence.setVisible(false);
-		
-		loseSequence = new Character(texture_lose, 0, 0, (float)13.0, stage, this);
-		loseSequence.setVisible(false);
-		
-		route = new ArrayList<Character>();
-		gameOver = true;
-		actor_picked = null;
-		actor_dropped = false;
-		start_route = false;
-		num_helpers = starfish.size();
-		
-		adventure_started = false;		
-		cityInteraction = false;
-	    
-		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
-		hero.set_illegaltile(TILE_ILLEGAL_ID);
-		
-		hero.addFrameSeries(texture_hero_back);
-		hero.addFrameSeries(texture_hero_right);
-		hero.addFrameSeries(texture_hero_left);
-	    hero.set_goal(treasure.get(0));*/
 	}
 	
 	public void chooseLevel(int idx) {
@@ -581,6 +469,8 @@ public class Level implements Screen { //, InputProcessor {
 		File fXmlFile = new File("assets/streetpirates-level" + (idx + 1) + "-placement.xml");
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		
+		System.out.println("CHOOSE LEVEL");
+		
 	    try {
 		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 		Document doc = dBuilder.parse(fXmlFile);
@@ -591,10 +481,7 @@ public class Level implements Screen { //, InputProcessor {
 	 
 		System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
 	 
-	    starfish.clear();
-	    car.clear();
-	    bandit.clear();
-	    treasure.clear();
+		clearActors();
 		
 		NodeList nList = doc.getElementsByTagName("object");
 		
@@ -674,6 +561,7 @@ public class Level implements Screen { //, InputProcessor {
 					hero = character;
 					;
 				}
+				//character = null;
 			}
 		}
 		
@@ -708,13 +596,6 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(i).setVisible(false);
 		}
 		
-		winSequence = new Character(texture_win, 0, 0, (float)13.0, stage, this);
-		winSequence.setVisible(false);
-		
-		loseSequence = new Character(texture_lose, 0, 0, (float)13.0, stage, this);
-		loseSequence.setVisible(false);
-		
-		route = new ArrayList<Character>();
 		gameOver = true;
 		actor_picked = null;
 		actor_dropped = false;
@@ -735,6 +616,7 @@ public class Level implements Screen { //, InputProcessor {
 	}
 	
 	public void resetLevel(boolean gotoMap) {
+		System.out.println("restart level");
 		actor_picked = null;
 		actor_dropped = false;
 		start_route = false;
@@ -755,15 +637,25 @@ public class Level implements Screen { //, InputProcessor {
 		}
 		
 		hero.setStartPosition();
+		/* FIXME: these setvisibilty to false calls should not be in a resetLevel function!
+		 * workaround for actors of previous levels showing up at next levels ... FIXME also!
+		 */
+		hero.setVisible(false);
 		cleanFootTrail();
 		
 		for(int i = 0; i < starfish.size(); i++) {
-			starfish.get(i).setStartPosition();	
+			starfish.get(i).setStartPosition();
+			starfish.get(i).setVisible(false);
 		}
 		
 		for(int i = 0; i < bandit.size(); i++) {
 			if (bandit.get(i).getNumberFrameSeries() > 1)
 				bandit.get(i).setFrameSeriesIdx(1);
+				bandit.get(i).setVisible(false);
+		}
+		
+		for(int i = 0; i < treasure.size(); i++) {
+			treasure.get(i).setVisible(false);
 		}
 		
 	}
@@ -855,7 +747,7 @@ public class Level implements Screen { //, InputProcessor {
 	
 	@Override
 	public void render(float delta) {		
-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+		//Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		int layers_id[] = {0};
 		int city_layers_id[] = {0, 1};
 		if (adventure_started == false)
@@ -882,7 +774,7 @@ public class Level implements Screen { //, InputProcessor {
         	   l.actor_picked = null;
         	   l.actor_dropped = false;
            }
-           if (l.start_route == true) {
+           if (l.start_route == true && cityInteraction) {
         	   l.start_route = false;
            }
            
@@ -961,7 +853,7 @@ public class Level implements Screen { //, InputProcessor {
 		for(int i = 0; i < starfish.size(); i++) {
 			starfish.get(i).addClickListener();	
 		}
-		compass.addClickListener();
+		compass.addexistingClickListener(compassListener);
 		stage.addListener(new LevelListener(this));
 		parrotMessage.setVisible(true);
 		parrotMessage.setFrameSeriesIdx(0);
@@ -978,6 +870,10 @@ public class Level implements Screen { //, InputProcessor {
 	@Override
     public void hide() {
          // called when current screen changes from this to a different screen
+		clearActors();
+		System.out.println("HIDE");
+		compass.removeListener(compassListener);
+		
     }
 	
 	@Override
