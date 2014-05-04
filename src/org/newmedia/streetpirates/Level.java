@@ -100,7 +100,7 @@ public class Level implements Screen { //, InputProcessor {
 	private ArrayList<Character> bandit;
 	private ArrayList<Character> starfish;
 	private Character pirateflag;
-	private ArrayList<Character> treasure;
+	public ArrayList<Character> treasure;
 	public Character parrot, parrotMessage;
 	private Skin buttonSkin;
 	
@@ -562,6 +562,7 @@ public class Level implements Screen { //, InputProcessor {
 					;
 				}
 				//character = null;
+				
 			}
 		}
 		
@@ -611,7 +612,6 @@ public class Level implements Screen { //, InputProcessor {
 		hero.addFrameSeries(texture_hero_back);
 		hero.addFrameSeries(texture_hero_right);
 		hero.addFrameSeries(texture_hero_left);
-	    hero.set_goal(treasure.get(0));
 		
 	}
 	
@@ -657,7 +657,6 @@ public class Level implements Screen { //, InputProcessor {
 		for(int i = 0; i < treasure.size(); i++) {
 			treasure.get(i).setVisible(false);
 		}
-		
 	}
 	
 	public ArrayList<Character> getCars() {

@@ -54,17 +54,19 @@ public class Character extends Actor {
 	Texture currentFrame;
 	TextureRegion imageregion[][], currentFrameRegion;
 	Animation animation[];
-	Character target, goal;
+	Character target;
 	float stateTime;
 	float startTileX, startTileY;
 	int currentFrameSeriesIdx, numberFrameSeries;
 	int movingDirection;
 	int lastCollision, routeDirection, currentDirection;
+	int goalsFound = 0;
 	boolean useAutoRoute, inAutoRoute, emergencyMove;
 	Vector2 autoRoute[];
 	Vector2 autoRouteReverse[];
 	LinkedList<Stack<Integer>> directionFrame;
 	ArrayList<Character> footstepPartial;
+	ArrayList<Character> goalsReached;
 	ArrayList<Action> actionList;
 	
 	public boolean pickable;
@@ -130,14 +132,15 @@ public class Character extends Actor {
 		this.in_action = false;
 		this.inCollision = false;
 		this.target = null;
-		this.goal = null;
 		this.useAutoRoute = false;
 		this.inAutoRoute = false;
 		this.emergencyMove = false;
 		this.directionFrame = new LinkedList<Stack<Integer>>();
 		this.currentDirection = DOWN;
 		this.footstepPartial = new ArrayList<Character>();
+		this.goalsReached = new ArrayList<Character>();
 		this.actionList = new ArrayList<Action>();
+		this.goalsFound = 0;
 	}
 	
 	public void addFrameSeries(Texture texture[]) {
@@ -207,10 +210,6 @@ public class Character extends Actor {
 	
 	public void set_target(Character target) {
 		this.target = target;
-	}
-	
-	public void set_goal(Character target) {
-		this.goal = target;
 	}
 	
 	public Character get_target() {
@@ -519,12 +518,23 @@ public class Character extends Actor {
 			}
 		}
 		
-		if (this == l.hero && overlapRectangles (l.hero.goal, this, (float)0.4, (float)0.2)) {
-				// need victory message - You reached the treasure!
-			    l.winSequence.setVisible(true);
-			    l.winSequence.set_moving(true);
-			    l.winSequence.addListener(new MessageListener(l.winSequence, 550, 600, 730, 780, MESSAGE_GOTO_MENU));
-			    this.resetHeroLevel();
+		for (Character g: l.treasure) {
+			if (this == l.hero && overlapRectangles (g, this, (float)0.4, (float)0.2)) {
+				if (this.goalsReached.contains(g) == false) {
+					this.goalsFound++;
+					this.goalsReached.add(g);
+					g.setVisible(false);
+					System.out.println("FOUND ONE TREASURE");
+					if (this.goalsFound == l.treasure.size()) {
+					// need victory message - You reached the treasure!
+					l.winSequence.setVisible(true);
+			    	l.winSequence.set_moving(true);
+			    	l.winSequence.addListener(new MessageListener(l.winSequence, 550, 600, 730, 780, MESSAGE_GOTO_MENU));
+			    	this.resetHeroLevel();
+			    	System.out.println("FOUND ALL TREASURES!");
+					}
+				}
+			}
 		}
 		
 		//for (Actor a: this.getStage().getActors()) {
