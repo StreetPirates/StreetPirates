@@ -1184,7 +1184,7 @@ public class Character extends Actor {
 			int tiley = (int)target.getY()/l.tileheight;
 			if (!illegal_tile(tilex * l.tilewidth, tiley * l.tileheight)) {
 				//System.out.println("ATTACK " + target.getX() + " " + target.getY() + " tilex: " +tilex + "tiley: " + tiley);
-				gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.03f);
+				gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.025f);
 			}	
 		}
 		else if (emergencyMove == false && random_move == true){		
