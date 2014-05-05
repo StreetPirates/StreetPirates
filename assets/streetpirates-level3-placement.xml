@@ -17,16 +17,16 @@
 	
 	<object x="9" y="0" type="treasure" scaling="2.0" />
 	
-	<object x="5" y="5" type="car-blue" scaling="2.0" 
+	<object x="4" y="3" type="car-blue" scaling="2.0" 
 	    back="car-blue-back" right="car-blue-right" left="car-blue-left" >
-	    <routepoint x="5" y="3" />
-	    <routepoint x="8" y="6" />
+	    <routepoint x="4" y="3" />
+	    <routepoint x="9" y="6" />
 	</object>
 	 
 	<object x="7" y="6" type="car-red" scaling="2.0" 
 	    back="car-red-back" right="car-red-right" left="car-red-left" >
 	    <routepoint x="7" y="6" />
-	    <routepoint x="10" y="1" />
+	    <routepoint x="9" y="1" />
 	</object>
 	<object x="0" y="0" type="starfish" scaling="1.0" />
 	<object x="1" y="0" type="starfish" scaling="1.0" />

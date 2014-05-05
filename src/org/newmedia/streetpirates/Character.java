@@ -1093,7 +1093,7 @@ public class Character extends Actor {
 			ArrayList<Vector2> tiles = getTileList(x, y);
 			for (Vector2 d: tiles) {
 				int tileid = l.getTileId(d.x * l.tilewidth, d.y * l.tileheight);		
-				for (int i = 0; i < valid_tiles; i++) {
+				for (int i = 0; i < illegal_tiles; i++) {
 					if (tileid == tileid_illegal[i]) {
 						//System.out.println("illegal expanded tile x: "+ d.x + " y: " + d.y);
 						return true;
