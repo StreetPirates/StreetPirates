@@ -528,7 +528,7 @@ public class Level implements Screen { //, InputProcessor {
 				
 				
 				if (!eElement.getAttribute("extra").equals("")) {
-					System.out.println("EXTRA  " + eElement.getAttribute("extra"));
+					//System.out.println("EXTRA  " + eElement.getAttribute("extra"));
 					Texture extra[] = assetTextureMap.get(eElement.getAttribute("extra"));
 					character.addFrameSeries(extra);
 				}
@@ -545,7 +545,7 @@ public class Level implements Screen { //, InputProcessor {
 					character.addFrameSeries(left);
 				}
 				if (!eElement.getAttribute("guard").equals("")) {
-					System.out.println("GUARD: " + eElement.getAttribute("guard"));
+					//System.out.println("GUARD: " + eElement.getAttribute("guard"));
 					character.set_guardtile(TILE_STREET_ID);
 				}
 				
@@ -631,7 +631,7 @@ public class Level implements Screen { //, InputProcessor {
 	}
 	
 	public void resetLevel(boolean gotoMap) {
-		System.out.println("restart level");
+		//System.out.println("restart level");
 		actor_picked = null;
 		actor_dropped = false;
 		start_route = false;
@@ -652,7 +652,7 @@ public class Level implements Screen { //, InputProcessor {
 		}
 		
 		hero.setStartPosition();
-		/* FIXME: these setvisibilty to false calls should not be in a resetLevel function!
+		/* FIXME: these set visibilty to false calls should not be in a resetLevel function!
 		 * workaround for actors of previous levels showing up at next levels ... FIXME also!
 		 */
 		hero.setVisible(false);

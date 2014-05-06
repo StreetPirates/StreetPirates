@@ -492,7 +492,6 @@ public class Character extends Actor {
 	public void resetHeroLevel() {
 		if (this != l.hero)
 			return;
-		System.out.println("reset hero level");
 		this.flushActionsFrames();
 		this.set_moving(false);
     	this.set_in_action(false);

@@ -246,14 +246,19 @@ public class Menu implements Screen { //implements Screen {
 		settingsBtn = newBtn(settings, 625, 5, btnlist);
 		instructionsBtn = newBtn(instructions, 700, 450, btnlist);
 		
-		float countWidth = 50, countHeight = 50;
-		for (int i = 0; i < this.game.getNumLevels(); i++) {
-			System.out.println("MAP LEVEL " + i);
-			newBtn(levelTexture.get(i), countWidth, countHeight, maplist);
-			countWidth += levelTexture.get(i).getWidth();
-			countHeight += levelTexture.get(i).getHeight();
+		float countWidth = 150, countHeight = 80;
+		for (int i = 0; i < this.game.getNumLevels()/2 + this.game.getNumLevels()%2; i++) {
+			for (int j = 0; j < this.game.getNumLevels()/2 + this.game.getNumLevels()%2; j++) {
+				if ( (j + 1) * (i + 1) > this.game.getNumLevels() )
+					break;
+				System.out.println("MAP LEVEL " + i);
+				newBtn(levelTexture.get(i * (this.game.getNumLevels()/2 + this.game.getNumLevels()%2) +j)
+						, countWidth, countHeight, maplist);
+				countWidth += levelTexture.get(i).getWidth() + 50;
+			}
+			countWidth = 150;
+			countHeight += levelTexture.get(i).getHeight() + 50;
 			//maplist.get(i).setVisible(false);
-			
 		}
 		
 		startMapListener = new ButtonListener(this.game);
@@ -321,16 +326,21 @@ public class Menu implements Screen { //implements Screen {
 		int levelIdx;
 		
 		public MapSelectListener(PirateGame game, int level) {
-			System.out.println("MAPSELECTLISTENER : " + level);
+			//System.out.println("MAPSELECTLISTENER : " + level);
 			this.game = game;
 			this.levelIdx = level;
 		}
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 			System.out.println("SELECTMAP " + levelIdx);
+			// uncommenting these creates weird problems in levels...
+			//setButtonsVisible(false, maplist);
+			//setButtonsVisible(true, btnlist);
             game.setCurrentLevel(levelIdx);
             game.setScreen(game.getCurrentLevel());
-            //this.removeListener(maplistlistener.get(i));
+            
+            //for ( int i = 0 ; i < this.game.getNumLevels(); i++)
+            	//maplist.get(i).removeListener(maplistlistener.get(i));
             return true;  // must return true for touchUp event to occur
         }
 		
@@ -352,7 +362,7 @@ public class Menu implements Screen { //implements Screen {
             
 			for (int i = 0; i < this.game.getNumLevels(); i++) {
 				//maplist.get(i).setVisible(true);
-				System.out.println("MAPBUTTON : " + i);
+				//System.out.println("MAPBUTTON : " + i);
 				MapSelectListener selector = new MapSelectListener(this.game, i); 
 				maplistlistener.add(selector);
 				//if ( i == 1)

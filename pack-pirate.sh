@@ -20,7 +20,8 @@ jar uf $jarfile assets/menu/*png
 jar uf $jarfile assets/menu/*jpg
 jar uf $jarfile assets/map/FOOTPRINTS.png
 jar uf $jarfile assets/map/trafficLight.png
-jar uf $jarfile assets/map/parrot.png
+jar uf $jarfile assets/map/parrot_front.png
+jar uf $jarfile assets/map/parrot_profil.png
 jar uf $jarfile assets/map/texts*.png
 jar uf $jarfile assets/map/EXIT.png
 jar uf $jarfile assets/map/Map*png
