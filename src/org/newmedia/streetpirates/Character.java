@@ -373,8 +373,73 @@ public class Character extends Actor {
         //return x < r.x + r.width && x + width > r.x && y < r.y + r.height && y + height > r.y;
     }
 	
-	public static Vector2 findTile(int tilex, int tiley, int direction) {
+	public Vector2 moveAwayFromTile(int tilex, int tiley) { //, int direction) {
+		int mytilex = (int)this.getX() / l.tilewidth;
+		int mytiley = (int)this.getY() / l.tileheight;
+		Vector2 next = new Vector2(mytilex, mytiley);
+		boolean found = false;
+		
+		//this is the stupidest and ugliest function in decades...
+		if (mytilex > tilex && !illegal_tile((mytilex + 1 )*l.tilewidth, mytiley * l.tileheight ))
+			next.x++;
+		else if (mytilex < tiley && !illegal_tile((mytilex - 1)*l.tilewidth, mytiley * l.tileheight))
+			next.x--;
+		else if (mytiley > tiley && !illegal_tile(mytilex *l.tilewidth, (mytiley + 1) * l.tileheight))
+			next.y++;
+		else if (mytiley < tiley && !illegal_tile(mytilex *l.tilewidth, (mytiley - 1) * l.tileheight))
+			next.y--;
+		else {
+			
+			for (int dir = 0; dir < 3; dir++) {
+			switch (dir) {
+			case DOWN:
+				if (mytiley <= tiley && !illegal_tile(mytilex*l.tilewidth, (mytiley - 1) * l.tileheight)) {
+					found = true;
+					next.y--;
+				}
+				break;
+			case UP:
+				if (mytiley >= tiley  && !illegal_tile(mytilex*l.tilewidth, (mytiley + 1) * l.tileheight)) {
+					found = true;
+					next.y++;
+				}
+				break;
+			case RIGHT:
+				if (mytilex >= tilex  && !illegal_tile((mytilex + 1)*l.tilewidth, mytiley * l.tileheight)) {
+					found = true;
+					next.x++;
+				}
+				break;
+			case LEFT:
+				if (mytilex <= tilex  && !illegal_tile((mytilex - 1)*l.tilewidth, mytiley * l.tileheight)) {
+					found = true;
+					next.x--;
+				}
+				break;
+			default:
+				break;
+			}
+			if (found == true)
+				break;
+		  }
+		
+		  if (found == false) {
+			  for (int dir = 0; dir < 3; dir++) {
+				  next = findTile(mytilex, mytiley, dir);
+				  if (!illegal_tile(next.x * l.tilewidth, next.y * l.tileheight))
+					  break;
+			  }
+		  }
+		}
+		System.out.println("MOVEAWAY FROM " + tilex + ", " + tiley + "CUR: " + mytilex +
+				", " + mytiley + "TO " + next.x + ", " + next.y);
+		return next;
+	}
+	
+	
+	public Vector2 findTile(int tilex, int tiley, int direction) {
 		Vector2 next = new Vector2(tilex, tiley);
+		
 		switch (direction) {
 			case DOWN:
 				next.y--;
@@ -384,11 +449,14 @@ public class Character extends Actor {
 				break;
 			case RIGHT:
 				next.x++;
+				break;
 			case LEFT:
 				next.x--;
+				break;
 			default:
 				break;
 		}
+		System.out.println("FINDTILE TO " + tilex + ", " + tiley + "TO " + next.x + ", " + next.y);
 		return next;
 	}
 	
@@ -446,6 +514,60 @@ public class Character extends Actor {
 
 		this.setBounds(this.getX(), this.getY(), this.getWidth(), this.getHeight());
 		
+		
+		/* emergencyMove resetting condition */
+		if (target!= null && !target.immune_tile(this.getX(), this.getY()) && this.emergencyMove &&
+				!overlapRectangles (target, this, (float)2.0, (float)2.0)) {
+				this.emergencyMove = false;
+				System.out.println("EMERGENCY REMOVE");
+		}
+		
+		/* if character is on target's immune tile (e.g. car on pedwalk), and target is apporaching the pedwalk 
+		 * we have a big problem... either target has to pause, or the current character has to move away immediately
+		 * from the illegal tile. Probably both.
+		 */
+		if (target != null && target.immune_tile(this.getX(), this.getY()) &&
+				overlapRectangles (target, this, (float)0.6, (float)0.6) && (this.emergencyMove == false)
+				) {
+			//System.out.println("ON PEDESTRIAN WALK WHILE! " + getX() + " " + getY());
+			this.flushActionsFrames();
+			int tilex = (int)this.getX() / l.tilewidth;
+			int tiley = (int)this.getY() / l.tileheight;
+			int direction = 0;
+			boolean validFound = false, firstpass = true;
+			this.emergencyMove = true;
+			while (validFound == false) {
+				Vector2 newtile; 
+				newtile = moveAwayFromTile((int)target.getX() / l.tilewidth, (int) target.getY() / l.tileheight);
+						
+				if (//!illegal_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight) && 
+						(tilex != newtile.x || tiley != newtile.y) /*
+						target.immune_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight)*/) {
+					gotoPoint(l, newtile.x * l.tilewidth, newtile.y * l.tileheight, 0.08f);
+					System.out.println(this + " CAR ON PEDESTRIAN WALK WHILE! from " + tilex + " " + tiley + " GOTO " + newtile.x + " " + newtile.y);
+					validFound = true;
+					SequenceAction sequence = new SequenceAction();
+					sequence.addAction(run(new java.lang.Runnable() {
+					    public void run () {
+					    	//System.out.println("DONE ON PEDESTRIAN WALK WHILE! ");
+					    	/* action works when this is commented out. Why? if this flag is reset to false, normal
+					    	 * car movement will proceed, possibly killing the pedestrian... But how to restart the
+					    	 * movement and not have the car freeze forever? Look at emergencyMove resetting condition
+					    	 * a bit above
+					    	 */
+					        //emergencyMove = false; 
+					    }
+					}));
+					this.addAction(after(sequence)); //adding the last part above (resetting emergencyMove) as an afterAction make sthe emergency move work
+				}
+			}
+			
+			if (this.useAutoRoute) { 
+	        	this.inAutoRoute = false;
+	        }
+			return;
+		}
+		
 		/* if target character has moved to an immune tile, cancel pending actions. 
 		 * We don't want a car to overrun a hero on a pedestrian walk because the random move
 		 * was planned before the hero moved there.
@@ -461,46 +583,6 @@ public class Character extends Actor {
 	        }
 			//return;
 		}
-		
-		/* if character is on target's immune tile (e.g. car on pedwalk), and target is apporaching the pedwalk 
-		 * we have a big problem... either target has to pause, or the current character has to move away immediately
-		 * from the illegal tile. Probably both.
-		 */
-		if (target != null && target.immune_tile(this.getX(), this.getY()) &&
-				overlapRectangles (target, this, (float)1.0, (float)1.0) && (this.emergencyMove == false)
-				) {
-			//System.out.println("ON PEDESTRIAN WALK WHILE! " + getX() + " " + getY());
-			this.flushActionsFrames();
-			int tilex = (int)this.getX() / l.tilewidth;
-			int tiley = (int)this.getY() / l.tileheight;
-			int direction = 0;
-			boolean validFound = false;
-			this.emergencyMove = true;
-			while (validFound == false) {
-				Vector2 newtile = findTile(tilex, tiley, direction);
-				if (!illegal_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight) &&
-						!target.immune_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight)) {
-					gotoPoint(l, newtile.x * l.tilewidth, newtile.y * l.tileheight, 0.03f);
-					//System.out.println("ON PEDESTRIAN WALK WHILE! from " + tilex + " " + tiley + " GOTO " + newtile.x + " " + newtile.y);
-					validFound = true;
-					SequenceAction sequence = new SequenceAction();
-					sequence.addAction(run(new java.lang.Runnable() {
-					    public void run () {
-					    	//System.out.println("DONE ON PEDESTRIAN WALK WHILE! ");
-					        emergencyMove = false; //action works when this is commented out. Why?
-					    }
-					}));
-					this.addAction(after(sequence)); //adding the last part above (resetting emergencyMove) as an afterAction make sthe emergency move work
-				}
-				direction++;
-			}
-			
-			if (this.useAutoRoute) { 
-	        	this.inAutoRoute = false;
-	        }
-			return;
-		}
-		
 		
 		for (Character a: l.getBandits()) {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
@@ -537,6 +619,15 @@ public class Character extends Actor {
 			}
 		}
 		
+		for (Character a: l.route) {
+			if (this == l.hero && overlapRectangles (a, this, (float)1.0, (float)1.0)) {
+				a.setVisible(false);
+				//System.out.println("picking up starfish");
+				break;
+			}
+		}
+		
+		
 		//for (Actor a: this.getStage().getActors()) {
 		for (Character a: l.getCars()) {
 			//Character c = (Character)a;
@@ -567,7 +658,7 @@ public class Character extends Actor {
 		        }
 		        
 		        if (this.useAutoRoute) {
-		        	a.inAutoRoute = false;
+		        	this.inAutoRoute = false;
 		        	this.routeDirection = ~this.routeDirection;
 		        }
 			    /*System.out.println("Collision! A.x = " + this.getX() + "A.y = " 
@@ -590,7 +681,6 @@ public class Character extends Actor {
 					}
 			   }
 			   if (currentCollisions == 0) {
-				   //System.out.println("Reset collision! " + currentDirection );
 				   this.inCollision = false;   
 			   }
 		   }
@@ -604,6 +694,7 @@ public class Character extends Actor {
 			clock = newclock;
 			clock_lastmoved = newclock;
 			moveToTileOrTarget();
+			//if (l.getCars().contains(this)) System.out.println("Move to tileortarget " + this );
 		}
 		}
 	}
@@ -694,7 +785,7 @@ public class Character extends Actor {
 					addFrameChangeAction(sequence);
 				}
 				
-				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.6f));
+				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.7f));
 			}
 			//TODO: maybe we just need to go to tile, not exact position for route? so comment next line...
 			//sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
@@ -1086,6 +1177,17 @@ public class Character extends Actor {
 		}
 		return false;
 	}
+
+	public boolean simple_illegal_tile(float x, float y) {
+		int tileid = l.getTileId(x, y);
+		for (int i = 0; i < illegal_tiles; i++) {
+			if (tileid == tileid_illegal[i]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	
 	public boolean illegal_tile(float x, float y) {
 		
@@ -1193,8 +1295,8 @@ public class Character extends Actor {
 			int tilex = (int)((target.getX() + target.getWidth()/2)/l.tilewidth);
 			int tiley = (int)target.getY()/l.tileheight;
 			if (!illegal_tile(tilex * l.tilewidth, tiley * l.tileheight)) {
-				//System.out.println("ATTACK " + target.getX() + " " + target.getY() + " tilex: " +tilex + "tiley: " + tiley);
-				gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.025f);
+				System.out.println("ATTACK " + target.getX() + " " + target.getY() + " tilex: " +tilex + "tiley: " + tiley);
+				gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.023f);
 			}	
 		}
 		else if (emergencyMove == false && random_move == true){		

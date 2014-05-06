@@ -870,7 +870,6 @@ public class Level implements Screen { //, InputProcessor {
     public void hide() {
          // called when current screen changes from this to a different screen
 		clearActors();
-		System.out.println("HIDE");
 		compass.removeListener(compassListener);
 		
     }
