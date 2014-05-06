@@ -91,6 +91,8 @@ public class Level implements Screen { //, InputProcessor {
 	private MapProperties propActive;
 	private OrthogonalTiledMapRenderer renderer, cityrenderer;
 	private	TiledMapTileLayer layer, citylayer;
+	private int numMapLayers, numCityLayers;
+	private int mapLayerIdList[], cityLayerIdList[];
 	private int columns;
 	private int rows;
 	private int num_starfish = 2, place_idx = 0;
@@ -98,7 +100,7 @@ public class Level implements Screen { //, InputProcessor {
 	public Stage stage;
 	private ArrayList<Character> car;
 	private ArrayList<Character> bandit;
-	private ArrayList<Character> starfish;
+	public ArrayList<Character> starfish;
 	private Character pirateflag;
 	public ArrayList<Character> treasure;
 	public Character parrot, parrotMessage;
@@ -132,12 +134,12 @@ public class Level implements Screen { //, InputProcessor {
 	public final String treasureChestAssetPrefix = "assets/map/treasure1.png";
 	
 	/* city tileset ids hardcoded */
-	public final int TILE_TYPES = 5;
-	public final int TILE_ILLEGAL_ID = 1;
-	public final int TILE_PAVEMENT_ID = 2;
-	public final int TILE_PEDESTRIANWALK_ID = 3;
-	public final int TILE_STREET_ID = 4;
-	public final int TILE_UNKNOWN_ID = 5;
+	public static final int TILE_TYPES = 5;
+	public static final int TILE_ILLEGAL_ID = 1;
+	public static final int TILE_PAVEMENT_ID = 2;
+	public static final int TILE_PEDESTRIANWALK_ID = 3;
+	public static final int TILE_STREET_ID = 4;
+	public static final int TILE_UNKNOWN_ID = 5;
 	/* from stronger to weakest id type. In case types overlap in tile layers, the stronger type logically applies.
 	 * E.g. a tile with a layer of pavement and street, is a pavement logically. This happens on rounded pavement corners.
 	 * E.g. 
@@ -444,6 +446,17 @@ public class Level implements Screen { //, InputProcessor {
 		tiledCityActive = tiledCity.get(idx);
 		propActive = prop.get(idx);
 		
+		numMapLayers = tiledMapActive.getLayers().getCount();
+		numCityLayers = tiledCityActive.getLayers().getCount();
+		
+		mapLayerIdList = new int[numMapLayers];
+		cityLayerIdList = new int[numCityLayers];
+		for (int i = 0; i < numMapLayers; i++)
+			mapLayerIdList[i] = i;
+		
+		for (int i = 0; i < numCityLayers; i++)
+			cityLayerIdList[i] = i;
+		
 		layer = (TiledMapTileLayer)tiledMapActive.getLayers().get(0); // assuming the layer at index on contains tiles
 		citylayer = (TiledMapTileLayer)tiledCityActive.getLayers().get(1); // assuming the layer at index on contains tiles
 		columns = layer.getWidth();
@@ -452,7 +465,6 @@ public class Level implements Screen { //, InputProcessor {
 		tileheight = propActive.get("tileheight", Integer.class);
 		width = propActive.get("width", Integer.class);
 		height = propActive.get("height", Integer.class);
-		
 		
 		renderer = new OrthogonalTiledMapRenderer(tiledMapActive, 1/(float)tilewidth);
 		cityrenderer = new OrthogonalTiledMapRenderer(tiledCityActive, 1/(float)tilewidth);
@@ -492,7 +504,7 @@ public class Level implements Screen { //, InputProcessor {
 	 
 			Node nNode = nList.item(temp);
 			
-			System.out.println("\nCurrent Element :" + nNode.getNodeName());
+			//System.out.println("\nCurrent Element :" + nNode.getNodeName());
 	 
 			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 				String texEl, backEl, rightEl, leftEl, typeEl;
@@ -500,9 +512,9 @@ public class Level implements Screen { //, InputProcessor {
 				
 				Element eElement = (Element) nNode;
 				
-				System.out.println("X-coordinate : " + eElement.getAttribute("x"));
-				System.out.println("Y-coordinate : " + eElement.getAttribute("y"));
-				System.out.println("type : " + eElement.getAttribute("type"));
+				//System.out.println("X-coordinate : " + eElement.getAttribute("x"));
+				//System.out.println("Y-coordinate : " + eElement.getAttribute("y"));
+				//System.out.println("type : " + eElement.getAttribute("type"));
 				
 				//System.out.println(" : " + eElement.getAttribute("x"));
 				ArrayList<Character> list = assetListMap.get(eElement.getAttribute("type"));
@@ -532,6 +544,10 @@ public class Level implements Screen { //, InputProcessor {
 					Texture left[] = assetTextureMap.get(eElement.getAttribute("left"));
 					character.addFrameSeries(left);
 				}
+				if (!eElement.getAttribute("guard").equals("")) {
+					System.out.println("GUARD: " + eElement.getAttribute("guard"));
+					character.set_guardtile(TILE_STREET_ID);
+				}
 				
 				int nroutepoints = 0;
 				NodeList nNodeChildren = nNode.getChildNodes();
@@ -545,8 +561,8 @@ public class Level implements Screen { //, InputProcessor {
 						route[nroutepoints] = new Vector2(Integer.parseInt(eChild.getAttribute("x")) * this.tilewidth,
 								Integer.parseInt(eChild.getAttribute("y")) * this.tileheight);
 						
-						System.out.println(eChild.getAttribute("x"));
-						System.out.println(eChild.getAttribute("y"));
+						//System.out.println(eChild.getAttribute("x"));
+						//System.out.println(eChild.getAttribute("y"));
 						nroutepoints++;	
 					}	
 				}
@@ -561,7 +577,6 @@ public class Level implements Screen { //, InputProcessor {
 					hero = character;
 					;
 				}
-				//character = null;
 				
 			}
 		}
@@ -590,7 +605,7 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(i).set_validtile(TILE_PEDESTRIANWALK_ID);
 			car.get(i).set_illegaltile(TILE_PAVEMENT_ID);
 			car.get(i).set_illegaltile(TILE_ILLEGAL_ID);
-			car.get(0).set_guardtile(TILE_STREET_ID);
+			//car.get(0).set_guardtile(TILE_STREET_ID);
 			//car.get(i).set_random_move();
 			car.get(i).set_target(hero);
 			//car.get(i).addAutoRoute(routeCar[i]);
@@ -747,12 +762,10 @@ public class Level implements Screen { //, InputProcessor {
 	@Override
 	public void render(float delta) {		
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		int layers_id[] = {0};
-		int city_layers_id[] = {0, 1};
 		if (adventure_started == false)
-			renderer.render(layers_id);
+			renderer.render(mapLayerIdList);
 		else
-			cityrenderer.render(city_layers_id);
+			cityrenderer.render(cityLayerIdList);
 		stage.act(Gdx.graphics.getDeltaTime());//delta);
 		stage.draw();
 		

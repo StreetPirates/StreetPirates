@@ -61,7 +61,8 @@ public class Character extends Actor {
 	int movingDirection;
 	int lastCollision, routeDirection, currentDirection;
 	int goalsFound = 0;
-	boolean useAutoRoute, inAutoRoute, emergencyMove;
+	boolean useAutoRoute, inAutoRoute, emergencyMove, guardMove;
+	long guardStartClock;
 	Vector2 autoRoute[];
 	Vector2 autoRouteReverse[];
 	LinkedList<Stack<Integer>> directionFrame;
@@ -135,6 +136,7 @@ public class Character extends Actor {
 		this.useAutoRoute = false;
 		this.inAutoRoute = false;
 		this.emergencyMove = false;
+		this.guardMove = false;
 		this.directionFrame = new LinkedList<Stack<Integer>>();
 		this.currentDirection = DOWN;
 		this.footstepPartial = new ArrayList<Character>();
@@ -543,7 +545,7 @@ public class Character extends Actor {
 				if (//!illegal_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight) && 
 						(tilex != newtile.x || tiley != newtile.y) /*
 						target.immune_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight)*/) {
-					gotoPoint(l, newtile.x * l.tilewidth, newtile.y * l.tileheight, 0.08f);
+					gotoPoint(l, newtile.x * l.tilewidth, newtile.y * l.tileheight, 0.03f);
 					System.out.println(this + " CAR ON PEDESTRIAN WALK WHILE! from " + tilex + " " + tiley + " GOTO " + newtile.x + " " + newtile.y);
 					validFound = true;
 					SequenceAction sequence = new SequenceAction();
@@ -619,7 +621,8 @@ public class Character extends Actor {
 			}
 		}
 		
-		for (Character a: l.route) {
+		if (l.adventure_started)
+		for (Character a: l.starfish) {
 			if (this == l.hero && overlapRectangles (a, this, (float)1.0, (float)1.0)) {
 				a.setVisible(false);
 				//System.out.println("picking up starfish");
@@ -631,7 +634,9 @@ public class Character extends Actor {
 		//for (Actor a: this.getStage().getActors()) {
 		for (Character a: l.getCars()) {
 			//Character c = (Character)a;
-			if (a!= this && overlapRectangles (a, this, (float)0.4, (float)0.2) && !this.inCollision) {
+			if (a!= this && overlapRectangles (a, this, (float)0.4, (float)0.2) && !this.inCollision
+					&& a.guardMove == false && this.guardMove == false
+					&& a.emergencyMove == false && this.emergencyMove == false) {
 			   /*TODO: moving boolean flag is reset in last action, so there is chance a character stays in in_Action/moving limbo (i.e. true flags) forever.
 			    * so find a better way of removing a specific action. or resetting the flag at draw function or elsewhere.
 			    */
@@ -784,8 +789,10 @@ public class Character extends Actor {
 				if (numberFrameSeries > 1) {
 					addFrameChangeAction(sequence);
 				}
-				
-				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.7f));
+				float time = 0.6f;
+				if (l.getTileId(next.x * l.tilewidth, next.y * l.tileheight) == Level.TILE_STREET_ID)
+					time = 0.7f;
+				sequence.addAction(moveTo(next.x * l.tilewidth, next.y * l.tileheight, 0.6f));
 			}
 			//TODO: maybe we just need to go to tile, not exact position for route? so comment next line...
 			//sequence.addAction(moveTo(dest.getX(), dest.getY(), 0.5f));
@@ -1288,15 +1295,29 @@ public class Character extends Actor {
 			inAutoRoute = true;
 		}
 		
-		else if (target != null && guard_tile(target.getX()  + target.getWidth()/2 , target.getY())) {
+		if (this.guardMove == true) {
+			long newclock = System.nanoTime();
+			if (newclock - this.guardStartClock > 500000000) {
+				this.guardMove = false;
+				System.out.println("RESET GUARD");
+			}
+			
+		}
+		else if (target != null && guard_tile(target.getX()  + target.getWidth()/2 , target.getY())
+				&& (!this.guardMove /*||
+					((java.lang.Math.abs(this.getX()-target.getX()) < 3 *l.tilewidth)
+					&& (java.lang.Math.abs(this.getY()-target.getY()) < 3 *l.tileheight))*/
+						) ) {
 			//try to move to target, if they are on tile of type tileid
 			// e.g. car will find hero pirate, if he is on a street tile!
-			//int tilex = (int)(target.getX()/ l.tilewidth);
-			int tilex = (int)((target.getX() + target.getWidth()/2)/l.tilewidth);
+			int tilex = (int)(target.getX()/ l.tilewidth);
+			//int tilex = (int)((target.getX() + target.getWidth()/2)/l.tilewidth);
 			int tiley = (int)target.getY()/l.tileheight;
 			if (!illegal_tile(tilex * l.tilewidth, tiley * l.tileheight)) {
 				System.out.println("ATTACK " + target.getX() + " " + target.getY() + " tilex: " +tilex + "tiley: " + tiley);
-				gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.023f);
+				this.guardMove = true;
+				this.guardStartClock = System.nanoTime();;
+				gotoPoint(l, tilex * l.tilewidth, tiley * l.tileheight, 0.01f);
 			}	
 		}
 		else if (emergencyMove == false && random_move == true){		

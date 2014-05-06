@@ -2,7 +2,10 @@
 
 jarfile=$1
 jar uf $jarfile assets/city/kth* 
-jar uf $jarfile assets/*compass*tmx
+jar uf $jarfile assets/streetpirates-level*tmx
+jar uf $jarfile assets/streetpirates-city*tmx
+jar uf $jarfile assets/streetpirates-level*placement*xml
+jar uf $jarfile assets/streetpirates-level*scale*png
 jar uf $jarfile assets/city/city*ct28* 
 jar uf $jarfile assets/city/sea.jpg
 jar uf $jarfile assets/city/bandits*png

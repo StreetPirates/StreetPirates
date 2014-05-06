@@ -11,7 +11,7 @@
     </object>
 	<object x="9" y="0" type="treasure" scaling="2.0" />
 	
-	 <object x="5" y="3" type="car-blue" scaling="2.0" 
+	 <object x="5" y="3" type="car-blue" scaling="2.0" guard="true"
 	    back="car-blue-back" right="car-blue-right" left="car-blue-left" >
 	    <routepoint x="5" y="6" />
 	    <routepoint x="8" y="2" />

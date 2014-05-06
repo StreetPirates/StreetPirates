@@ -10,7 +10,7 @@
 	    extra="pirateflag" >
     </object>
 	<object x="11" y="6" type="treasure" scaling="2.0" />
-	<object x="6" y="6" type="car-blue" scaling="2.0" 
+	<object x="6" y="6" type="car-blue" scaling="2.0" guard="true"
 	    back="car-blue-back" right="car-blue-right" left="car-blue-left" >
 	    <routepoint x="7" y="9" />
 	    <routepoint x="12" y="5" />
