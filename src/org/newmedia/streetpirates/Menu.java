@@ -22,6 +22,9 @@ import org.newmedia.streetpirates.Level.LevelListener;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.*;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.audio.Music;
 //import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -52,6 +55,9 @@ public class Menu implements Screen { //implements Screen {
 	ArrayList<Texture> levelTexture;//, level2Texture, level3Texture;
 	Image menuImage, instructionImage, parrot;
 	private OrthographicCamera camera;
+	public static Sound introSound;
+	Music introMusic;
+	long introSoundId;
 	
 	MenuCharacter heroA, heroB;
 	ArrayList<Button> btnlist, maplist;
@@ -216,6 +222,9 @@ public class Menu implements Screen { //implements Screen {
 			instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/texts" + i + ".png"));
 			//instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/parrot-test" + i + "-large.png"));
 		
+		introSound = Gdx.audio.newSound(Gdx.files.internal("assets/intro.mp3"));
+		//introMusic = new Music();// Gdx.audio.newMusic(Gdx.files.internal("assets/intro.mp3"));
+		
 		stage = new Stage();
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, 13, 10);
@@ -336,6 +345,8 @@ public class Menu implements Screen { //implements Screen {
 			// uncommenting these creates weird problems in levels...
 			//setButtonsVisible(false, maplist);
 			//setButtonsVisible(true, btnlist);
+			
+			//introSound.stop(introSoundId);
             game.setCurrentLevel(levelIdx);
             game.setScreen(game.getCurrentLevel());
             
@@ -506,6 +517,7 @@ public class Menu implements Screen { //implements Screen {
 	@Override
     public void show() {
          // called when this screen is set as the screen with game.setScreen();
+		//introSoundId = introSound.loop();
 		
 		for (Button btn: btnlist) {
 			;
