@@ -48,6 +48,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.*;
 
+import javax.sound.sampled.Clip;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import org.w3c.dom.Document;
@@ -758,6 +759,7 @@ public class Level implements Screen { //, InputProcessor {
 			adventure_started = true;
 			parrotMessage.setVisible(false);
 			parrotMessage.removeListener(parrotMessageListener);
+			game.getMenu().cityClip.loop(Clip.LOOP_CONTINUOUSLY);
 		}
 		cleanFootTrail();
 	}

@@ -270,8 +270,10 @@ public class Character extends Actor {
 				l.adventure_started = false;
 				c.setVisible(false);
 				c.removeListener(this);
-				if (this.finalMessage == MESSAGE_GOTO_MENU)
+				if (this.finalMessage == MESSAGE_GOTO_MENU) {
+					l.game.getMenu().stopSounds();
 					l.game.setScreen(l.game.getMenu());
+				}
 				else if (this.finalMessage == MESSAGE_RESTART_LEVEL) {
 					l.resetLevel(true);
 					l.showActors();
@@ -587,6 +589,8 @@ public class Character extends Actor {
 		
 		for (Character a: l.getBandits()) {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
+				l.game.getMenu().cityClip.stop();
+				l.game.getMenu().losePirateClip.start();
 				l.loseSequence.setVisible(true);
 			    l.loseSequence.addListener(new MessageListener(l.loseSequence, 550, 600, 730, 780, MESSAGE_GOTO_MENU));//RESTART_LEVEL));
 			    this.resetHeroLevel();
@@ -595,6 +599,8 @@ public class Character extends Actor {
 		
 		for (Character a: l.getCars()) {
 			if (a!= this && a.get_target() == this && overlapRectangles (a, this, (float)0.4, (float)0.2)) {
+				l.game.getMenu().cityClip.stop();
+				l.game.getMenu().loseCarClip.start();
 				l.loseSequence.setVisible(true);
 			    l.loseSequence.addListener(new MessageListener(l.loseSequence, 550, 600, 730, 780, MESSAGE_GOTO_MENU));//RESTART_LEVEL));
 			    this.resetHeroLevel();
@@ -609,12 +615,14 @@ public class Character extends Actor {
 					g.setVisible(false);
 					System.out.println("FOUND ONE TREASURE");
 					if (this.goalsFound == l.treasure.size()) {
-					// need victory message - You reached the treasure!
-					l.winSequence.setVisible(true);
-			    	l.winSequence.set_moving(true);
-			    	l.winSequence.addListener(new MessageListener(l.winSequence, 550, 600, 730, 780, MESSAGE_GOTO_MENU));
-			    	this.resetHeroLevel();
-			    	System.out.println("FOUND ALL TREASURES!");
+						//need victory message - You reached the treasure!
+						l.game.getMenu().cityClip.stop();
+						l.game.getMenu().winClip.start();
+						l.winSequence.setVisible(true);
+						l.winSequence.set_moving(true);
+						l.winSequence.addListener(new MessageListener(l.winSequence, 550, 600, 730, 780, MESSAGE_GOTO_MENU));
+						this.resetHeroLevel();
+						System.out.println("FOUND ALL TREASURES!");
 					}
 				}
 			}
@@ -622,7 +630,7 @@ public class Character extends Actor {
 		
 		if (l.adventure_started)
 		for (Character a: l.starfish) {
-			if (this == l.hero && overlapRectangles (a, this, (float)1.0, (float)1.0)) {
+			if (this == l.hero && overlapRectangles (a, this, (float)0.8, (float)0.8)) {
 				a.setVisible(false);
 				//System.out.println("picking up starfish");
 				break;

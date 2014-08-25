@@ -22,9 +22,6 @@ import org.newmedia.streetpirates.Level.LevelListener;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.*;
-import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.audio.Music;
 //import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -44,6 +41,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import javax.sound.sampled.*;
+import javazoom.jl.player.Player;
+import java.io.File;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 
 public class Menu implements Screen { //implements Screen {
 	PirateGame game;
@@ -55,9 +57,9 @@ public class Menu implements Screen { //implements Screen {
 	ArrayList<Texture> levelTexture;//, level2Texture, level3Texture;
 	Image menuImage, instructionImage, parrot, backgroundMapImage;
 	private OrthographicCamera camera;
-	public static Sound introSound;
-	Music introMusic;
-	long introSoundId;
+	//public static Sound introSound;
+	//Music introMusic;
+	//long introSoundId;
 	
 	MenuCharacter heroA, heroB;
 	ArrayList<Button> btnlist, maplist;
@@ -72,7 +74,11 @@ public class Menu implements Screen { //implements Screen {
 	ArrayList<MenuCharacter> pirate;
 	public int storyIdx, instructionIdx;
 	public boolean storyStarts, instructionStarts, mapSelector;
-	
+	//Player player; 
+	//AudioStream BGM, as;
+	//AudioData MD;
+	//ContinuousAudioDataStream loop = null;
+	public Clip introClip, cityClip, loseCarClip, losePirateClip, winClip;
 	
 	/**
 	 * @param args
@@ -224,9 +230,61 @@ public class Menu implements Screen { //implements Screen {
 			instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/ODHGEIES_cropped.png"));//texts" + i + ".png"));
 			//instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/parrot-test" + i + "-large.png"));
 		
-		//Audio audio = Gdx.audio;
-		//introSound = Gdx.audio.newSound(Gdx.files.internal("assets/cheer.ogg"));
-		//introMusic = Gdx.audio.newMusic(Gdx.files.internal("assets/cheer.ogg"));
+		try {
+			
+			  //1st attempt with clip. AudioFormat is needed to make this work.
+		      AudioInputStream introAudio =AudioSystem.getAudioInputStream(new File("assets/menu/intro.wav").getAbsoluteFile());
+		      AudioFormat format = introAudio.getFormat();
+	          DataLine.Info info = new DataLine.Info(Clip.class, format);
+	          introClip = (Clip)AudioSystem.getLine(info);
+		      introClip.open(introAudio);
+		      introClip.loop(Clip.LOOP_CONTINUOUSLY);
+		      
+		      AudioInputStream cityAudio =AudioSystem.getAudioInputStream(new File("assets/menu/city.wav").getAbsoluteFile());
+		      format = introAudio.getFormat();
+	          info = new DataLine.Info(Clip.class, format);
+	          cityClip = (Clip)AudioSystem.getLine(info);
+		      cityClip.open(cityAudio);
+
+		      AudioInputStream loseCarAudio =AudioSystem.getAudioInputStream(new File("assets/menu/horn.wav").getAbsoluteFile());
+		      format = loseCarAudio.getFormat();
+	          info = new DataLine.Info(Clip.class, format);
+	          loseCarClip = (Clip)AudioSystem.getLine(info);
+		      loseCarClip.open(loseCarAudio);
+		      
+		      AudioInputStream losePirateAudio =AudioSystem.getAudioInputStream(new File("assets/menu/pirate.wav").getAbsoluteFile());
+		      format = losePirateAudio.getFormat();
+	          info = new DataLine.Info(Clip.class, format);
+	          losePirateClip = (Clip)AudioSystem.getLine(info);
+		      losePirateClip.open(losePirateAudio);
+		      
+		      AudioInputStream winAudio =AudioSystem.getAudioInputStream(new File("assets/menu/cheer.wav").getAbsoluteFile());
+		      format = winAudio.getFormat();
+	          info = new DataLine.Info(Clip.class, format);
+	          winClip = (Clip)AudioSystem.getLine(info);
+		      winClip.open(winAudio);
+			
+		    //2nd attempt with oracle specific API, we don't really prefer this
+			//BGM = new AudioStream(new FileInputStream("/opt/devel/android/StreetPirates/assets/menu/park.wav"));
+			//MD = BGM.getData();
+			//loop = new ContinuousAudioDataStream(MD);
+		    //AudioPlayer.player.start(BGM);
+			//AudioPlayer.player.start(loop);			
+			
+		    //3rd attempt with JLayer fails, there is some conflict with libgdx and the LayerIIIDecoder class... :(
+		    // JLayer is needed to play MP3s, default java libs only support wav files ...
+		    // current workaround is to use only wav files, resulting in very large files :( FIXME
+			//FileInputStream fis     = new FileInputStream("/opt/devel/android/StreetPirates/assets/menu/horn.mp3");
+            //BufferedInputStream bis = new BufferedInputStream(fis);  
+            //player = new Player(bis);  
+            //player.play();
+			
+		    }
+		catch(Exception ex)
+		    {
+			  System.out.println("problem playing or locating WAV clip");
+			  ex.printStackTrace();
+		    }
 		
 		stage = new Stage();
 		camera = new OrthographicCamera();
@@ -347,6 +405,7 @@ public class Menu implements Screen { //implements Screen {
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 			System.out.println("SELECTMAP " + levelIdx);
+			introClip.stop();
 			setButtonsVisible(false, maplist);
 			setButtonsVisible(true, btnlist);
 			backgroundMapImage.setVisible(false);
@@ -566,6 +625,13 @@ public class Menu implements Screen { //implements Screen {
 	@Override
 	public void resize(int w, int h) {	
 		 stage.setViewport(w, h, true);
+	}
+	
+	public void stopSounds() {
+		losePirateClip.stop();
+		loseCarClip.stop();
+		winClip.stop();
+		introClip.stop();
 	}
 	
 	public class MenuListener extends InputListener {
