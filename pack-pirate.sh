@@ -32,3 +32,13 @@ jar uf $jarfile assets/map/compass.png
 jar uf $jarfile assets/map/starfish-alpha.png
 jar uf $jarfile assets/storytelling/*downsize*jpg
 jar uf $jarfile assets/map/nekrotiles2.png
+jar uf $jarfile assets/menu/Background_papyrus.jpg
+jar uf $jarfile assets/menu/she_parrot.png
+jar uf $jarfile assets/menu/she_resize.png
+jar uf $jarfile assets/map/ODHGEIES_cropped.png
+jar uf $jarfile assets/menu/Background_papyrus.jpg
+jar uf $jarfile assets/menu/horn.wav
+jar uf $jarfile assets/menu/cheer.wav
+jar uf $jarfile assets/menu/intro.wav
+jar uf $jarfile assets/menu/city.wav
+jar uf $jarfile assets/menu/pirate.wav
