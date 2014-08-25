@@ -50,10 +50,10 @@ public class Menu implements Screen { //implements Screen {
 	Stage stage;
 	Group background;
 	Texture menuTexture;
-	Texture startMap, makeMap, settings, instructions;
+	Texture startMap, makeMap, settings, instructions, backgroundMapSelection;
 	Texture pirateA[], pirateB[], storyTexture[], instructionTexture[], parrotTexture[];
 	ArrayList<Texture> levelTexture;//, level2Texture, level3Texture;
-	Image menuImage, instructionImage, parrot;
+	Image menuImage, instructionImage, parrot, backgroundMapImage;
 	private OrthographicCamera camera;
 	public static Sound introSound;
 	Music introMusic;
@@ -149,7 +149,7 @@ public class Menu implements Screen { //implements Screen {
 		
         public boolean mouseMoved(InputEvent event, float x, float y) {
         	boolean other_chosen = false;
-        	System.out.println("ACTOR MOUSE touchDown x: " + x + " y: " + y);
+        	//System.out.println("ACTOR MOUSE touchDown x: " + x + " y: " + y);
         	for (MenuCharacter other: menu.pirate) {
 				if (other != c && other.stickychosen == true) {
 					other_chosen = true;
@@ -193,13 +193,15 @@ public class Menu implements Screen { //implements Screen {
 		
 		pirateA[0] = new Texture(Gdx.files.internal("assets/menu/PirateAlone.png"));
 		pirateA[1] = new Texture(Gdx.files.internal("assets/menu/PirateParrot.png"));
-		pirateB[0] = new Texture(Gdx.files.internal("assets/menu/PinkPirateAlone.png"));
-		pirateB[1] = new Texture(Gdx.files.internal("assets/menu/PinkPirateParrot.png"));
+		pirateB[0] = new Texture(Gdx.files.internal("assets/menu/she_resize.png"));
+		pirateB[1] = new Texture(Gdx.files.internal("assets/menu/she_parrot.png"));
 		
 		startMap = new Texture(Gdx.files.internal("assets/menu/DialekseXarth.png"));
 		makeMap = new Texture(Gdx.files.internal("assets/menu/FtiakseXarth.png"));
 		settings = new Texture(Gdx.files.internal("assets/menu/Prosarmogh.png"));
 		instructions = new Texture(Gdx.files.internal("assets/menu/Odhgies_Omada.png"));
+		backgroundMapSelection = new Texture(Gdx.files.internal("assets/menu/Background_papyrus.jpg"));
+		backgroundMapImage = new Image(backgroundMapSelection);
 		
 		levelTexture = new ArrayList<Texture>();
 		for (int i = 0; i < this.game.getNumLevels(); i++) {
@@ -218,12 +220,13 @@ public class Menu implements Screen { //implements Screen {
 			storyTexture[i] = new Texture(Gdx.files.internal("assets/storytelling/storytelling" + i + "_downsize.jpg"));
 		
 		instructionTexture = new Texture[5]; 
-		for (int i = 1; i <= 5; i++)
-			instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/texts" + i + ".png"));
+		for (int i = 1; i <= 1; i++)
+			instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/ODHGEIES_cropped.png"));//texts" + i + ".png"));
 			//instructionTexture[i - 1] = new Texture(Gdx.files.internal("assets/map/parrot-test" + i + "-large.png"));
 		
-		introSound = Gdx.audio.newSound(Gdx.files.internal("assets/intro.mp3"));
-		//introMusic = new Music();// Gdx.audio.newMusic(Gdx.files.internal("assets/intro.mp3"));
+		//Audio audio = Gdx.audio;
+		//introSound = Gdx.audio.newSound(Gdx.files.internal("assets/cheer.ogg"));
+		//introMusic = Gdx.audio.newMusic(Gdx.files.internal("assets/cheer.ogg"));
 		
 		stage = new Stage();
 		camera = new OrthographicCamera();
@@ -235,6 +238,8 @@ public class Menu implements Screen { //implements Screen {
 		
 		menuImage.setVisible(true);
 		background.addActor(menuImage);
+		backgroundMapImage.setVisible(false);
+		background.addActor(backgroundMapImage);
 		stage.addActor(background);
 		
 		heroA = new MenuCharacter(pirateA, 320, 240, 0.8);
@@ -289,7 +294,7 @@ public class Menu implements Screen { //implements Screen {
 		parrotListener = new InputListener() {
 			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 				
-				if (instructionIdx >= 4) {
+				//if (instructionIdx >= 4) {
 					instructionImage.removeListener(instructionImageListener);
 					instructionImage.setVisible(false);
 					instructionStarts = true;
@@ -297,14 +302,14 @@ public class Menu implements Screen { //implements Screen {
 					heroA.setVisible(true);
 					heroB.setVisible(true);
 					parrot.removeListener(parrotListener);
-					background.removeActor(parrot);
+					//background.removeActor(parrot);
 					background.removeActor(instructionImage);
 					
-				}
-				else {
+				//}
+				/*else {
 					instructionIdx++;
 					instructionImage.setDrawable(new TextureRegionDrawable(new TextureRegion(instructionTexture[instructionIdx % 5])));
-				}
+				}*/
 				return false;
 			}
 		};
@@ -342,16 +347,14 @@ public class Menu implements Screen { //implements Screen {
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 			System.out.println("SELECTMAP " + levelIdx);
-			// uncommenting these creates weird problems in levels...
-			//setButtonsVisible(false, maplist);
-			//setButtonsVisible(true, btnlist);
-			
+			setButtonsVisible(false, maplist);
+			setButtonsVisible(true, btnlist);
+			backgroundMapImage.setVisible(false);
+			//background.removeActor(backgroundMapImage);
 			//introSound.stop(introSoundId);
             game.setCurrentLevel(levelIdx);
             game.setScreen(game.getCurrentLevel());
             
-            //for ( int i = 0 ; i < this.game.getNumLevels(); i++)
-            	//maplist.get(i).removeListener(maplistlistener.get(i));
             return true;  // must return true for touchUp event to occur
         }
 		
@@ -363,25 +366,30 @@ public class Menu implements Screen { //implements Screen {
 
 	public class ButtonMapSelectListener extends InputListener {
 		PirateGame game;
+		boolean initialized;
 		
 		public ButtonMapSelectListener(PirateGame game) {
 			this.game = game;
+			this.initialized = false;
 		}
 		
 		public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 			System.out.println("MAPBUTTON touchDown x: " + x + " y: " + y);
             
+			// re-initalizing this every time we select a map creates some problems in the levels... so
+			// we initialize only once
+			if (initialized == false)
 			for (int i = 0; i < this.game.getNumLevels(); i++) {
-				//maplist.get(i).setVisible(true);
 				//System.out.println("MAPBUTTON : " + i);
 				MapSelectListener selector = new MapSelectListener(this.game, i); 
 				maplistlistener.add(selector);
 				//if ( i == 1)
 				maplist.get(i).addListener(selector);
-				
+				initialized = true;
 			}
 			setButtonsVisible(true, maplist);
 			setButtonsVisible(false, btnlist);
+			backgroundMapImage.setVisible(true);
             return true;  // must return true for touchUp event to occur
         }
 		
@@ -447,44 +455,42 @@ public class Menu implements Screen { //implements Screen {
 			if (menu.instructionStarts == true) {
 				menu.instructionImage = new Image(instructionTexture[0]);
 				menu.instructionImage.setBounds(Gdx.graphics.getWidth()/2 - (float)0.5 * instructionTexture[0].getWidth(),
-						Gdx.graphics.getHeight()/2 - instructionTexture[0].getHeight(),
-						2 * instructionTexture[0].getWidth(),
-						2 * instructionTexture[0].getHeight()
-						//Gdx.graphics.getHeight()/2,
-						//Gdx.graphics.getWidth()/2
+						Gdx.graphics.getHeight()/2 - (float)0.5 * instructionTexture[0].getHeight(),
+						instructionTexture[0].getWidth(),
+						instructionTexture[0].getHeight()
 						);
-				parrot.addListener(parrotListener);
-				parrot.setBounds(440, 400, instructionTexture[0].getWidth(), instructionTexture[0].getHeight());
+				//parrot.addListener(parrotListener);
+				//parrot.setBounds(440, 400, instructionTexture[0].getWidth(), instructionTexture[0].getHeight());
 				
 				menu.instructionImage.setVisible(true);
-				menu.parrot.setVisible(true);
+				//menu.parrot.setVisible(true);
 				menu.instructionImageListener = new MessageListener(this.menu);
 				menu.instructionImage.addListener(menu.instructionImageListener);
 				menu.instructionStarts = false;
 				menu.instructionIdx = 0;
 				menu.instructionImage.setDrawable(new TextureRegionDrawable(new TextureRegion(instructionTexture[menu.instructionIdx % 5])));
 				menu.background.addActor(menu.instructionImage);
-				menu.background.addActor(menu.parrot);
+				//menu.background.addActor(menu.parrot);
 				menu.heroA.setVisible(false);
 				menu.heroB.setVisible(false);
 				
 			}
-			else if (menu.instructionIdx >= 4) {
+			else { //if (menu.instructionIdx >= 4) {
 				menu.instructionImage.removeListener(menu.instructionImageListener);
 				menu.instructionImage.setVisible(false);
 				menu.instructionStarts = true;
 				menu.instructionIdx = 0;
 				menu.heroA.setVisible(true);
 				menu.heroB.setVisible(true);
-				parrot.removeListener(parrotListener);
-				background.removeActor(menu.parrot);
+				//parrot.removeListener(parrotListener);
+				//background.removeActor(menu.parrot);
 				background.removeActor(menu.instructionImage);
 				
 			}
-			else {
+			/*else {
 				menu.instructionIdx++;
 				menu.instructionImage.setDrawable(new TextureRegionDrawable(new TextureRegion(instructionTexture[menu.instructionIdx % 5])));
-			}
+			}*/
 			
 			//System.out.println("ACTOR PICKED touchDown x: " + x + " y: " + y);
             return true;  // must return true for touchUp event to occur

@@ -1298,7 +1298,7 @@ public class Character extends Actor {
 			long newclock = System.nanoTime();
 			if (newclock - this.guardStartClock > 500000000) {
 				this.guardMove = false;
-				System.out.println("RESET GUARD");
+				//System.out.println("RESET GUARD");
 			}
 			
 		}
