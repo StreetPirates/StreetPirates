@@ -632,6 +632,12 @@ public class Menu implements Screen { //implements Screen {
 		loseCarClip.stop();
 		winClip.stop();
 		introClip.stop();
+		cityClip.stop();
+		losePirateClip.setFramePosition(0);
+		loseCarClip.setFramePosition(0);
+		winClip.setFramePosition(0);
+		introClip.setFramePosition(0);
+		cityClip.setFramePosition(0);
 	}
 	
 	public class MenuListener extends InputListener {

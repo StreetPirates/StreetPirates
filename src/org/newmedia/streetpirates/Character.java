@@ -18,6 +18,8 @@ package org.newmedia.streetpirates;
 
 import java.util.*;
 
+import javax.sound.sampled.Clip;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.math.Vector2;
@@ -272,6 +274,7 @@ public class Character extends Actor {
 				c.removeListener(this);
 				if (this.finalMessage == MESSAGE_GOTO_MENU) {
 					l.game.getMenu().stopSounds();
+					l.game.getMenu().introClip.loop(Clip.LOOP_CONTINUOUSLY);
 					l.game.setScreen(l.game.getMenu());
 				}
 				else if (this.finalMessage == MESSAGE_RESTART_LEVEL) {
@@ -377,64 +380,44 @@ public class Character extends Actor {
         //return x < r.x + r.width && x + width > r.x && y < r.y + r.height && y + height > r.y;
     }
 	
-	public Vector2 moveAwayFromTile(int tilex, int tiley) { //, int direction) {
+	public Vector2 moveAwayFromTile(Character target) { //, int direction) {
+		int tilex = (int)target.getX() / l.tilewidth;
+		int tiley = (int) target.getY() / l.tileheight;
 		int mytilex = (int)this.getX() / l.tilewidth;
 		int mytiley = (int)this.getY() / l.tileheight;
 		Vector2 next = new Vector2(mytilex, mytiley);
 		boolean found = false;
 		
-		//this is the stupidest and ugliest function in decades...
-		if (mytilex > tilex && !illegal_tile((mytilex + 1 )*l.tilewidth, mytiley * l.tileheight ))
-			next.x++;
-		else if (mytilex < tiley && !illegal_tile((mytilex - 1)*l.tilewidth, mytiley * l.tileheight))
-			next.x--;
-		else if (mytiley > tiley && !illegal_tile(mytilex *l.tilewidth, (mytiley + 1) * l.tileheight))
-			next.y++;
-		else if (mytiley < tiley && !illegal_tile(mytilex *l.tilewidth, (mytiley - 1) * l.tileheight))
+		if (this.getY() < target.getY() && !illegal_tile(mytilex*l.tilewidth, (next.y - 1) * l.tileheight)) {
+			found = true;
 			next.y--;
-		else {
-			
-			for (int dir = 0; dir < 3; dir++) {
-			switch (dir) {
-			case DOWN:
-				if (mytiley <= tiley && !illegal_tile(mytilex*l.tilewidth, (mytiley - 1) * l.tileheight)) {
-					found = true;
-					next.y--;
-				}
-				break;
-			case UP:
-				if (mytiley >= tiley  && !illegal_tile(mytilex*l.tilewidth, (mytiley + 1) * l.tileheight)) {
-					found = true;
-					next.y++;
-				}
-				break;
-			case RIGHT:
-				if (mytilex >= tilex  && !illegal_tile((mytilex + 1)*l.tilewidth, mytiley * l.tileheight)) {
-					found = true;
-					next.x++;
-				}
-				break;
-			case LEFT:
-				if (mytilex <= tilex  && !illegal_tile((mytilex - 1)*l.tilewidth, mytiley * l.tileheight)) {
-					found = true;
-					next.x--;
-				}
-				break;
-			default:
-				break;
-			}
-			if (found == true)
-				break;
-		  }
+			System.out.println("DOWN from default directions!!!! xcoord " +  next.x);
+		}
+		else if (this.getY() > target.getY()  && !illegal_tile(mytilex*l.tilewidth, (next.y + 1) * l.tileheight)) {
+			found = true;
+			next.y++;
+			System.out.println("UP from default directions!!!! xcoord " +  next.x);
+		}
 		
-		  if (found == false) {
+		if (this.getX() > target.getX()  && !illegal_tile((next.x + 1)*l.tilewidth, next.y * l.tileheight)) {
+			found = true;
+			next.x++;
+			System.out.println("RIGHT from default directions!!!! xcoord " +  next.x);
+		}
+		else if (this.getX() < target.getX()  && !illegal_tile((next.x - 1)*l.tilewidth, next.y * l.tileheight)) {
+			found = true;
+			next.x--;
+			System.out.println("LEFT from default directions!!!! xcoord " +  next.x);
+		}
+
+		if (found == false) {
 			  for (int dir = 0; dir < 3; dir++) {
 				  next = findTile(mytilex, mytiley, dir);
 				  if (!illegal_tile(next.x * l.tilewidth, next.y * l.tileheight))
 					  break;
 			  }
 		  }
-		}
+		
 		System.out.println("MOVEAWAY FROM " + tilex + ", " + tiley + "CUR: " + mytilex +
 				", " + mytiley + "TO " + next.x + ", " + next.y);
 		return next;
@@ -539,14 +522,20 @@ public class Character extends Actor {
 			int direction = 0;
 			boolean validFound = false, firstpass = true;
 			this.emergencyMove = true;
+			
 			while (validFound == false) {
 				Vector2 newtile; 
-				newtile = moveAwayFromTile((int)target.getX() / l.tilewidth, (int) target.getY() / l.tileheight);
+				newtile = moveAwayFromTile(target);
 						
 				if (//!illegal_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight) && 
 						(tilex != newtile.x || tiley != newtile.y) /*
 						target.immune_tile(newtile.x * l.tilewidth, newtile.y * l.tileheight)*/) {
-					gotoPoint(l, newtile.x * l.tilewidth, newtile.y * l.tileheight, 0.03f);
+					//gotoPoint(l, newtile.x * l.tilewidth, newtile.y * l.tileheight, 0f);
+					
+					SequenceAction seqImmediate = new SequenceAction();
+					seqImmediate.addAction(moveTo(newtile.x * l.tilewidth, newtile.y * l.tileheight, 0.05f));
+					this.addAction(seqImmediate);
+					
 					System.out.println(this + " CAR ON PEDESTRIAN WALK WHILE! from " + tilex + " " + tiley + " GOTO " + newtile.x + " " + newtile.y);
 					validFound = true;
 					SequenceAction sequence = new SequenceAction();
@@ -558,10 +547,10 @@ public class Character extends Actor {
 					    	 * movement and not have the car freeze forever? Look at emergencyMove resetting condition
 					    	 * a bit above
 					    	 */
-					        //emergencyMove = false; 
+					        emergencyMove = false;
 					    }
 					}));
-					this.addAction(after(sequence)); //adding the last part above (resetting emergencyMove) as an afterAction make sthe emergency move work
+					this.addAction(after(sequence)); //adding the last part above (resetting emergencyMove) as an afterAction makes the emergency move work
 				}
 			}
 			
@@ -1119,7 +1108,7 @@ public class Character extends Actor {
 				//System.out.println("PATH x: " + next.x + " y: " + next.y);
 			}
 			//TODO: no matching directionFrame for this move
-			sequence.addAction(moveTo(x, y, 0.5f));
+			sequence.addAction(moveTo(x, y, duration));
 		}
 		endRouteSequence(sequence);
 		

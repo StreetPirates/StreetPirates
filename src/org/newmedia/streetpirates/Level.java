@@ -676,6 +676,7 @@ public class Level implements Screen { //, InputProcessor {
 		for(int i = 0; i < treasure.size(); i++) {
 			treasure.get(i).setVisible(false);
 		}
+		//game.getMenu().stopSounds();
 	}
 	
 	public ArrayList<Character> getCars() {
