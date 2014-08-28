@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<characters>
+
+    <object x="3" y="6" type="hero" scaling="1.5" />
+    <object x="6" y="8" type="bandit" scaling="2.5" 
+        extra="pirateflag" >
+    </object>
+	<object x="11" y="5" type="bandit-purple" scaling="2.5"
+	    extra="pirateflag" >
+    </object>
+    <object x="6" y="0" type="bandit-brown" scaling="2.5"
+	    extra="pirateflag" >
+    </object>
+    
+	<object x="11" y="7" type="treasure" scaling="2.0" />
+	
+	<object x="9" y="0" type="treasure" scaling="2.0" />
+	
+	<object x="4" y="3" type="car-blue" scaling="2.0" guard="true" 
+	    back="car-blue-back" right="car-blue-right" left="car-blue-left" >
+	    <routepoint x="4" y="3" />
+	    <routepoint x="9" y="6" />
+	</object>
+	 
+	<object x="7" y="6" type="car-red" scaling="2.0" 
+	    back="car-red-back" right="car-red-right" left="car-red-left" >
+	    <routepoint x="7" y="6" />
+	    <routepoint x="9" y="1" />
+	</object>
+	<object x="0" y="0" type="starfish" scaling="1.0" />
+	<object x="1" y="0" type="starfish" scaling="1.0" />
+	<object x="2" y="0" type="starfish" scaling="1.0" />
+	<object x="1" y="1" type="starfish" scaling="1.0" />
+	<object x="0" y="1" type="starfish" scaling="1.0" />
+	<object x="2" y="1" type="starfish" scaling="1.0" />
+	<object x="1" y="2" type="starfish" scaling="1.0" />
+	<object x="0" y="2" type="starfish" scaling="1.0" />
+	<object x="2" y="2" type="starfish" scaling="1.0" />
+    
+</characters>
+
+

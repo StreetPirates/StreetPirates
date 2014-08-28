@@ -18,13 +18,15 @@ package org.newmedia.streetpirates;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Gdx.*;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.graphics.GL10;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteCache;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.maps.Map;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.*;
@@ -46,6 +48,16 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.*;
 
+import javax.sound.sampled.Clip;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
+import org.w3c.dom.Element;
+import java.io.File;
+
+import java.util.HashMap;
 //import com.badlogic.gdx.maps.tiled.TiledMap;
 //import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 //import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
@@ -55,6 +67,7 @@ import java.util.Arrays;
 
 
 import org.newmedia.streetpirates.Character;
+import org.newmedia.streetpirates.Character.CharacterListener;
 import org.newmedia.streetpirates.Character.MessageListener;
 
 public class Level implements Screen { //, InputProcessor {
@@ -72,12 +85,16 @@ public class Level implements Screen { //, InputProcessor {
 	private Texture texture_backButton[];
 	public Texture texture_footstep[];
 	private OrthographicCamera camera;
-	private TiledMap tiledMap;
-	private TiledMap tiledCity;
+	private ArrayList<TiledMap> tiledMap;
+	private ArrayList<TiledMap> tiledCity;
+	private TiledMap tiledMapActive, tiledCityActive;
 	private TmxMapLoader maploader;
-	private MapProperties prop;
+	private ArrayList<MapProperties> prop;
+	private MapProperties propActive;
 	private OrthogonalTiledMapRenderer renderer, cityrenderer;
 	private	TiledMapTileLayer layer, citylayer;
+	private int numMapLayers, numCityLayers;
+	private int mapLayerIdList[], cityLayerIdList[];
 	private int columns;
 	private int rows;
 	private int num_starfish = 2, place_idx = 0;
@@ -85,9 +102,9 @@ public class Level implements Screen { //, InputProcessor {
 	public Stage stage;
 	private ArrayList<Character> car;
 	private ArrayList<Character> bandit;
-	private ArrayList<Character> starfish;
+	public ArrayList<Character> starfish;
 	private Character pirateflag;
-	private Character treasure;
+	public ArrayList<Character> treasure;
 	public Character parrot, parrotMessage;
 	private Skin buttonSkin;
 	
@@ -105,21 +122,33 @@ public class Level implements Screen { //, InputProcessor {
 	public int car_cost[][];
 	public MessageListener parrotMessageListener, backButtonListener;
 	public InputListener parrotListener; 
+	public CharacterListener compassListener;
+	
+	/* entity are actors/object in the foreground
+	 * Car
+	 * Bandit
+	 * Chest 
+	 * */
+	public final int ENTITY_TYPES = 4;
+	//public final String pirateAssetPrefix = "hi";
+	public final String banditpurpleAssetPrefix = "assets/city/bandits-purple.png";
+	public final String carblueAssetPrefix = "assets/cars/blue_car_back.png";
+	public final String treasureChestAssetPrefix = "assets/map/treasure1.png";
 	
 	/* city tileset ids hardcoded */
-	public final int TILE_TYPES = 5;
-	public final int TILE_ILLEGAL_ID = 1;
-	public final int TILE_PAVEMENT_ID = 2;
-	public final int TILE_PEDESTRIANWALK_ID = 3;
-	public final int TILE_STREET_ID = 4;
-	public final int TILE_UNKNOWN_ID = 5;
+	public static final int TILE_TYPES = 5;
+	public static final int TILE_ILLEGAL_ID = 1;
+	public static final int TILE_PAVEMENT_ID = 2;
+	public static final int TILE_PEDESTRIANWALK_ID = 3;
+	public static final int TILE_STREET_ID = 4;
+	public static final int TILE_UNKNOWN_ID = 5;
 	/* from stronger to weakest id type. In case types overlap in tile layers, the stronger type logically applies.
 	 * E.g. a tile with a layer of pavement and street, is a pavement logically. This happens on rounded pavement corners.
 	 * E.g. 
 	 */
-	public final int tile_pavement_types[] = {1, 37, 57, 39, 59};
-	public final int tile_pedestrianwalk_types[] = {55};
-	public final int tile_street_types[] = {11};
+	public final int tile_pavement_types[] = {1, 37, 57, 39, 59, 269, 305, 327};
+	public final int tile_pedestrianwalk_types[] = {55, 10};
+	public final int tile_street_types[] = {11, 4, 279};
 	public Vector2 routeCar[][];
 	//public Vector2 routeCarA[] = { new Vector2(100, 100), new Vector2(600, 400) };
 	//public Vector2 routeCarB[] = { new Vector2(400, 550), new Vector2(500, 260) };
@@ -138,6 +167,8 @@ public class Level implements Screen { //, InputProcessor {
 	Texture imgbutton;
 	TextureRegion imgbuttonregion;
 	Window window;
+	HashMap<String, Texture[] > assetTextureMap = new HashMap<String, Texture[]>();
+	HashMap<String, ArrayList<Character> > assetListMap = new HashMap<String, ArrayList<Character>>();
 	
 	//@Override
 	public Level(PirateGame game) {		
@@ -145,10 +176,17 @@ public class Level implements Screen { //, InputProcessor {
 		this.game = game;
 		//tiledMap = new TmxMapLoader().load("assets/map/map.tmx");
 		//tiledMap = new TmxMapLoader().load("assets/streetpirates-level1.tmx");
-		tiledMap = new TmxMapLoader().load("assets/streetpirates-level1-withcompass.tmx");
-		//tiledCity = new TmxMapLoader().load("assets/streetpirates-city1-withcompass.tmx");
-		tiledCity = new TmxMapLoader().load("assets/streetpirates-city1-withcompass-backup.tmx");
-		prop = tiledMap.getProperties();
+		tiledMap = new ArrayList<TiledMap>();
+		tiledCity = new ArrayList<TiledMap>();
+		prop = new ArrayList<MapProperties>();
+		
+		System.out.println("LEVELL  " + game.getNumLevels());
+		for (int i = 0; i < game.getNumLevels(); i++) {
+			tiledMap.add(new TmxMapLoader().load("assets/streetpirates-level" + (i + 1) + ".tmx"));
+			tiledCity.add(new TmxMapLoader().load("assets/streetpirates-city" + (i + 1) + ".tmx"));
+			prop.add(tiledMap.get(i).getProperties());
+			System.out.println("LEVEL " + i);
+		}
 		
 		texture_hero = new Texture[4];
 		texture_hero[0] = new Texture(Gdx.files.internal("assets/pirate/front_walk1.png"));
@@ -247,17 +285,23 @@ public class Level implements Screen { //, InputProcessor {
 		texture_backButton = new Texture[1];
 		texture_backButton[0] = new Texture(Gdx.files.internal("assets/map/EXIT.png"));
 		
-		layer = (TiledMapTileLayer)tiledMap.getLayers().get(0); // assuming the layer at index on contains tiles
-		citylayer = (TiledMapTileLayer)tiledCity.getLayers().get(1); // assuming the layer at index on contains tiles
+		//Sound intro = Gdx.audio.newSound(Gdx.files.internal("assets/A Walk in the Park (1).mp3"));
+		
+		tiledMapActive = tiledMap.get(this.game.getCurrentLevelIdx());
+		tiledCityActive = tiledCity.get(this.game.getCurrentLevelIdx());
+		propActive = prop.get(this.game.getCurrentLevelIdx());
+		
+		layer = (TiledMapTileLayer)tiledMapActive.getLayers().get(0); // assuming the layer at index on contains tiles
+		citylayer = (TiledMapTileLayer)tiledCityActive.getLayers().get(1); // assuming the layer at index on contains tiles
 		columns = layer.getWidth();
 		rows = layer.getHeight();
-		tilewidth = prop.get("tilewidth", Integer.class);
-		tileheight = prop.get("tileheight", Integer.class);
-		width = prop.get("width", Integer.class);
-		height = prop.get("height", Integer.class);
+		tilewidth = propActive.get("tilewidth", Integer.class);
+		tileheight = propActive.get("tileheight", Integer.class);
+		width = propActive.get("width", Integer.class);
+		height = propActive.get("height", Integer.class);
 		
-		renderer = new OrthogonalTiledMapRenderer(tiledMap, 1/(float)tilewidth);
-		cityrenderer = new OrthogonalTiledMapRenderer(tiledCity, 1/(float)tilewidth);
+		//renderer = new OrthogonalTiledMapRenderer(tiledMapActive, 1/(float)tilewidth);
+		//cityrenderer = new OrthogonalTiledMapRenderer(tiledCityActive, 1/(float)tilewidth);
 		
 		for (int i = 0 ; i < layer.getWidth(); i++)
 			for (int j = 0 ; j < layer.getHeight(); j++) {
@@ -272,22 +316,22 @@ public class Level implements Screen { //, InputProcessor {
 				//System.out.println("width " + citylayer.getWidth() + "height: " + citylayer.getHeight() + " " + "cell(" + i + "," + j + "): " + citylayer.getCell(i, j));//.getTile().getId());
 			}
 		
-		tiletypes = create_types_tilemap(tiledCity); 
+		/*tiletypes = create_types_tilemap(tiledCityActive); 
 		cost = new int[this.width][this.height];
 		car_cost = new int[this.width][this.height];
-		calculate_cost();
+		calculate_cost();*/
 
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, columns, rows);
-		renderer.setView(camera);
-		cityrenderer.setView(camera);
+		//camera.setToOrtho(false, columns, rows);
+		//renderer.setView(camera);
+		//cityrenderer.setView(camera);
 		
 		stage = new Stage();
 		stage.setCamera(camera);
 		
 		characters = new ArrayList<Character>();
 
-		treasure = new Character(texture_treasure, 11, 6, (float)2.0, stage, this);
+		treasure = new ArrayList<Character>();
 		compass = new Character(texture_compass, (float)13.5, 7, (float)2.5, stage, this);
 		parrotMessage = new Character(texture_parrot_message[0], (float)13, 0, (float)3.0, stage, this);
 		parrot = new Character(texture_parrot, (float)13, (float)0.8, (float)3.0, stage, this);
@@ -301,6 +345,7 @@ public class Level implements Screen { //, InputProcessor {
 		
 		parrotMessageListener = parrotMessage.addMessageListener(0, parrotMessage.getHeight(), 0, parrotMessage.getWidth(), Character.MESSAGE_STAY);
 		backButtonListener = backButton.addMessageListener(0, backButton.getHeight(), 0, backButton.getWidth(), Character.MESSAGE_GOTO_MENU);
+		compassListener = compass.newClickListener();
 		
 		parrotListener = new InputListener() {
 				public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
@@ -315,50 +360,236 @@ public class Level implements Screen { //, InputProcessor {
 		
 		bandit = new ArrayList<Character>();
 		//bandit.add(new Character(texture_bandits_purple, 1, 8, (float)2.5, stage, this));
-		bandit.add(new Character(texture_bandits_grey, 10, 3, (float)2.5, stage, this));
-		bandit.add(new Character(texture_bandits_brown, 4, 3, (float)2.5, stage, this));
 				
 		car = new ArrayList<Character>();
-		car.add(new Character(texture_bluecar_front, 6, 6, (float)2.0, stage, this));
-		car.add(new Character(texture_redcar_front, 3, 6, (float)2.0, stage, this));
-		car.add(new Character(texture_greencar_front, 2, 3, (float)2.0, stage, this));
-		
-		car.get(0).addFrameSeries(texture_bluecar_back);
-		car.get(0).addFrameSeries(texture_bluecar_right);
-		car.get(0).addFrameSeries(texture_bluecar_left);
-		car.get(1).addFrameSeries(texture_redcar_back);
-		car.get(1).addFrameSeries(texture_redcar_right);
-		car.get(1).addFrameSeries(texture_redcar_left);
-		car.get(2).addFrameSeries(texture_greencar_back);
-		car.get(2).addFrameSeries(texture_greencar_right);
-		car.get(2).addFrameSeries(texture_greencar_left);
-		
 		routeCar = new Vector2[3][2];
-		/*routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(11 * tilewidth, 4 * tileheight);
-		routeCar[1][0] = new Vector2(2 * tilewidth, 4 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
-		routeCar[2][0] = new Vector2(2 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 3 * tileheight);*/
 		
-		routeCar[0][0] = new Vector2(7 * tilewidth, 9 * tileheight); routeCar[0][1] = new Vector2(12 * tilewidth, 5 * tileheight);
-		routeCar[1][0] = new Vector2(1 * tilewidth, 3 * tileheight); routeCar[1][1] = new Vector2(6 * tilewidth, 7 * tileheight);
-		routeCar[2][0] = new Vector2(1 * tilewidth, 2 * tileheight); routeCar[2][1] = new Vector2(7 * tilewidth, 4 * tileheight);
-		
-		//starfish = new Character[num_starfishes];
 		starfish = new ArrayList<Character>();
-		starfish.add(new Character(texture_starfish, 11, 0, (float)1.0, stage, this));
-		starfish.add(new Character(texture_starfish, 10, 1, (float)1.0, stage, this));
-		starfish.add(new Character(texture_starfish, 11, 1, (float)1.0, stage, this));
-		starfish.add(new Character(texture_starfish, 12, 1, (float)1.0, stage, this));
-		starfish.add(new Character(texture_starfish, 11, 2, (float)1.0, stage, this));
-		//starfish.add(new Character(texture_starfish, 11, 5, (float)1.0, stage, this));
 		
-		hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
-		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
-		hero.set_illegaltile(TILE_ILLEGAL_ID);
-		hero.set_goal(treasure);
-		hero.addFrameSeries(texture_hero_back);
-		hero.addFrameSeries(texture_hero_right);
-		hero.addFrameSeries(texture_hero_left);
+		winSequence = new Character(texture_win, 0, 0, (float)13.0, stage, this);
+		winSequence.setVisible(false);
 		
+		loseSequence = new Character(texture_lose, 0, 0, (float)13.0, stage, this);
+		loseSequence.setVisible(false);
+		
+		route = new ArrayList<Character>();
+		
+		//hero = new ArrayList<Character>();
+		//hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
+		
+		
+		
+		
+		
+		//assetFileMap.put("pirate") = ;
+		assetTextureMap.put("bandit-purple", texture_bandits_purple);
+		assetTextureMap.put("bandit-brown", texture_bandits_brown);
+		assetTextureMap.put("bandit-grey", texture_bandits_grey);
+		assetTextureMap.put("bandit", texture_bandits_brown);
+		assetTextureMap.put("pirateflag", texture_pirateflag);
+		assetTextureMap.put("treasure", texture_treasure);
+		assetTextureMap.put("starfish", texture_starfish);
+		assetTextureMap.put("car-green", texture_greencar_front);
+		assetTextureMap.put("car-green-back", texture_greencar_back);
+		assetTextureMap.put("car-green-right", texture_greencar_right);
+		assetTextureMap.put("car-green-left", texture_greencar_left);
+		assetTextureMap.put("car-red", texture_redcar_front);
+		assetTextureMap.put("car-red-back", texture_redcar_back);
+		assetTextureMap.put("car-red-right", texture_redcar_right);
+		assetTextureMap.put("car-red-left", texture_redcar_left);
+		assetTextureMap.put("car-blue", texture_bluecar_front);
+		assetTextureMap.put("car-blue-back", texture_bluecar_back);
+		assetTextureMap.put("car-blue-right", texture_bluecar_right);
+		assetTextureMap.put("car-blue-left", texture_bluecar_left);
+		assetTextureMap.put("hero", texture_hero);
+		assetTextureMap.put("hero-back", texture_hero_back);
+		assetTextureMap.put("hero-left", texture_hero_left);
+		assetTextureMap.put("hero-right", texture_hero_right);
+		
+		assetListMap.put("treasure", treasure);
+		assetListMap.put("bandit", bandit);
+		assetListMap.put("bandit-purple", bandit);
+		assetListMap.put("bandit-brown", bandit);
+		assetListMap.put("bandit-grey", bandit);
+		assetListMap.put("starfish", starfish);
+		assetListMap.put("car", car);
+		assetListMap.put("car-green", car);
+		assetListMap.put("car-red", car);
+		assetListMap.put("car-blue", car);
+		//assetListMap.put("hero", hero);
+		
+	}
+	
+	public void clearActors() {
+	    starfish.clear();
+	    car.clear();
+	    bandit.clear();
+	    treasure.clear();
+	    route.clear();
+	    //hero = null;
+	}
+	
+	public void showActors() {
+		hero.setVisible(true);
+	
+		for(int i = 0; i < starfish.size(); i++) {
+			starfish.get(i).setVisible(true);
+		}
+	
+		for(int i = 0; i < bandit.size(); i++) {
+			bandit.get(i).setVisible(true);
+		}
+		
+		for(int i = 0; i < treasure.size(); i++) {
+			treasure.get(i).setVisible(true);
+		}
+	}
+	
+	public void chooseLevel(int idx) {
+		tiledMapActive = tiledMap.get(idx);
+		tiledCityActive = tiledCity.get(idx);
+		propActive = prop.get(idx);
+		
+		numMapLayers = tiledMapActive.getLayers().getCount();
+		numCityLayers = tiledCityActive.getLayers().getCount();
+		
+		mapLayerIdList = new int[numMapLayers];
+		cityLayerIdList = new int[numCityLayers];
+		for (int i = 0; i < numMapLayers; i++)
+			mapLayerIdList[i] = i;
+		
+		for (int i = 0; i < numCityLayers; i++)
+			cityLayerIdList[i] = i;
+		
+		layer = (TiledMapTileLayer)tiledMapActive.getLayers().get(0); // assuming the layer at index on contains tiles
+		citylayer = (TiledMapTileLayer)tiledCityActive.getLayers().get(1); // assuming the layer at index on contains tiles
+		columns = layer.getWidth();
+		rows = layer.getHeight();
+		tilewidth = propActive.get("tilewidth", Integer.class);
+		tileheight = propActive.get("tileheight", Integer.class);
+		width = propActive.get("width", Integer.class);
+		height = propActive.get("height", Integer.class);
+		
+		renderer = new OrthogonalTiledMapRenderer(tiledMapActive, 1/(float)tilewidth);
+		cityrenderer = new OrthogonalTiledMapRenderer(tiledCityActive, 1/(float)tilewidth);
+		
+		camera.setToOrtho(false, columns, rows);
+		renderer.setView(camera);
+		cityrenderer.setView(camera);
+		
+		tiletypes = create_types_tilemap(tiledCityActive); 
+		cost = new int[this.width][this.height];
+		car_cost = new int[this.width][this.height];
+		calculate_cost();
+		
+		File fXmlFile = new File("assets/streetpirates-level" + (idx + 1) + "-placement.xml");
+		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		
+		System.out.println("CHOOSE LEVEL");
+		
+	    try {
+		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+		Document doc = dBuilder.parse(fXmlFile);
+	 
+		//optional, but recommended
+		//read this - http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
+		doc.getDocumentElement().normalize();
+	 
+		System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+	 
+		clearActors();
+		
+		NodeList nList = doc.getElementsByTagName("object");
+		
+		System.out.println("----------------------------");
+		
+		 
+		for (int temp = 0; temp < nList.getLength(); temp++) {
+	 
+			Node nNode = nList.item(temp);
+			
+			//System.out.println("\nCurrent Element :" + nNode.getNodeName());
+	 
+			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+				String texEl, backEl, rightEl, leftEl, typeEl;
+				Character character;
+				
+				Element eElement = (Element) nNode;
+				
+				//System.out.println("X-coordinate : " + eElement.getAttribute("x"));
+				//System.out.println("Y-coordinate : " + eElement.getAttribute("y"));
+				//System.out.println("type : " + eElement.getAttribute("type"));
+				
+				//System.out.println(" : " + eElement.getAttribute("x"));
+				ArrayList<Character> list = assetListMap.get(eElement.getAttribute("type"));
+				Texture tex[] = assetTextureMap.get(eElement.getAttribute("type"));
+				
+				int tiley = Integer.parseInt(eElement.getAttribute("y"));
+				int tilex = Integer.parseInt(eElement.getAttribute("x"));
+				
+				float scaling = Float.parseFloat(eElement.getAttribute("scaling"));
+				character = new Character(tex, tilex, tiley, scaling, stage, this); 
+				
+				
+				if (!eElement.getAttribute("extra").equals("")) {
+					//System.out.println("EXTRA  " + eElement.getAttribute("extra"));
+					Texture extra[] = assetTextureMap.get(eElement.getAttribute("extra"));
+					character.addFrameSeries(extra);
+				}
+				if (!eElement.getAttribute("back").equals("")) {
+					Texture back[] = assetTextureMap.get(eElement.getAttribute("back"));
+					character.addFrameSeries(back);
+				}
+				if (!eElement.getAttribute("right").equals("")) {
+					Texture right[] = assetTextureMap.get(eElement.getAttribute("right"));
+					character.addFrameSeries(right);
+				}
+				if (!eElement.getAttribute("left").equals("")) {
+					Texture left[] = assetTextureMap.get(eElement.getAttribute("left"));
+					character.addFrameSeries(left);
+				}
+				if (!eElement.getAttribute("guard").equals("")) {
+					//System.out.println("GUARD: " + eElement.getAttribute("guard"));
+					character.set_guardtile(TILE_STREET_ID);
+				}
+				
+				int nroutepoints = 0;
+				NodeList nNodeChildren = nNode.getChildNodes();
+				Vector2 route[] = new Vector2[2];
+				
+				for (int child = 0; child < nNodeChildren.getLength(); child++) {
+					Node nChild = nNodeChildren.item(child);
+					
+					if (nChild.getNodeName().equals("routepoint") && nroutepoints < 2) {
+						Element eChild = (Element) nChild;		
+						route[nroutepoints] = new Vector2(Integer.parseInt(eChild.getAttribute("x")) * this.tilewidth,
+								Integer.parseInt(eChild.getAttribute("y")) * this.tileheight);
+						
+						//System.out.println(eChild.getAttribute("x"));
+						//System.out.println(eChild.getAttribute("y"));
+						nroutepoints++;	
+					}	
+				}
+				//delete route;
+				if (nroutepoints > 0) 
+					character.addAutoRoute(route);
+				
+				if (list !=null)
+					list.add(character);
+				
+				if (eElement.getAttribute("type").equals("hero")) {
+					hero = character;
+					;
+				}
+				
+			}
+		}
+		
+	    } catch (Exception e) {
+	    	e.printStackTrace();
+	    }		
+		
+	    
 		for(int i = 0; i < starfish.size(); i++) {
 			starfish.get(i).set_pickable(true);
 			starfish.get(i).set_illegaltile(TILE_STREET_ID);
@@ -368,8 +599,9 @@ public class Level implements Screen { //, InputProcessor {
 
 		for(int i = 0; i < bandit.size(); i++) {
 			bandit.get(i).set_target(hero);
-			bandit.get(i).addFrameSeries(texture_pirateflag);
-			bandit.get(i).setFrameSeriesIdx(1);
+			//bandit.get(i).addFrameSeries(texture_pirateflag);
+			if (bandit.get(i).getNumberFrameSeries() > 1)
+				bandit.get(i).setFrameSeriesIdx(1);
 		}
 		
 		for(int i = 0; i < car.size(); i++) {
@@ -377,20 +609,13 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(i).set_validtile(TILE_PEDESTRIANWALK_ID);
 			car.get(i).set_illegaltile(TILE_PAVEMENT_ID);
 			car.get(i).set_illegaltile(TILE_ILLEGAL_ID);
-			car.get(0).set_guardtile(TILE_STREET_ID);
+			//car.get(0).set_guardtile(TILE_STREET_ID);
 			//car.get(i).set_random_move();
 			car.get(i).set_target(hero);
-			car.get(i).addAutoRoute(routeCar[i]);
+			//car.get(i).addAutoRoute(routeCar[i]);
 			car.get(i).setVisible(false);
 		}
 		
-		winSequence = new Character(texture_win, 0, 0, (float)13.0, stage, this);
-		winSequence.setVisible(false);
-		
-		loseSequence = new Character(texture_lose, 0, 0, (float)13.0, stage, this);
-		loseSequence.setVisible(false);
-		
-		route = new ArrayList<Character>();
 		gameOver = true;
 		actor_picked = null;
 		actor_dropped = false;
@@ -399,9 +624,18 @@ public class Level implements Screen { //, InputProcessor {
 		/* tiles with id >= tileid will be illegal */
 		adventure_started = false;		
 		cityInteraction = false;
+	    
+		hero.set_immunetile(TILE_PEDESTRIANWALK_ID);
+		hero.set_illegaltile(TILE_ILLEGAL_ID);
+		
+		hero.addFrameSeries(texture_hero_back);
+		hero.addFrameSeries(texture_hero_right);
+		hero.addFrameSeries(texture_hero_left);
+		
 	}
 	
 	public void resetLevel(boolean gotoMap) {
+		//System.out.println("restart level");
 		actor_picked = null;
 		actor_dropped = false;
 		start_route = false;
@@ -418,24 +652,31 @@ public class Level implements Screen { //, InputProcessor {
 			car.get(i).set_can_move(false);
 			car.get(i).setVisible(false);
 			car.get(i).setFrameSeriesIdx(0);
+			car.get(i).setStartPosition();
 		}
-		car.get(0).setPosition(6 * this.tilewidth, 6 * this.tileheight);
-		car.get(1).setPosition(3 * this.tilewidth, 6 * this.tileheight);
-		car.get(2).setPosition(2 * this.tilewidth, 3 * this.tileheight);
 		
-		hero.setPosition(0, 0);
+		hero.setStartPosition();
+		/* FIXME: these set visibilty to false calls should not be in a resetLevel function!
+		 * workaround for actors of previous levels showing up at next levels ... FIXME also!
+		 */
+		hero.setVisible(false);
 		cleanFootTrail();
 		
-		starfish.get(0).setPosition(11 * this.tilewidth, 0);
-		starfish.get(1).setPosition(10 * this.tilewidth, 1 * this.tileheight);
-		starfish.get(2).setPosition(11 * this.tilewidth, 1 * this.tileheight);
-		starfish.get(3).setPosition(12 * this.tilewidth, 1 * this.tileheight);
-		starfish.get(4).setPosition(11 * this.tilewidth, 2 * this.tileheight);
-		
-		for(int i = 0; i < bandit.size(); i++) {
-			bandit.get(i).setFrameSeriesIdx(1);
+		for(int i = 0; i < starfish.size(); i++) {
+			starfish.get(i).setStartPosition();
+			starfish.get(i).setVisible(false);
 		}
 		
+		for(int i = 0; i < bandit.size(); i++) {
+			if (bandit.get(i).getNumberFrameSeries() > 1)
+				bandit.get(i).setFrameSeriesIdx(1);
+				bandit.get(i).setVisible(false);
+		}
+		
+		for(int i = 0; i < treasure.size(); i++) {
+			treasure.get(i).setVisible(false);
+		}
+		//game.getMenu().stopSounds();
 	}
 	
 	public ArrayList<Character> getCars() {
@@ -519,19 +760,18 @@ public class Level implements Screen { //, InputProcessor {
 			adventure_started = true;
 			parrotMessage.setVisible(false);
 			parrotMessage.removeListener(parrotMessageListener);
+			game.getMenu().cityClip.loop(Clip.LOOP_CONTINUOUSLY);
 		}
 		cleanFootTrail();
 	}
 	
 	@Override
 	public void render(float delta) {		
-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
-		int layers_id[] = {0};
-		int city_layers_id[] = {0, 1};
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		if (adventure_started == false)
-			renderer.render(layers_id);
+			renderer.render(mapLayerIdList);
 		else
-			cityrenderer.render(city_layers_id);
+			cityrenderer.render(cityLayerIdList);
 		stage.act(Gdx.graphics.getDeltaTime());//delta);
 		stage.draw();
 		
@@ -552,7 +792,7 @@ public class Level implements Screen { //, InputProcessor {
         	   l.actor_picked = null;
         	   l.actor_dropped = false;
            }
-           if (l.start_route == true) {
+           if (l.start_route == true && cityInteraction) {
         	   l.start_route = false;
            }
            
@@ -631,7 +871,7 @@ public class Level implements Screen { //, InputProcessor {
 		for(int i = 0; i < starfish.size(); i++) {
 			starfish.get(i).addClickListener();	
 		}
-		compass.addClickListener();
+		compass.addexistingClickListener(compassListener);
 		stage.addListener(new LevelListener(this));
 		parrotMessage.setVisible(true);
 		parrotMessage.setFrameSeriesIdx(0);
@@ -648,6 +888,9 @@ public class Level implements Screen { //, InputProcessor {
 	@Override
     public void hide() {
          // called when current screen changes from this to a different screen
+		clearActors();
+		compass.removeListener(compassListener);
+		
     }
 	
 	@Override

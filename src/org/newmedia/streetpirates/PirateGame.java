@@ -24,13 +24,18 @@ import com.badlogic.gdx.Gdx.*;
 public class PirateGame extends Game {
 	   Level level;
 	   Menu menu;
+	   int numLevels = 3, currentLevelIdx = 0;
 	   //Level cityLevel;
 	   //Level menuScreen;
+	   
 	   @Override
        public void create() {
+		   	   System.out.println("NEWLEVEL ");
 		       //menuScreen = new MenuScreen(this);
                level = new Level(this);
                menu = new Menu(this);
+               //numLevels = 2;
+               currentLevelIdx = 0;
                //cityLevel = new CityLevel(this);
                setScreen(menu);
                //setScreen(level);           
@@ -40,7 +45,20 @@ public class PirateGame extends Game {
 		   return level;
 	   }
 	   
+	   public int getCurrentLevelIdx() {
+		   return currentLevelIdx;
+	   }
+	   
+	   public void setCurrentLevel(int l) {
+		   currentLevelIdx = l;
+		   level.chooseLevel(l);
+	   }
+	   
 	   public Menu getMenu() {
 		   return menu;
+	   }
+	   
+	   public int getNumLevels() {
+		   return numLevels;
 	   }
 }

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="16" height="10" tilewidth="60" tileheight="60">
+ <tileset firstgid="1" name="city_tiles_oct28" tilewidth="60" tileheight="60">
+  <image source="city/city_tiles_oct28.png" width="600" height="600"/>
+ </tileset>
+ <tileset firstgid="101" name="kthria4" tilewidth="60" tileheight="60">
+  <image source="city/kthria4.png" width="930" height="360"/>
+ </tileset>
+ <tileset firstgid="191" name="Map_Background" tilewidth="60" tileheight="60">
+  <image source="map/Map_Background.png" width="960" height="600"/>
+ </tileset>
+ <tileset firstgid="351" name="sea" tilewidth="60" tileheight="60">
+  <image source="city/sea.jpg" width="960" height="600"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="16" height="10">
+  <data encoding="csv">
+132,133,134,135,136,137,1,11,11,1,143,144,145,0,0,0,
+1,1,1,1,1,1,11,11,11,1,178,179,177,0,0,0,
+1,11,11,11,11,11,11,11,11,1,135,136,137,0,0,0,
+1,11,11,11,11,11,11,11,11,11,1,1,1,0,0,0,
+1,11,11,11,1,1,11,11,11,11,11,11,11,0,0,0,
+1,11,11,1,1,1,1,11,11,11,11,11,11,0,0,0,
+1,11,11,11,1,1,11,11,11,11,1,1,1,0,0,0,
+1,11,11,11,11,11,11,11,11,1,135,136,134,0,0,0,
+1,11,11,11,11,11,11,11,11,1,185,189,190,0,0,0,
+1,11,11,11,1,1,1,1,1,1,177,178,179,0,0,0
+</data>
+ </layer>
+ <layer name="Tile Layer 2" width="16" height="10">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,164,165,351,352,353,
+0,0,0,0,0,0,59,55,55,0,120,121,0,367,368,369,
+0,0,0,0,0,0,0,0,0,0,0,0,0,383,384,385,
+0,0,0,0,0,0,0,0,0,57,0,0,0,399,400,401,
+0,55,55,37,0,0,39,0,0,0,0,0,0,415,416,417,
+0,0,0,0,22,23,0,0,0,0,0,0,0,431,432,433,
+0,0,0,57,0,0,59,55,55,37,0,0,0,447,448,449,
+0,0,0,0,0,0,0,0,0,0,170,174,175,463,464,465,
+0,0,0,0,0,0,0,0,0,0,162,0,164,479,480,481,
+0,0,0,37,0,0,0,0,0,0,0,0,0,495,496,497
+</data>
+ </layer>
+</map>

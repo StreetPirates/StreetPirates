@@ -2,7 +2,10 @@
 
 jarfile=$1
 jar uf $jarfile assets/city/kth* 
-jar uf $jarfile assets/*compass*tmx
+jar uf $jarfile assets/streetpirates-level*tmx
+jar uf $jarfile assets/streetpirates-city*tmx
+jar uf $jarfile assets/streetpirates-level*placement*xml
+jar uf $jarfile assets/streetpirates-level*scale*png
 jar uf $jarfile assets/city/city*ct28* 
 jar uf $jarfile assets/city/sea.jpg
 jar uf $jarfile assets/city/bandits*png
@@ -17,7 +20,8 @@ jar uf $jarfile assets/menu/*png
 jar uf $jarfile assets/menu/*jpg
 jar uf $jarfile assets/map/FOOTPRINTS.png
 jar uf $jarfile assets/map/trafficLight.png
-jar uf $jarfile assets/map/parrot.png
+jar uf $jarfile assets/map/parrot_front.png
+jar uf $jarfile assets/map/parrot_profil.png
 jar uf $jarfile assets/map/texts*.png
 jar uf $jarfile assets/map/EXIT.png
 jar uf $jarfile assets/map/Map*png
@@ -28,3 +32,14 @@ jar uf $jarfile assets/map/compass.png
 jar uf $jarfile assets/map/starfish-alpha.png
 jar uf $jarfile assets/storytelling/*downsize*jpg
 jar uf $jarfile assets/map/nekrotiles2.png
+jar uf $jarfile assets/menu/Background_papyrus.jpg
+jar uf $jarfile assets/menu/she_parrot.png
+jar uf $jarfile assets/menu/she_resize.png
+jar uf $jarfile assets/map/ODHGEIES_cropped.png
+jar uf $jarfile assets/menu/Background_papyrus.jpg
+jar uf $jarfile assets/menu/horn.wav
+jar uf $jarfile assets/menu/cheer.wav
+jar uf $jarfile assets/menu/intro.wav
+jar uf $jarfile assets/menu/city.wav
+jar uf $jarfile assets/menu/pirate.wav
+zip $jarfile.zip $jarfile assets/streetpirates-level*-placement.xml assets/menu/*wav
