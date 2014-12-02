@@ -378,9 +378,6 @@ public class Level implements Screen { //, InputProcessor {
 		//hero = new Character(texture_hero, 0, 0, (float)1.5, stage, this);
 		
 		
-		
-		
-		
 		//assetFileMap.put("pirate") = ;
 		assetTextureMap.put("bandit-purple", texture_bandits_purple);
 		assetTextureMap.put("bandit-brown", texture_bandits_brown);
