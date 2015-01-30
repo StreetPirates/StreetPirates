@@ -78,7 +78,7 @@ public class Menu implements Screen { //implements Screen {
 	//AudioStream BGM, as;
 	//AudioData MD;
 	//ContinuousAudioDataStream loop = null;
-	public Clip introClip, cityClip, loseCarClip, losePirateClip, winClip;
+	public Clip introClip, cityClip, loseCarClip, losePirateClip, winClip, mapClip;
 	
 	/**
 	 * @param args
@@ -264,6 +264,12 @@ public class Menu implements Screen { //implements Screen {
 	          winClip = (Clip)AudioSystem.getLine(info);
 		      winClip.open(winAudio);
 			
+		      AudioInputStream mapAudio =AudioSystem.getAudioInputStream(new File("assets/menu/Cloudcity.wav").getAbsoluteFile());
+		      format = mapAudio.getFormat();
+	          info = new DataLine.Info(Clip.class, format);
+	          mapClip = (Clip)AudioSystem.getLine(info);
+		      mapClip.open(mapAudio);
+		      
 		    //2nd attempt with oracle specific API, we don't really prefer this
 			//BGM = new AudioStream(new FileInputStream("/opt/devel/android/StreetPirates/assets/menu/park.wav"));
 			//MD = BGM.getData();
@@ -632,11 +638,13 @@ public class Menu implements Screen { //implements Screen {
 		loseCarClip.stop();
 		winClip.stop();
 		introClip.stop();
+		mapClip.stop();
 		cityClip.stop();
 		losePirateClip.setFramePosition(0);
 		loseCarClip.setFramePosition(0);
 		winClip.setFramePosition(0);
 		introClip.setFramePosition(0);
+		mapClip.setFramePosition(0);
 		cityClip.setFramePosition(0);
 	}
 	

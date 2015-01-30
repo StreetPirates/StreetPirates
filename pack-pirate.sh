@@ -42,4 +42,5 @@ jar uf $jarfile assets/menu/cheer.wav
 jar uf $jarfile assets/menu/intro.wav
 jar uf $jarfile assets/menu/city.wav
 jar uf $jarfile assets/menu/pirate.wav
+jar uf $jarfile assets/menu/Cloudcity.wav
 zip $jarfile.zip $jarfile assets/streetpirates-level*-placement.xml assets/menu/*wav

@@ -628,7 +628,7 @@ public class Level implements Screen { //, InputProcessor {
 		hero.addFrameSeries(texture_hero_back);
 		hero.addFrameSeries(texture_hero_right);
 		hero.addFrameSeries(texture_hero_left);
-		
+		game.getMenu().mapClip.loop(Clip.LOOP_CONTINUOUSLY);
 	}
 	
 	public void resetLevel(boolean gotoMap) {
@@ -673,6 +673,7 @@ public class Level implements Screen { //, InputProcessor {
 		for(int i = 0; i < treasure.size(); i++) {
 			treasure.get(i).setVisible(false);
 		}
+		//game.getMenu().mapClip.loop(Clip.LOOP_CONTINUOUSLY);
 		//game.getMenu().stopSounds();
 	}
 	
@@ -757,6 +758,7 @@ public class Level implements Screen { //, InputProcessor {
 			adventure_started = true;
 			parrotMessage.setVisible(false);
 			parrotMessage.removeListener(parrotMessageListener);
+			game.getMenu().mapClip.stop();
 			game.getMenu().cityClip.loop(Clip.LOOP_CONTINUOUSLY);
 		}
 		cleanFootTrail();
