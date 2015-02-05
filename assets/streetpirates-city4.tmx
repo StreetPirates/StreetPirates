@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="16" height="10" tilewidth="60" tileheight="60">
+ <tileset firstgid="1" name="map_tiles (2)" tilewidth="60" tileheight="60">
+  <image source="map/map_tiles (2).png" width="180" height="360"/>
+  <terraintypes>
+   <terrain name="pavement" tile="0"/>
+   <terrain name="street" tile="3"/>
+   <terrain name="grass" tile="6"/>
+   <terrain name="pedwalk" tile="9"/>
+  </terraintypes>
+ </tileset>
+ <tileset firstgid="19" name="Map_Background" tilewidth="60" tileheight="60">
+  <image source="map/Map_Background.png" width="960" height="600"/>
+ </tileset>
+ <tileset firstgid="179" name="kthria4" tilewidth="60" tileheight="60">
+  <image source="city/kthria4.png" width="930" height="360"/>
+ </tileset>
+ <tileset firstgid="269" name="city_tiles_oct28" tilewidth="60" tileheight="60">
+  <image source="city/city_tiles_oct28.png" width="600" height="600"/>
+ </tileset>
+ <tileset firstgid="369" name="sea" tilewidth="60" tileheight="60">
+  <image source="city/sea.jpg" width="960" height="600"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="16" height="10">
+  <data encoding="csv">
+213,214,215,268,268,268,221,279,279,255,256,257,213,369,370,371,
+269,269,269,269,269,269,269,279,279,269,0,0,0,385,386,387,
+279,279,279,279,269,269,269,279,279,269,269,0,0,401,402,403,
+279,279,279,279,269,269,269,279,279,269,269,0,0,417,418,419,
+268,279,279,279,269,269,269,279,279,269,0,0,0,433,434,435,
+218,269,279,279,269,269,269,279,279,269,0,0,0,449,450,451,
+256,269,279,279,279,269,279,279,279,269,0,0,0,465,466,467,
+213,269,279,279,279,279,279,279,279,269,269,0,0,481,482,483,
+269,269,279,279,279,279,279,279,279,269,269,0,0,497,498,499,
+513,497,481,465,449,433,417,433,449,465,481,497,513,513,514,515
+</data>
+ </layer>
+ <layer name="Tile Layer 2" width="16" height="10">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,221,222,223,0,0,0,
+0,0,0,0,0,223,0,0,0,0,256,257,255,0,0,0,
+0,0,0,0,0,0,0,10,10,0,0,214,215,0,0,0,
+0,0,0,0,0,310,0,0,0,0,0,214,212,0,0,0,
+206,307,0,0,0,310,0,10,10,0,263,267,268,0,0,0,
+243,0,0,0,0,310,0,0,0,0,255,256,257,0,0,0,
+198,0,10,10,325,0,327,0,0,0,221,222,223,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,257,255,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,214,215,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+</map>

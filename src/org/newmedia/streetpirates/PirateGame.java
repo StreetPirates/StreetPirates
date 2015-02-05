@@ -24,7 +24,7 @@ import com.badlogic.gdx.Gdx.*;
 public class PirateGame extends Game {
 	   Level level;
 	   Menu menu;
-	   int numLevels = 3, currentLevelIdx = 0;
+	   int numLevels = 4, currentLevelIdx = 0;
 	   //Level cityLevel;
 	   //Level menuScreen;
 	   
