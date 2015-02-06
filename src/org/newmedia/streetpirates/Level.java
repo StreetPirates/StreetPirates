@@ -146,7 +146,7 @@ public class Level implements Screen { //, InputProcessor {
 	 * E.g. a tile with a layer of pavement and street, is a pavement logically. This happens on rounded pavement corners.
 	 * E.g. 
 	 */
-	public final int tile_pavement_types[] = {1, 37, 57, 39, 59, 269, 305, 327, 325};
+	public final int tile_pavement_types[] = {1, 37, 57, 39, 59, 269, 305, 307, 327, 325};
 	public final int tile_pedestrianwalk_types[] = {55, 10};
 	public final int tile_street_types[] = {11, 4, 279};
 	public Vector2 routeCar[][];
